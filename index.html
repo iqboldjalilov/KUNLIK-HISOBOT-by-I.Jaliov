@@ -291,6 +291,58 @@
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style>
 </head>
 <body>
@@ -1322,6 +1374,13 @@
           if(incoming.length) onNew(incoming);
         }, e=> console.warn("Inbox кузатувида хато:", e && e.message));
     }
+    // Раҳбар ёзувни ўчирса — булутдаги нусхаси ҳам ўчирилади (агентда ҳам йўқолади)
+    async function deleteInboxRecord(id){
+      if(!ready) return;
+      try{ await db.collection(COLL_INBOX).doc(id).delete(); }
+      catch(e){ console.warn("Булутдан ўчиришда хато:", e && e.message); }
+    }
+
     async function markClaimed(ids){
       if(!ready || !ids.length) return;
       const batch = db.batch();
@@ -1382,7 +1441,7 @@
         if(!confirm("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?")) return;
         if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
       },
-      pushAgentRecord, fetchAgentTodayRecords, fetchAgentMonthRecords, listenAgentInbox, markClaimed,
+      pushAgentRecord, fetchAgentTodayRecords, fetchAgentMonthRecords, listenAgentInbox, markClaimed, deleteInboxRecord,
       saveAgentsToCloud, loadAgentsFromCloud, setStatus
     };
   })();
@@ -1874,7 +1933,8 @@
       const sof = r.tushum - xarajat;
       return `<tr>
         <td>${i+1}</td>
-        <td>${fmtDate(r.sana)}</td>
+        <td>${fmtDate(r.sana)}${r.manba && r.manba.indexOf("агент")===0
+            ? `<br><span class="pill" style="background:#3b7dd8;color:#fff;font-size:10.5px;" title="${esc(r.manba)}">👤 агент</span>` : ""}</td>
         <td>${carPill(r.mashina)}</td>
         <td>${esc(r.shofyor)||"—"}</td>
         <td>${esc(r.yonalish)||"—"}</td>
@@ -1896,7 +1956,11 @@
             const rec = records.find(r=>r.id===b.dataset.del);
             records = records.filter(r=>r.id!==b.dataset.del);
             saveRecords(records);
-            logAudit("Ёзув ўчирилди", rec ? `${rec.sana} · ${rec.mashina} · ${fmt(rec.tushum)}` : "");
+            // Агент киритган ёзув бўлса — булутдан ҳам ўчирамиз, шунда агентда ҳам йўқолади
+            if(rec && rec.manba && rec.manba.indexOf("агент") === 0){
+              CLOUD.deleteInboxRecord(rec.id);
+            }
+            logAudit("Ёзув ўчирилди", rec ? `${fmtDate(rec.sana)} · ${rec.mashina} · ${fmt(rec.tushum)}` : "");
             updateDatalists();
             renderRecords();
             renderTodayStats();
@@ -1951,6 +2015,58 @@
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style></head><body>
     <h1>${title}</h1>
     <p>Чоп этилган сана: ${new Date().toLocaleDateString("uz-UZ")} ${new Date().toLocaleTimeString("uz-UZ")}</p>
@@ -2047,6 +2163,58 @@
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style></head><body>
     <h1>Кунлик Хисобот — Харажатлар ҳисоботи</h1>
     <p class="meta">${filterDesc} · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -2645,6 +2813,58 @@
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style></head><body>
     <h1>Кунлик Хисобот — Ойлик отчет</h1>
     <p class="meta">Ой: <b>${month}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -3084,7 +3304,15 @@
     cars.forEach(c=>{ if(byCar[c.name]) carNames.push(c.name); });
     Object.keys(byCar).forEach(n=>{ if(!carNames.includes(n)) carNames.push(n); });
 
-    return { month, metric, unit, y, m, daysInMonth, byCar, carNames };
+    // Фақат маълумоти бор кунларни оламиз — бўш ва келмаган кунлар кўрсатилмайди
+    const activeDays = [];
+    for(let d=1; d<=daysInMonth; d++){
+      let has = false;
+      for(const car of Object.keys(byCar)){ if(byCar[car][d]){ has = true; break; } }
+      if(has) activeDays.push(d);
+    }
+
+    return { month, metric, unit, y, m, daysInMonth, activeDays, byCar, carNames };
   }
 
   function renderPivot(){
@@ -3099,8 +3327,11 @@
                         "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
     const show = v => v ? Math.round(v / P.unit).toLocaleString("ru-RU") : "";
 
+    const days = P.activeDays;
+    if(!days.length){ el.innerHTML = `<p class="empty">Бу ойда ёзув йўқ.</p>`; return; }
+
     let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
-    for(let d=1; d<=P.daysInMonth; d++) head += `<th class="pv-num">${d}</th>`;
+    days.forEach(d=> head += `<th class="pv-num">${d}</th>`);
     head += `<th class="pv-total">Жами</th></tr>`;
 
     const dayTotals = {};
@@ -3111,19 +3342,19 @@
       const rusumi = carObj && carObj.rusumi ? carObj.rusumi : "";
       let rowSum = 0;
       let tds = "";
-      for(let d=1; d<=P.daysInMonth; d++){
+      days.forEach(d=>{
         const v = P.byCar[name][d] || 0;
         rowSum += v;
         dayTotals[d] = (dayTotals[d] || 0) + v;
         tds += `<td class="pv-num">${show(v)}</td>`;
-      }
+      });
       grand += rowSum;
       body += `<tr><td><b>${esc(name)}</b></td><td>${esc(rusumi)}</td>${tds}` +
               `<td class="pv-total">${show(rowSum)}</td></tr>`;
     });
 
     let foot = `<tr class="pv-foot"><td colspan="2">жами</td>`;
-    for(let d=1; d<=P.daysInMonth; d++) foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`;
+    days.forEach(d=> foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`);
     foot += `<td class="pv-total">${show(grand)}</td></tr>`;
 
     const metricLabel = P.metric === "tushum" ? "Тушум"
@@ -3146,63 +3377,92 @@
 
   function exportPivotExcel(){
     const P = buildPivot();
-    if(!P.carNames.length){ alert("Бу ойда ёзув йўқ."); return; }
+    const days = P.activeDays;
+    if(!days.length){ alert("Бу ойда ёзув йўқ."); return; }
     const monthNames = ["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН",
                         "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
-    const esc2 = v => String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    const cellS = v => `<Cell><Data ss:Type="String">${esc2(v)}</Data></Cell>`;
-    const cellN = v => `<Cell><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
+    const now = new Date();
+    const pp = n => String(n).padStart(2,"0");
+    const hdrCell = v => `<Cell ss:StyleID="hdr"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const sCell   = v => `<Cell ss:StyleID="txt"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const nCell   = v => `<Cell ss:StyleID="num"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
+    const bCell   = v => `<Cell ss:StyleID="bold"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const bnCell  = v => `<Cell ss:StyleID="boldnum"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
 
-    let head = cellS("Давлат рақами") + cellS("Русуми");
-    for(let d=1; d<=P.daysInMonth; d++) head += cellS(String(d));
-    head += cellS("Жами");
+    let head = hdrCell("Давлат рақами") + hdrCell("Русуми");
+    days.forEach(d=> head += hdrCell(String(d)));
+    head += hdrCell("Жами");
 
     const dayTotals = {}; let grand = 0; let rows = "";
     P.carNames.forEach(name=>{
-      const carObj = cars.find(c=> c.name === name);
+      const c = cars.find(x=> x.name === name);
       let rowSum = 0, tds = "";
-      for(let d=1; d<=P.daysInMonth; d++){
-        const v = Math.round((P.byCar[name][d]||0) / P.unit);
+      days.forEach(d=>{
+        const v = Math.round((P.byCar[name][d]||0)/P.unit);
         rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
-        tds += cellN(v);
-      }
+        tds += nCell(v);
+      });
       grand += rowSum;
-      rows += "<Row>" + cellS(name) + cellS(carObj && carObj.rusumi ? carObj.rusumi : "") + tds + cellN(rowSum) + "</Row>";
+      rows += "<Row>" + sCell(name) + sCell(c && c.rusumi ? c.rusumi : "") + tds + bnCell(rowSum) + "</Row>";
     });
-    let foot = cellS("жами") + cellS("");
-    for(let d=1; d<=P.daysInMonth; d++) foot += cellN(dayTotals[d]||0);
-    foot += cellN(grand);
+    let foot = bCell("жами") + bCell("");
+    days.forEach(d=> foot += bnCell(dayTotals[d]||0));
+    foot += bnCell(grand);
 
+    const cols = `<Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="70"/>` +
+      days.map(()=> `<Column ss:AutoFitWidth="0" ss:Width="52"/>`).join("") +
+      `<Column ss:AutoFitWidth="0" ss:Width="85"/>`;
+
+    const metricLabel = P.metric==="tushum" ? "Тушум" : P.metric==="topshirilgan" ? "Топширилган" : "Соф тушум";
     const title = `${P.y} йил ${monthNames[P.m-1]}ойи`;
+    const meta = `Кўрсаткич: ${metricLabel} · ${P.unit===1000?"минг сўмда":"тўлиқ сўмда"} · ` +
+                 `Шакллантирилди: ${fmtDate(localDateStr(now))} ${pp(now.getHours())}:${pp(now.getMinutes())}`;
+
     const xml = `<?xml version="1.0"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Worksheet ss:Name="Ойлик жадвал"><Table>
-<Row>${cellS(title)}</Row>
-<Row>${head}</Row>
-${rows}
-<Row>${foot}</Row>
-</Table>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
+  <Style ss:ID="txt"><Alignment ss:Vertical="Center"/></Style>
+  <Style ss:ID="num"><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
+  <Style ss:ID="bold"><Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="boldnum"><Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
+  <Style ss:ID="title"><Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/><Borders/></Style>
+  <Style ss:ID="meta"><Font ss:Italic="1" ss:Size="10" ss:Color="#6B7280"/><Borders/></Style>
+ </Styles>
+ <Worksheet ss:Name="Ойлик жадвал">
+  <Table>${cols}
+   <Row ss:Height="22"><Cell ss:StyleID="title"><Data ss:Type="String">${xmlEscape(title)}</Data></Cell></Row>
+   <Row><Cell ss:StyleID="meta"><Data ss:Type="String">${xmlEscape(meta)}</Data></Cell></Row>
+   <Row></Row>
+   <Row ss:Height="20">${head}</Row>
+   ${rows}
+   <Row ss:Height="20">${foot}</Row>
+  </Table>
   <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
    <PageSetup>
     <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
     <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
    </PageSetup>
    <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
+   <Print><ValidPrinterInfo/><FitWidth>1</FitWidth><FitHeight>0</FitHeight><PaperSizeIndex>9</PaperSizeIndex></Print>
+   <FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane>
   </WorksheetOptions>
-</Worksheet></Workbook>`;
+ </Worksheet>
+</Workbook>`;
     const blob = new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -3213,32 +3473,74 @@ ${rows}
 
   function printPivot(){
     const el = document.getElementById("pivotWrap");
-    if(!el || !el.innerHTML.trim()){ alert("Аввал жадвал шаклланиши керак."); return; }
+    if(!el || !el.innerHTML.trim() || el.innerHTML.includes("empty")){
+      alert("Бу ойда ёзув йўқ."); return;
+    }
     const w = window.open("", "_blank");
     w.document.write(`<html><head><meta charset="utf-8"><title>Ойлик жадвал</title>
       <style>
-        body{font-family:Arial,sans-serif;padding:14px;}
-        table{border-collapse:collapse;width:100%;font-size:11px;}
-        th,td{border:1px solid #999;padding:3px 5px;text-align:right;white-space:nowrap;}
+        body{font-family:Arial,sans-serif;padding:16px;color:#152036;}
+        h1,div{margin:0;}
+        table{border-collapse:collapse;width:100%;font-size:11px;margin-top:10px;}
+        th,td{border:1px solid #9aa2b1;padding:4px 6px;text-align:right;white-space:nowrap;}
         th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left;}
-        thead th{background:#efefef;}
-        tfoot td{font-weight:bold;background:#f6f6f6;}
-        .pv-total{background:#fff7cc;font-weight:bold;}
-        @page{size:landscape;}
+        thead th{background:#0f2440;color:#fff;font-weight:bold;}
+        tbody tr:nth-child(even) td{background:#fafafa;}
+        tfoot td{background:#f2eee2;font-weight:bold;border-top:2px solid #c9a227;}
+        .pv-total{background:#fff6cf;font-weight:bold;}
+        @page{size:landscape;margin:10mm;}
       
-  /* ---- Ойлик жадвал (кунма-кун) ---- */
-  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
-  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
-  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
-  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
-  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
-  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
-  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
-  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
-  .pivot-table tbody tr:hover td{background:#faf8f2;}
-  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
-  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
-  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style></head><body>${el.innerHTML}
       <script>window.print()<\/script></body></html>`);
     w.document.close();
@@ -3370,6 +3672,58 @@ ${rows}
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style></head><body>
     <h1>Кунлик Хисобот — Йиллик отчет</h1>
     <p class="meta">Йил: <b>${year}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -5076,7 +5430,13 @@ ${rows}
     cars.forEach(c=>{ if(byCar[c.name]) carNames.push(c.name); });
     Object.keys(byCar).forEach(n=>{ if(!carNames.includes(n)) carNames.push(n); });
 
-    agPivotCache = { month, metric, unit, y, m, daysInMonth, byCar, carNames, count:list.length };
+    const activeDays = [];
+    for(let d=1; d<=daysInMonth; d++){
+      let has = false;
+      for(const car of Object.keys(byCar)){ if(byCar[car][d]){ has = true; break; } }
+      if(has) activeDays.push(d);
+    }
+    agPivotCache = { month, metric, unit, y, m, daysInMonth, activeDays, byCar, carNames, count:list.length };
     return agPivotCache;
   }
 
@@ -5093,24 +5453,27 @@ ${rows}
                         "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
     const show = v => v ? Math.round(v/P.unit).toLocaleString("ru-RU") : "";
 
+    const days = P.activeDays;
+    if(!days.length){ el.innerHTML = `<p class="empty">Бу ойда ёзув йўқ.</p>`; return; }
+
     let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
-    for(let d=1; d<=P.daysInMonth; d++) head += `<th class="pv-num">${d}</th>`;
+    days.forEach(d=> head += `<th class="pv-num">${d}</th>`);
     head += `<th class="pv-total">Жами</th></tr>`;
 
     const dayTotals = {}; let grand = 0; let body = "";
     P.carNames.forEach(name=>{
       const c = cars.find(x=> x.name === name);
       let rowSum = 0, tds = "";
-      for(let d=1; d<=P.daysInMonth; d++){
+      days.forEach(d=>{
         const v = P.byCar[name][d] || 0;
         rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
         tds += `<td class="pv-num">${show(v)}</td>`;
-      }
+      });
       grand += rowSum;
       body += `<tr><td><b>${esc(name)}</b></td><td>${esc(c && c.rusumi ? c.rusumi : "")}</td>${tds}<td class="pv-total">${show(rowSum)}</td></tr>`;
     });
     let foot = `<tr class="pv-foot"><td colspan="2">жами</td>`;
-    for(let d=1; d<=P.daysInMonth; d++) foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`;
+    days.forEach(d=> foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`);
     foot += `<td class="pv-total">${show(grand)}</td></tr>`;
 
     const metricLabel = P.metric==="tushum" ? "Тушум" : P.metric==="topshirilgan" ? "Топширилган" : "Соф тушум";
@@ -5129,7 +5492,7 @@ ${rows}
   async function exportAgentPivotExcel(){
     if(!agPivotCache){ await renderAgentPivot(); }
     const P = agPivotCache;
-    if(!P || !P.carNames.length){ alert("Бу ойда ёзув йўқ."); return; }
+    if(!P || !P.carNames.length || !P.activeDays.length){ alert("Бу ойда ёзув йўқ."); return; }
     const monthNames = ["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН",
                         "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
     const now = new Date();
@@ -5140,29 +5503,30 @@ ${rows}
     const bCell   = v => `<Cell ss:StyleID="bold"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
     const bnCell  = v => `<Cell ss:StyleID="boldnum"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
 
+    const days = P.activeDays;
     let head = hdrCell("Давлат рақами") + hdrCell("Русуми");
-    for(let d=1; d<=P.daysInMonth; d++) head += hdrCell(String(d));
+    days.forEach(d=> head += hdrCell(String(d)));
     head += hdrCell("Жами");
 
     const dayTotals = {}; let grand = 0; let rows = "";
     P.carNames.forEach(name=>{
       const c = cars.find(x=> x.name === name);
       let rowSum = 0, tds = "";
-      for(let d=1; d<=P.daysInMonth; d++){
+      days.forEach(d=>{
         const v = Math.round((P.byCar[name][d]||0)/P.unit);
         rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
         tds += nCell(v);
-      }
+      });
       grand += rowSum;
       rows += "<Row>" + sCell(name) + sCell(c && c.rusumi ? c.rusumi : "") + tds + bnCell(rowSum) + "</Row>";
     });
     let foot = bCell("жами") + bCell("");
-    for(let d=1; d<=P.daysInMonth; d++) foot += bnCell(dayTotals[d]||0);
+    days.forEach(d=> foot += bnCell(dayTotals[d]||0));
     foot += bnCell(grand);
 
-    const cols = `<Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="70"/>` +
-      Array.from({length:P.daysInMonth}, ()=> `<Column ss:AutoFitWidth="0" ss:Width="46"/>`).join("") +
-      `<Column ss:AutoFitWidth="0" ss:Width="80"/>`;
+    const cols = `<Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="70"/>` +
+      days.map(()=> `<Column ss:AutoFitWidth="0" ss:Width="52"/>`).join("") +
+      `<Column ss:AutoFitWidth="0" ss:Width="85"/>`;
 
     const title = `${P.y} йил ${monthNames[P.m-1]}ойи — агент: ${currentAgent.name}`;
     const meta = `Шакллантирилди: ${fmtDate(localDateStr(now))} ${pp(now.getHours())}:${pp(now.getMinutes())} · ` +
@@ -5236,7 +5600,59 @@ ${rows}
         thead th{background:#0f2440;color:#fff;}
         tfoot td,.pv-total{background:#fff6cf;font-weight:bold;}
         @page{size:landscape;margin:10mm;}
-      </style></head><body>${html}
+      
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
+</style></head><body>${html}
       <script>window.print()<\/script></body></html>`);
     w.document.close();
   }
