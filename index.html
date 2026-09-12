@@ -343,6 +343,44 @@
     #agentPanel .filters{grid-template-columns:1fr;}
     #agentPanel header h1{font-size:16px;}
   }
+
+  /* ============================================================
+     ЧОП ЭТИШ / PDF — саҳифа ичида (телефонда ҳам ишлайди)
+     ============================================================ */
+  #printArea{display:none;}
+  #printArea .print-title{font-size:18px;font-weight:800;color:#0f2440;margin-bottom:8px;}
+
+  @media print{
+    body.printing > *{display:none !important;}
+    body.printing #printArea{
+      display:block !important;
+      position:static;
+      padding:0;margin:0;
+      background:#fff;color:#000;
+    }
+    body.printing #printArea table{
+      border-collapse:collapse;width:100%;font-size:10.5px;
+    }
+    body.printing #printArea th,
+    body.printing #printArea td{
+      border:1px solid #999;padding:3px 5px;text-align:right;white-space:nowrap;
+      background:#fff !important;color:#000 !important;
+    }
+    body.printing #printArea th:first-child,
+    body.printing #printArea td:first-child,
+    body.printing #printArea th:nth-child(2),
+    body.printing #printArea td:nth-child(2){text-align:left;}
+    body.printing #printArea thead th{
+      background:#0f2440 !important;color:#fff !important;font-weight:bold;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    body.printing #printArea tfoot td,
+    body.printing #printArea .pv-total{
+      background:#fff6cf !important;font-weight:bold;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    @page{size:landscape;margin:8mm;}
+  }
 </style>
 </head>
 <body>
@@ -413,26 +451,31 @@
       <form class="entry" id="agentForm">
         <div><label>Сана</label><input type="date" id="ag_sana" required></div>
         <div><label>Мошина</label><select id="ag_mashina" required></select></div>
-        <div><label>Шофёр</label><input type="text" id="ag_shofyor" list="agDriverList"><datalist id="agDriverList"></datalist></div>
-        <div><label>Йўналиш</label><input type="text" id="ag_yonalish" list="agRouteList"><datalist id="agRouteList"></datalist></div>
-        <div><label>Умумий тушум (сўм)</label><input type="number" id="ag_tushum" min="0" step="1000" required></div>
-        <div><label>Ёқилғи харажати (сўм)</label><input type="number" id="ag_yoqilgi" min="0" step="1000" value="0"></div>
-        <div><label>Топширилган сумма (сўм)</label><input type="number" id="ag_topshirilgan" min="0" step="1000" placeholder="Шофёр топширган"></div>
+        <div data-agf="shofyor"><label>Шофёр</label><input type="text" id="ag_shofyor" list="agDriverList"><datalist id="agDriverList"></datalist></div>
+        <div data-agf="yonalish"><label>Йўналиш</label><input type="text" id="ag_yonalish" list="agRouteList"><datalist id="agRouteList"></datalist></div>
+        <div><label>Умумий тушум</label><input type="number" id="ag_tushum" min="0" step="1000" required></div>
+        <div data-agf="yoqilgi"><label>Ёқилғи харажати</label><input type="number" id="ag_yoqilgi" min="0" step="1000" value="0"></div>
+        <div data-agf="topshirilgan"><label>Топширилган сумма</label><input type="number" id="ag_topshirilgan" min="0" step="1000" placeholder="Шофёр топширган"></div>
         <button type="button" class="more-toggle" id="agMoreToggle"><span class="chev">▸</span> Қўшимча (йўл, бошқа харажат, км)</button>
         <div class="more-fields hidden" id="agMoreWrap">
-          <div><label>Йўл харажати (сўм)</label><input type="number" id="ag_yol" min="0" step="1000" value="0"></div>
-          <div><label>Бошқа харажат (сўм)</label><input type="number" id="ag_boshqa" min="0" step="1000" value="0"></div>
-          <div><label>Босилган масофа (км)</label><input type="number" id="ag_km" min="0" step="1"></div>
+          <div data-agf="yol"><label>Йўл харажати</label><input type="number" id="ag_yol" min="0" step="1000" value="0"></div>
+          <div data-agf="boshqa"><label>Бошқа харажат</label><input type="number" id="ag_boshqa" min="0" step="1000" value="0"></div>
+          <div data-agf="km"><label>Босилган масофа (км)</label><input type="number" id="ag_km" min="0" step="1"></div>
         </div>
+        <div class="full" id="agDupHint"></div>
         <div class="full" id="agPreview" style="font-size:13px;color:var(--muted);"></div>
-        <div class="full"><label>Изоҳ</label><input type="text" id="ag_izoh"></div>
+        <div class="full" data-agf="izoh"><label>Изоҳ</label><input type="text" id="ag_izoh"></div>
         <div class="full actions-row">
           <button type="submit" class="btn gold">Сақлаш ва юбориш</button>
         </div>
       </form>
     </div>
     <div class="card">
-      <h2>Бугун сиз киритган ёзувлар</h2>
+      <h2>Танланган санадаги ёзувлар</h2>
+      <div id="agentBaseNote"></div>
+      <div class="actions-row" style="margin-top:0;">
+        <button class="btn outline" id="agTodayRefreshBtn">🔄 Янгилаш</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>№</th><th>Сана</th><th>Мошина</th><th>Шофёр</th><th>Тушум</th><th>Топширилган</th><th>Ҳолат</th></tr></thead>
@@ -440,7 +483,8 @@
         </table>
       </div>
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
-        Ёзувни ўчириш ёки таҳрирлаш фақат раҳбарда мумкин. Хато киритсангиз, раҳбарга хабар беринг.
+        Бу ерда раҳбар базасидаги барча ёзувлар кўринади — сиз киритганлар ҳам, раҳбар киритганлар ҳам.
+        Ёзувни ўчириш ёки таҳрирлаш фақат раҳбарда мумкин.
       </p>
     </div>
 
@@ -574,6 +618,7 @@
           <input type="number" id="f_km" min="0" step="1" placeholder="Масалан: 320">
         </div>
         </div>
+        <div class="full" id="dupHint"></div>
         <div class="full" id="qarzPreview" style="font-size:13px;color:var(--muted);"></div>
         <div class="full" id="kmPreview" style="font-size:13px;color:var(--muted);"></div>
         <div class="full">
@@ -1064,6 +1109,18 @@
       </p>
     </div>
 
+    <div class="card" id="dupCheckCard" style="border-left:4px solid #b3402a;">
+      <h2>🔍 Такрорий ёзувларни текшириш</h2>
+      <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
+        Бир кун + бир мошина учун бир нечта ёзув борми — шуни топади.
+        Бу сиз ва агент бир хил кунни киритиб қўйганда юз беради ва тушум икки марта ҳисобланиб кетади.
+      </p>
+      <div class="actions-row" style="margin-top:4px;">
+        <button class="btn gold" id="runDupCheckBtn">Текширишни бошлаш</button>
+      </div>
+      <div id="dupCheckResult"></div>
+    </div>
+
     <div class="card">
       <h2>👤 Агентлар</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
@@ -1074,6 +1131,17 @@
       <div class="actions-row">
         <button class="btn outline" id="addAgentBtn">+ Агент қўшиш</button>
         <button class="btn gold" id="saveAgentsBtn">Сақлаш</button>
+      </div>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0;">
+      <h3 style="margin:0 0 4px;">Агент формасидаги майдонлар</h3>
+      <p style="font-size:13px;color:var(--muted);margin-top:0;">
+        Белгини олиб ташласангиз, ўша майдон агент ойнасида кўринмайди.
+        Сана, мошина ва тушум — мажбурий, уларни ўчириб бўлмайди.
+      </p>
+      <div id="agentFieldsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;"></div>
+      <div class="actions-row">
+        <button class="btn gold" id="saveAgentFieldsBtn">Майдонларни сақлаш</button>
       </div>
     </div>
 
@@ -1219,7 +1287,7 @@
       "kh_records_v1","kh_cars_v1","kh_pw_v1","kh_audit_v1","kh_telegram_v1",
       "kh_lockmin_v1","kh_debtpay_v1","kh_autosend_v1","kh_lastautosent_v1",
       "kh_cashtaken_v1","kh_expenses_v1","kh_expense_payments_v1",
-      "kh_theme_v1","kh_logo_v1","kh_brand_v1","kh_agents_v1"
+      "kh_theme_v1","kh_logo_v1","kh_brand_v1","kh_agents_v1","kh_agent_fields_v1"
     ];
 
     let db = null, ready = false, syncTimer = null, syncing = false, inboxUnsub = null;
@@ -1343,6 +1411,33 @@
         ...rec, agentName, createdAt: Date.now(), claimed: false
       });
     }
+    // Раҳбарнинг умумий базасидаги ЖОРИЙ ёзувлар (захира нусхадан ўқилади).
+    // Агент шу орқали барча ёзувларни кўради — ўчирилганлар ҳам йўқолади.
+    // Булут нусхасини бир марта ўқиб, кэшда сақлаймиз (қайта-қайта тортмаслик учун)
+    let sharedCache = null, sharedCacheAt = 0;
+    async function getShared(force){
+      if(!ready) return null;
+      if(sharedCache && !force && (Date.now() - sharedCacheAt) < 30000) return sharedCache;
+      const cloud = await fetchCloud();
+      if(!cloud || !cloud.data) return null;
+      const parse = k =>{
+        const raw = cloud.data[k];
+        if(!raw) return null;
+        try{ return JSON.parse(raw); }catch(e){ return null; }
+      };
+      sharedCache = {
+        records: parse("kh_records_v1") || [],
+        cars:    parse("kh_cars_v1"),
+        fields:  parse("kh_agent_fields_v1"),
+        updatedAt: cloud.meta && cloud.meta.updatedAt ? cloud.meta.updatedAt : 0
+      };
+      sharedCacheAt = Date.now();
+      return sharedCache;
+    }
+    async function fetchSharedAll(force){ return await getShared(force); }
+    async function fetchSharedRecords(force){ const d = await getShared(force); return d ? d.records : null; }
+    async function fetchSharedCars(force){ const d = await getShared(force); return d ? d.cars : null; }
+
     // Агентнинг бир ойлик ёзувлари (ой филтри JS томонда — индекс керак бўлмайди)
     async function fetchAgentMonthRecords(agentName, month){
       if(!ready) return [];
@@ -1352,6 +1447,15 @@
         const r = {id:d.id, ...d.data()};
         if(r.sana && String(r.sana).slice(0,7) === month) out.push(r);
       });
+      return out;
+    }
+
+    // Агентнинг БАРЧА юборган ёзувлари (сана филтрисиз)
+    async function fetchAgentTodayRecordsAll(agentName){
+      if(!ready) return [];
+      const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
+      const out = [];
+      snap.forEach(d=> out.push({id:d.id, ...d.data()}));
       return out;
     }
 
@@ -1367,7 +1471,9 @@
     // Раҳбар дастури: янги агент ёзувларини ўз базасига қўшади
     function listenAgentInbox(onNew){
       if(!ready || inboxUnsub) return;
-      inboxUnsub = db.collection(COLL_INBOX).where("claimed","==",false)
+      // Inbox'даги БАРЧА ёзувлар — қабул қилингач улар ўчирилади,
+      // шунинг учун бу ерда фақат "йўлдагилар" қолади
+      inboxUnsub = db.collection(COLL_INBOX)
         .onSnapshot(snap=>{
           const incoming = [];
           snap.forEach(d=> incoming.push({id:d.id, ...d.data()}));
@@ -1385,6 +1491,15 @@
       if(!ready || !ids.length) return;
       const batch = db.batch();
       ids.forEach(id=> batch.update(db.collection(COLL_INBOX).doc(id), {claimed:true}));
+      await batch.commit();
+    }
+
+    // Қабул қилинган ёзувларни inbox'дан бутунлай ўчириш.
+    // Улар энди раҳбар базасида — агент уларни умумий базадан кўради.
+    async function removeFromInbox(ids){
+      if(!ready || !ids.length) return;
+      const batch = db.batch();
+      ids.forEach(id=> batch.delete(db.collection(COLL_INBOX).doc(id)));
       await batch.commit();
     }
 
@@ -1406,8 +1521,8 @@
         const localSync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
         setLastSyncLabel(localSync || null);
         if(!main.exists){
-          setStatus("Уланган (булутда нусха йўқ)");
-          if(localStorage.getItem("kh_records_v1")) upload(true);
+          setStatus("Уланган (илк захира юкланмоқда...)");
+          await upload(true);      // илк марта — дарҳол юклаймиз, агент кўриши учун
           return;
         }
         const meta = main.data();
@@ -1420,6 +1535,8 @@
           }
         }else{
           setStatus("Уланган ✓", "var(--good)");
+          // Захира 6 соатдан эски бўлса — янгилаб қўямиз (агент янги маълумот кўрсин)
+          if(Date.now() - (meta.updatedAt||0) > 6*3600*1000) upload(true);
         }
       }catch(e){ setStatus("Уланмади (офлайн?)", "var(--bad)"); }
     }
@@ -1441,7 +1558,9 @@
         if(!confirm("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?")) return;
         if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
       },
-      pushAgentRecord, fetchAgentTodayRecords, fetchAgentMonthRecords, listenAgentInbox, markClaimed, deleteInboxRecord,
+      pushAgentRecord, fetchAgentTodayRecords, fetchAgentTodayRecordsAll, fetchAgentMonthRecords,
+      fetchSharedRecords, fetchSharedCars, fetchSharedAll,
+      listenAgentInbox, markClaimed, removeFromInbox, deleteInboxRecord,
       saveAgentsToCloud, loadAgentsFromCloud, setStatus
     };
   })();
@@ -1527,6 +1646,54 @@
   let cars = loadCars();
   let editingId = null;
 
+  /* ============================================================
+     ТАКРОРИЙ ЁЗУВ ҲИМОЯСИ
+     Бир кун + бир мошина учун иккинчи ёзув киритилса, огоҳлантиради.
+     Бу айниқса раҳбар ва агент бирга ишлаганда муҳим —
+     иккови бир хил кунни киритиб қўйса, тушум икки марта ҳисобланади.
+     ============================================================ */
+  function findDuplicates(sana, mashina, excludeId, list){
+    const src = list || records;
+    if(!sana || !mashina) return [];
+    return src.filter(r =>
+      r.sana === sana &&
+      r.mashina === mashina &&
+      r.id !== excludeId
+    );
+  }
+
+  // Такрорий ёзувлар ҳақида тушунарли огоҳлантириш матни
+  function duplicateWarningText(dups, sana, mashina){
+    const lines = dups.map((d,i)=>{
+      const manba = d.manba ? ` (${d.manba})` : "";
+      return `${i+1}) Тушум: ${fmt(d.tushum)}` +
+             (d.shofyor ? ` · Шофёр: ${d.shofyor}` : "") +
+             (d.topshirilgan!=null ? ` · Топширилган: ${fmt(d.topshirilgan)}` : "") +
+             manba;
+    }).join("\n");
+    return `ДИҚҚАТ! Бу кун ва мошина учун ёзув аллақачон бор.\n\n` +
+           `Сана: ${fmtDate(sana)}\nМошина: ${mashina}\n\n` +
+           `Мавжуд ёзув${dups.length>1?"лар":""}:\n${lines}\n\n` +
+           `Агар бу ўша куннинг ИККИНЧИ рейси бўлса — «OK» босинг.\n` +
+           `Агар адашиб қайта киритаётган бўлсангиз — «Бекор» босинг.`;
+  }
+
+  // Форма тўлдирилаётганда — жонли огоҳлантириш (сақлашдан олдин кўринади)
+  function renderDupHint(){
+    const el = document.getElementById("dupHint");
+    if(!el) return;
+    const sana = document.getElementById("f_sana").value;
+    const mashina = document.getElementById("f_mashina").value;
+    const dups = findDuplicates(sana, mashina, editingId);
+    if(!dups.length){ el.innerHTML = ""; return; }
+    const jami = dups.reduce((a,d)=> a + Number(d.tushum||0), 0);
+    el.innerHTML = `<div class="notice" style="margin:0;">
+      ⚠️ <b>Бу кун ва мошина учун ${dups.length} та ёзув бор</b>
+      (жами тушум: ${fmt(jami)}).
+      Иккинчи рейс бўлса — давом этинг; адашган бўлсангиз, аввал мавжудини текширинг.
+    </div>`;
+  }
+
   // Маҳаллий сана (UTC эмас!). toISOString() UTC беради — Ўзбекистонда (UTC+5)
   // соат 00:00–05:00 оралиғида кечаги санани кўрсатиб қўяр эди.
   // localStorage тўлиб қолса — маълумот ЖИМГИНА йўқолиб кетмаслиги учун ҳимоя.
@@ -1548,6 +1715,94 @@
         : "Маълумотни сақлаб бўлмади. Саҳифани янгилаб, қайта уриниб кўринг.");
       return false;
     }
+  }
+
+  // Файлни юклаб олиш — телефонда ҳам ишлайдиган усул.
+  // Айрим мобил браузерлар (iOS Safari) download атрибутини қўллаб-қувватламайди,
+  // шунда файл янги ойнада очилади ва фойдаланувчи уни сақлаб олади.
+  function downloadFile(content, filename, mime){
+    try{
+      const blob = (content instanceof Blob) ? content : new Blob([content], {type: mime || "application/octet-stream"});
+      // 1-йўл: стандарт юклаб олиш
+      if(window.navigator && window.navigator.msSaveOrOpenBlob){
+        window.navigator.msSaveOrOpenBlob(blob, filename);
+        return true;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const supportsDownload = "download" in a;
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      if(!supportsDownload) a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=> URL.revokeObjectURL(url), 20000);
+
+      // Телефонда юклаш ишламаса — фойдаланувчига йўл кўрсатамиз
+      if(!supportsDownload){
+        toast("Файл янги ойнада очилди — уни «Сақлаш» орқали юклаб олинг");
+      }
+      return true;
+    }catch(e){
+      console.error("Юклашда хато:", e);
+      alert("Файлни юклаб бўлмади. Браузер менюсидан «Саҳифани сақлаш» ни синаб кўринг.");
+      return false;
+    }
+  }
+
+  // Ҳисоботни чоп этиш / PDF — телефонда ҳам ишлайди.
+  // Янги ойна очиш ўрнига саҳифа ичида чоп этамиз (мобил браузерлар popup'ни блоклайди).
+  function printHtmlBlock(innerHtml, title){
+    const old = document.getElementById("printArea");
+    if(old) old.remove();
+    const area = document.createElement("div");
+    area.id = "printArea";
+    area.innerHTML = `<div class="print-title">${esc(title||"")}</div>` + innerHtml;
+    document.body.appendChild(area);
+    document.body.classList.add("printing");
+    const cleanup = ()=>{
+      document.body.classList.remove("printing");
+      const el = document.getElementById("printArea");
+      if(el) el.remove();
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    setTimeout(()=>{
+      window.print();
+      setTimeout(cleanup, 1500);   // afterprint ишламаса ҳам тозаласин
+    }, 120);
+  }
+
+  // Тўлиқ HTML ҳужжатни чоп этиш (ичида ўз стили бор).
+  // Телефонда popup блокланса — iframe орқали чоп этамиз.
+  function printFullHtmlDoc(html){
+    try{
+      const w = window.open("", "_blank");
+      if(w && w.document){
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        setTimeout(()=> w.print(), 400);
+        return;
+      }
+    }catch(e){ /* popup блокланган — iframe'га ўтамиз */ }
+
+    // Захира усул: яширин iframe (мобил браузерларда ишончли)
+    const old = document.getElementById("printFrame");
+    if(old) old.remove();
+    const f = document.createElement("iframe");
+    f.id = "printFrame";
+    f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+    document.body.appendChild(f);
+    const d = f.contentWindow.document;
+    d.open(); d.write(html); d.close();
+    setTimeout(()=>{
+      try{ f.contentWindow.focus(); f.contentWindow.print(); }
+      catch(e){ alert("Чоп этиб бўлмади. Браузер менюсидан «Чоп этиш» ни танланг."); }
+      setTimeout(()=> f.remove(), 2000);
+    }, 500);
   }
 
   function localDateStr(d){
@@ -1783,6 +2038,10 @@
     if(wrap.classList.contains("hidden")) openMoreFields(); else closeMoreFields();
   });
 
+  ["f_sana","f_mashina"].forEach(id=>{
+    document.getElementById(id)?.addEventListener("change", renderDupHint);
+  });
+
   document.getElementById("cancelEditBtn").addEventListener("click", ()=>{
     form.reset();
     document.getElementById("f_sana").valueAsDate = new Date();
@@ -1809,6 +2068,12 @@
       km: Number(document.getElementById("f_km").value||0),
       izoh: document.getElementById("f_izoh").value.trim(),
     };
+    // --- Такрорий ёзув текшируви ---
+    const dups = findDuplicates(data.sana, data.mashina, editingId);
+    if(dups.length){
+      if(!confirm(duplicateWarningText(dups, data.sana, data.mashina))) return;
+    }
+
     if(editingId){
       const idx = records.findIndex(r=>r.id===editingId);
       if(idx !== -1){
@@ -1830,6 +2095,7 @@
     document.getElementById("qarzPreview").innerHTML = "";
     document.getElementById("kmPreview").innerHTML = "";
     closeMoreFields();
+    document.getElementById("dupHint").innerHTML = "";
     updateDatalists();
     renderTodayStats();
     renderEntryBanners();
@@ -1928,11 +2194,21 @@
       body.innerHTML = `<tr><td colspan="10" class="empty">Ҳали ёзув йўқ. "Ёзув киритиш" бўлимидан қўшинг.</td></tr>`;
       return;
     }
+    // Такрорланувчи (сана+мошина) ёзувларни белгилаш учун
+    const dupKeys = new Set();
+    const seen = {};
+    records.forEach(r=>{
+      if(!r.sana || !r.mashina) return;
+      const k = r.sana + "||" + r.mashina;
+      if(seen[k]) dupKeys.add(k); else seen[k] = true;
+    });
+
     body.innerHTML = list.map((r,i)=>{
       const xarajat = r.yoqilgi+r.yol+r.boshqa;
       const sof = r.tushum - xarajat;
-      return `<tr>
-        <td>${i+1}</td>
+      const isDup = dupKeys.has(r.sana + "||" + r.mashina);
+      return `<tr${isDup ? ' style="background:#fff4f3;"' : ''}>
+        <td>${i+1}${isDup ? ' <span title="Бу кун ва мошина учун бир нечта ёзув бор" style="color:#b3402a;font-weight:800;">⚠</span>' : ''}</td>
         <td>${fmtDate(r.sana)}${r.manba && r.manba.indexOf("агент")===0
             ? `<br><span class="pill" style="background:#3b7dd8;color:#fff;font-size:10.5px;" title="${esc(r.manba)}">👤 агент</span>` : ""}</td>
         <td>${carPill(r.mashina)}</td>
@@ -2001,72 +2277,6 @@
       th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;}
       th{background:#0f2440;color:#fff;}
       tr:nth-child(even){background:#f6f4ee;}
-    
-  /* ---- Ойлик жадвал (кунма-кун) ---- */
-  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
-  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
-  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
-  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
-  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
-  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
-  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
-  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
-  .pivot-table tbody tr:hover td{background:#faf8f2;}
-  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
-  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
-  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
-
-  /* ============================================================
-     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
-     ============================================================ */
-  #agentPanel header{flex-wrap:wrap;gap:10px;}
-  #agentPanel main{padding-bottom:30px;}
-  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  #agentPanel .entry .full{grid-column:1/-1;}
-  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
-
-  @media(max-width:760px){
-    #agentPanel header{padding:12px 14px;}
-    #agentPanel header h1{font-size:17px;}
-    #agentPanel header p{font-size:11.5px;}
-    #agentClock{font-size:12px !important;padding:5px 9px !important;}
-    #agentPanel main{padding:12px 10px;}
-    #agentPanel .card{padding:14px 12px;border-radius:12px;}
-    #agentPanel .card h2{font-size:16px;}
-
-    /* Форма — телефонда битта устун, катта майдонлар */
-    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
-    #agentPanel input, #agentPanel select{
-      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
-      padding:12px 12px;
-      min-height:46px;
-    }
-    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
-    #agentPanel .btn{min-height:48px;font-size:15px;}
-    #agentPanel .actions-row{flex-direction:column;}
-    #agentPanel .actions-row .btn{width:100%;}
-
-    /* Фильтр тугмалари — иккитадан */
-    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    #agentPanel .filters .fld{min-width:0;}
-    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
-
-    /* Жадваллар — ёнга сурилади, устунлар тор */
-    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
-    #agentPanel table{font-size:12.5px;}
-    #agentPanel th, #agentPanel td{padding:7px 6px;}
-    #agentPanel .pivot-table{font-size:11px;}
-    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
-
-    /* Агент кириш экрани */
-    #agentLogin .lockbox{padding:22px 18px;}
-    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
-  }
-
-  @media(max-width:420px){
-    #agentPanel .filters{grid-template-columns:1fr;}
-    #agentPanel header h1{font-size:16px;}
-  }
 </style></head><body>
     <h1>${title}</h1>
     <p>Чоп этилган сана: ${new Date().toLocaleDateString("uz-UZ")} ${new Date().toLocaleTimeString("uz-UZ")}</p>
@@ -2234,11 +2444,7 @@
     </body></html>`;
   }
   function printExpensesReport(){
-    const w = window.open("", "_blank");
-    w.document.write(buildExpensesPrintHTML());
-    w.document.close();
-    w.focus();
-    setTimeout(()=>{ w.print(); }, 300);
+    printFullHtmlDoc(buildExpensesPrintHTML());
   }
   document.getElementById("printExpenses").addEventListener("click", printExpensesReport);
 
@@ -2530,11 +2736,7 @@
 
   function downloadFullWorkbook(){
     const xml = buildFullWorkbookXML();
-    const blob = new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "kunlik_hisobot_umumiy_"+localDateStr()+".xls";
-    a.click();
+    downloadFile(new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"}), "kunlik_hisobot_umumiy_"+localDateStr()+".xls", "application/vnd.ms-excel;charset=utf-8;");
     toast("Excel файл (4 sheet) юкланди ✓");
   }
 
@@ -2885,11 +3087,7 @@
   }
   function printMonthlyReport(){
     const month = document.getElementById("summaryMonth").value || currentMonthValue();
-    const w = window.open("", "_blank");
-    w.document.write(buildMonthlyReportPrintHTML(month));
-    w.document.close();
-    w.focus();
-    setTimeout(()=>{ w.print(); }, 300);
+    printFullHtmlDoc(buildMonthlyReportPrintHTML(month));
   }
   document.getElementById("monthlyPdfBtn").addEventListener("click", printMonthlyReport);
 
@@ -3094,11 +3292,7 @@
   function downloadMonthlyWorkbook(){
     const month = document.getElementById("summaryMonth").value || currentMonthValue();
     const xml = buildMonthlyWorkbookXML(month);
-    const blob = new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "oylik_hisobot_"+month+".xls";
-    a.click();
+    downloadFile(new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"}), "oylik_hisobot_"+month+".xls", "application/vnd.ms-excel;charset=utf-8;");
     toast("Ойлик отчет Excel'га юкланди ✓ ("+month+")");
   }
   document.getElementById("monthlyExcelBtn").addEventListener("click", downloadMonthlyWorkbook);
@@ -3463,11 +3657,7 @@
   </WorksheetOptions>
  </Worksheet>
 </Workbook>`;
-    const blob = new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `oylik_jadval_${P.month}.xls`;
-    a.click();
+    downloadFile(new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"}), `oylik_jadval_${P.month}.xls`, "application/vnd.ms-excel");
     toast("Excel файл юкланди ✓");
   }
 
@@ -3476,74 +3666,7 @@
     if(!el || !el.innerHTML.trim() || el.innerHTML.includes("empty")){
       alert("Бу ойда ёзув йўқ."); return;
     }
-    const w = window.open("", "_blank");
-    w.document.write(`<html><head><meta charset="utf-8"><title>Ойлик жадвал</title>
-      <style>
-        body{font-family:Arial,sans-serif;padding:16px;color:#152036;}
-        h1,div{margin:0;}
-        table{border-collapse:collapse;width:100%;font-size:11px;margin-top:10px;}
-        th,td{border:1px solid #9aa2b1;padding:4px 6px;text-align:right;white-space:nowrap;}
-        th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left;}
-        thead th{background:#0f2440;color:#fff;font-weight:bold;}
-        tbody tr:nth-child(even) td{background:#fafafa;}
-        tfoot td{background:#f2eee2;font-weight:bold;border-top:2px solid #c9a227;}
-        .pv-total{background:#fff6cf;font-weight:bold;}
-        @page{size:landscape;margin:10mm;}
-      
-  /* ============================================================
-     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
-     ============================================================ */
-  #agentPanel header{flex-wrap:wrap;gap:10px;}
-  #agentPanel main{padding-bottom:30px;}
-  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  #agentPanel .entry .full{grid-column:1/-1;}
-  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
-
-  @media(max-width:760px){
-    #agentPanel header{padding:12px 14px;}
-    #agentPanel header h1{font-size:17px;}
-    #agentPanel header p{font-size:11.5px;}
-    #agentClock{font-size:12px !important;padding:5px 9px !important;}
-    #agentPanel main{padding:12px 10px;}
-    #agentPanel .card{padding:14px 12px;border-radius:12px;}
-    #agentPanel .card h2{font-size:16px;}
-
-    /* Форма — телефонда битта устун, катта майдонлар */
-    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
-    #agentPanel input, #agentPanel select{
-      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
-      padding:12px 12px;
-      min-height:46px;
-    }
-    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
-    #agentPanel .btn{min-height:48px;font-size:15px;}
-    #agentPanel .actions-row{flex-direction:column;}
-    #agentPanel .actions-row .btn{width:100%;}
-
-    /* Фильтр тугмалари — иккитадан */
-    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    #agentPanel .filters .fld{min-width:0;}
-    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
-
-    /* Жадваллар — ёнга сурилади, устунлар тор */
-    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
-    #agentPanel table{font-size:12.5px;}
-    #agentPanel th, #agentPanel td{padding:7px 6px;}
-    #agentPanel .pivot-table{font-size:11px;}
-    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
-
-    /* Агент кириш экрани */
-    #agentLogin .lockbox{padding:22px 18px;}
-    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
-  }
-
-  @media(max-width:420px){
-    #agentPanel .filters{grid-template-columns:1fr;}
-    #agentPanel header h1{font-size:16px;}
-  }
-</style></head><body>${el.innerHTML}
-      <script>window.print()<\/script></body></html>`);
-    w.document.close();
+    printHtmlBlock(el.innerHTML, "");
   }
 
   document.getElementById("pivotMonth").value = localDateStr().slice(0,7);
@@ -3740,11 +3863,7 @@
   }
   function printYearlyReport(){
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
-    const w = window.open("", "_blank");
-    w.document.write(buildYearlyReportPrintHTML(year));
-    w.document.close();
-    w.focus();
-    setTimeout(()=>{ w.print(); }, 300);
+    printFullHtmlDoc(buildYearlyReportPrintHTML(year));
   }
   document.getElementById("yearlyPdfBtn").addEventListener("click", printYearlyReport);
 
@@ -3857,11 +3976,7 @@
   function downloadYearlyWorkbook(){
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
     const xml = buildYearlyWorkbookXML(year);
-    const blob = new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "yillik_hisobot_"+year+".xls";
-    a.click();
+    downloadFile(new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"}), "yillik_hisobot_"+year+".xls", "application/vnd.ms-excel;charset=utf-8;");
     toast("Йиллик отчет Excel'га юкланди ✓ ("+year+")");
   }
   document.getElementById("yearlyExcelBtn").addEventListener("click", downloadYearlyWorkbook);
@@ -4175,11 +4290,7 @@
   // ---- Backup / restore / wipe ----
   document.getElementById("backupBtn").addEventListener("click", ()=>{
     const data = {records, cars, expenses, expensePayments, exportedAt: new Date().toISOString()};
-    const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "kunlik_hisobot_zaxira_"+localDateStr()+".json";
-    a.click();
+    downloadFile(new Blob([JSON.stringify(data,null,2)], {type:"application/json"}), "kunlik_hisobot_zaxira_"+localDateStr()+".json", "application/json");
     toast("Захира нусха юкланди ✓");
   });
   document.getElementById("restoreBtn").addEventListener("click", ()=>{
@@ -5182,6 +5293,134 @@
   });
   renderAgentsList();
 
+  /* ---- Мавжуд такрорий ёзувларни топиш ---- */
+  function scanDuplicates(){
+    const groups = {};
+    records.forEach(r=>{
+      if(!r.sana || !r.mashina) return;
+      const key = r.sana + "||" + r.mashina;
+      (groups[key] = groups[key] || []).push(r);
+    });
+    return Object.values(groups)
+      .filter(g => g.length > 1)
+      .sort((a,b)=> String(b[0].sana).localeCompare(String(a[0].sana)));
+  }
+
+  function renderDupCheck(){
+    const el = document.getElementById("dupCheckResult");
+    if(!el) return;
+    const groups = scanDuplicates();
+    if(!groups.length){
+      el.innerHTML = `<div class="notice" style="background:#eaf7ef;border-color:#9fd8b5;color:#1f7a4d;margin-top:12px;">
+        ✅ Такрорий ёзув топилмади — маълумот тоза.
+      </div>`;
+      return;
+    }
+    const ortiqcha = groups.reduce((sum,g)=>{
+      const vals = g.map(r=> Number(r.tushum||0)).sort((a,b)=> b-a);
+      return sum + vals.slice(1).reduce((a,b)=> a+b, 0);   // энг каттасидан бошқалари
+    }, 0);
+
+    const rows = groups.map(g=>{
+      const inner = g.map(r=>`
+        <tr>
+          <td>${fmtDate(r.sana)}</td>
+          <td>${carPill(r.mashina)}</td>
+          <td>${esc(r.shofyor)||"—"}</td>
+          <td>${fmt(r.tushum)}</td>
+          <td>${r.topshirilgan==null?"—":fmt(r.topshirilgan)}</td>
+          <td>${r.manba ? `<span class="pill" style="background:#3b7dd8;color:#fff;">${esc(r.manba)}</span>` : "раҳбар"}</td>
+          <td><button class="btn danger small" data-dupdel="${r.id}">Ўчириш</button></td>
+        </tr>`).join("");
+      return `<tr style="background:#fdeced;"><td colspan="7" style="font-weight:700;">
+                ${fmtDate(g[0].sana)} · ${esc(g[0].mashina)} — ${g.length} та ёзув
+              </td></tr>` + inner;
+    }).join("");
+
+    el.innerHTML = `
+      <div class="notice" style="margin-top:12px;">
+        <b>${groups.length} та такрорланиш топилди.</b><br>
+        Эҳтимолий ортиқча тушум: <b>${fmt(ortiqcha)}</b>
+        (ҳар гуруҳдан энг каттасини қолдириб ҳисобланди).<br>
+        Ҳар бир гуруҳни кўриб чиқинг: агар улар ҳақиқатан ўша куннинг турли рейслари бўлса — тегманг.
+        Агар адашиб икки марта киритилган бўлса — ортиқчасини ўчиринг.
+      </div>
+      <div class="table-wrap" style="margin-top:10px;">
+        <table>
+          <thead><tr><th>Сана</th><th>Мошина</th><th>Шофёр</th><th>Тушум</th><th>Топширилган</th><th>Манба</th><th>Амал</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+
+    el.querySelectorAll("[data-dupdel]").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const rec = records.find(r=> r.id === b.dataset.dupdel);
+        if(!rec) return;
+        if(!confirm(`Ушбу ёзувни ўчирасизми?\n\n${fmtDate(rec.sana)} · ${rec.mashina} · ${fmt(rec.tushum)}`)) return;
+        requirePasswordThen(()=>{
+          records = records.filter(r=> r.id !== rec.id);
+          saveRecords(records);
+          if(rec.manba && String(rec.manba).indexOf("агент") === 0){
+            CLOUD.deleteInboxRecord(rec.id);
+          }
+          logAudit("Такрорий ёзув ўчирилди", `${fmtDate(rec.sana)} · ${rec.mashina} · ${fmt(rec.tushum)}`);
+          renderDupCheck();
+          renderRecords();
+          renderTodayStats();
+          toast("Такрорий ёзув ўчирилди ✓");
+        });
+      });
+    });
+  }
+  document.getElementById("runDupCheckBtn")?.addEventListener("click", renderDupCheck);
+
+  /* ---- Агент формасидаги майдонларни бошқариш ---- */
+  const LS_AGENT_FIELDS = "kh_agent_fields_v1";
+  const AGENT_FIELD_DEFS = [
+    {key:"shofyor",      label:"Шофёр"},
+    {key:"yonalish",     label:"Йўналиш"},
+    {key:"yoqilgi",      label:"Ёқилғи харажати"},
+    {key:"topshirilgan", label:"Топширилган сумма"},
+    {key:"yol",          label:"Йўл харажати"},
+    {key:"boshqa",       label:"Бошқа харажат"},
+    {key:"km",           label:"Босилган масофа (км)"},
+    {key:"izoh",         label:"Изоҳ"}
+  ];
+  function defaultAgentFields(){
+    const o = {};
+    AGENT_FIELD_DEFS.forEach(f=> o[f.key] = true);
+    return o;
+  }
+  function loadAgentFields(){
+    try{
+      const v = JSON.parse(localStorage.getItem(LS_AGENT_FIELDS));
+      return v && typeof v === "object" ? Object.assign(defaultAgentFields(), v) : defaultAgentFields();
+    }catch(e){ return defaultAgentFields(); }
+  }
+  let agentFields = loadAgentFields();
+
+  function renderAgentFieldsList(){
+    const el = document.getElementById("agentFieldsList");
+    if(!el) return;
+    el.innerHTML = AGENT_FIELD_DEFS.map(f=>`
+      <label style="display:flex;align-items:center;gap:8px;background:#faf8f2;border:1px solid var(--line);
+                    border-radius:9px;padding:9px 11px;cursor:pointer;font-size:13.5px;text-transform:none;
+                    letter-spacing:0;color:var(--ink);font-weight:600;margin:0;">
+        <input type="checkbox" data-afkey="${f.key}" ${agentFields[f.key] ? "checked" : ""}
+               style="width:18px;height:18px;margin:0;cursor:pointer;">
+        <span>${f.label}</span>
+      </label>`).join("");
+  }
+  renderAgentFieldsList();
+
+  document.getElementById("saveAgentFieldsBtn")?.addEventListener("click", ()=>{
+    const o = {};
+    document.querySelectorAll("[data-afkey]").forEach(cb=>{ o[cb.dataset.afkey] = cb.checked; });
+    agentFields = Object.assign(defaultAgentFields(), o);
+    safeSave(LS_AGENT_FIELDS, JSON.stringify(agentFields));
+    toast("Майдонлар сақланди ✓ — агент дастурни янгилагач кўринади");
+  });
+
   /* ---- Раҳбар: агентлар киритган ёзувларни қабул қилиш ---- */
   function startAgentInboxListener(){
     CLOUD.listenAgentInbox(async incoming=>{
@@ -5205,8 +5444,10 @@
       }
       const el = document.getElementById("cloudAgentCount");
       if(el) el.textContent = incoming.length + " та";
-      // Қабул қилинганларни белгилаймиз
-      CLOUD.markClaimed(incoming.map(r=> r.id)).catch(()=>{});
+      // Қабул қилинганлар inbox'дан ўчирилади — у ерда тўпланиб қолмайди.
+      // Ёзувлар энди раҳбар базасида ва булутдаги захирада сақланади,
+      // агент уларни умумий базадан кўради.
+      CLOUD.removeFromInbox(incoming.map(r=> r.id)).catch(()=>{});
     });
   }
 
@@ -5283,6 +5524,11 @@
   async function initAgentPanel(){
     document.getElementById("ag_sana").valueAsDate = new Date();
     // Мошиналар рўйхати — булутдан ёки локалдан
+    // Мошиналар рўйхати — булутдан (раҳбар базасидан), бўлмаса локалдан
+    try{
+      const cloudCars = await CLOUD.fetchSharedCars();
+      if(cloudCars && cloudCars.length) cars = cloudCars;
+    }catch(e){}
     const sel = document.getElementById("ag_mashina");
     sel.innerHTML = `<option value="">Мошинани танланг</option>` +
       cars.map(c=> `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
@@ -5294,17 +5540,25 @@
         drv.value = c.driver;
       }else if(c){
         // Созламада шофёр белгиланмаган бўлса — тарихдан энг сўнггисини оламиз
-        const last = records.filter(r=> r.mashina === c.name && r.shofyor)
-                            .sort((a,b)=> String(b.sana).localeCompare(String(a.sana)))[0];
+        const src = (agentDataCache && agentDataCache.all.length) ? agentDataCache.all : records;
+        const last = src.filter(r=> r.mashina === c.name && r.shofyor)
+                        .sort((a,b)=> String(b.sana).localeCompare(String(a.sana)))[0];
         drv.value = last ? last.shofyor : "";
       }
       agComputePreview();
+      renderAgentDupHint();
     };
     // Шофёр ва йўналиш таклифлари
-    const drivers = [...new Set(records.map(r=> r.shofyor).filter(Boolean))];
-    const routes  = [...new Set(records.map(r=> r.yonalish).filter(Boolean))];
+    let baseRecs = records;
+    try{
+      const D = await loadAgentData(true);
+      if(D && D.all.length) baseRecs = D.all;
+    }catch(e){}
+    const drivers = [...new Set(baseRecs.map(r=> r.shofyor).filter(Boolean))];
+    const routes  = [...new Set(baseRecs.map(r=> r.yonalish).filter(Boolean))];
     document.getElementById("agDriverList").innerHTML = drivers.map(d=>`<option value="${esc(d)}">`).join("");
     document.getElementById("agRouteList").innerHTML  = routes.map(r=>`<option value="${esc(r)}">`).join("");
+    applyAgentFields();
     renderAgentToday();
     document.getElementById("agPivotMonth").value = localDateStr().slice(0,7);
     updateAgentClock();
@@ -5359,15 +5613,26 @@
     if(!rec.sana || !rec.mashina || rec.tushum <= 0){
       alert("Сана, мошина ва тушумни тўғри киритинг."); return;
     }
+    // --- Такрорий ёзув текшируви (умумий базага нисбатан) ---
+    try{
+      const D = await loadAgentData(true);
+      const dups = findDuplicates(rec.sana, rec.mashina, null, D.all);
+      if(dups.length){
+        if(!confirm(duplicateWarningText(dups, rec.sana, rec.mashina))) return;
+      }
+    }catch(e){ /* интернет йўқ бўлса — текширувсиз давом этамиз */ }
     btn.disabled = true; btn.textContent = "Юборилмоқда...";
     try{
       await CLOUD.pushAgentRecord(rec, currentAgent.name);
       document.getElementById("agentForm").reset();
       document.getElementById("ag_sana").valueAsDate = new Date();
       document.getElementById("agPreview").innerHTML = "";
+      document.getElementById("agDupHint").innerHTML = "";
       document.getElementById("agMoreWrap").classList.add("hidden");
       toast("Ёзув юборилди ✓");
+      agentDataCache = null;          // кэшни тозалаймиз — янги ёзув кўринсин
       renderAgentToday();
+      renderAgentPivot();
     }catch(err){
       console.error(err);
       alert(err && err.message === "OFFLINE"
@@ -5378,25 +5643,120 @@
     }
   });
 
+  /* Агент кўрадиган ёзувлар = раҳбар базасидаги ЖОРИЙ ёзувлар
+     + агентнинг ҳали қабул қилинмаган (йўлдаги) ёзувлари.
+     Шунинг учун раҳбар ўчирган ёзув агентда ҳам дарҳол йўқолади,
+     ва агент раҳбар киритган ёзувларни ҳам кўради. */
+  let agentDataCache = null;
+
+  async function loadAgentData(force){
+    if(agentDataCache && !force) return agentDataCache;
+    const D = await CLOUD.fetchSharedAll(!!force);
+    const shared = (D && D.records) ? D.records : [];
+    const mine   = await CLOUD.fetchAgentTodayRecordsAll(currentAgent.name);
+    const sharedIds = new Set(shared.map(r=> r.id));
+    const pending = mine.filter(r=> !sharedIds.has(r.id));
+    agentDataCache = {
+      shared, pending,
+      all: shared.concat(pending),
+      cars: (D && D.cars) ? D.cars : null,
+      fields: (D && D.fields) ? D.fields : null,
+      updatedAt: D ? D.updatedAt : 0,
+      hasBase: !!(D && D.records)
+    };
+    return agentDataCache;
+  }
+
+  // Раҳбар базаси ҳолати ҳақида агентга аниқ хабар
+  function agentBaseNote(D){
+    if(!D.hasBase || !D.shared.length){
+      return `<div class="notice" style="margin-bottom:10px;">
+        <b>Раҳбар базаси ҳали булутга юкланмаган.</b><br>
+        Шунинг учун бу ерда фақат сиз юборган ёзувлар кўринади.
+        Раҳбар дастурни очиб, Созламалар → «Ҳозир булутга сақлаш» тугмасини боссин.
+      </div>`;
+    }
+    const d = new Date(D.updatedAt || Date.now());
+    const pp = n => String(n).padStart(2,"0");
+    return `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+      Раҳбар базаси: <b>${D.shared.length}</b> та ёзув ·
+      янгиланган: ${fmtDate(localDateStr(d))} ${pp(d.getHours())}:${pp(d.getMinutes())}
+    </div>`;
+  }
+
   async function renderAgentToday(){
     const body = document.getElementById("agentTodayBody");
     if(!body || !currentAgent) return;
     const date = document.getElementById("ag_sana").value || localDateStr();
+    body.innerHTML = `<tr><td colspan="7" class="empty">Юкланмоқда...</td></tr>`;
     try{
-      const list = await CLOUD.fetchAgentTodayRecords(currentAgent.name, date);
+      const D = await loadAgentData(true);
+      const pendingIds = new Set(D.pending.map(r=> r.id));
+      const list = D.all
+        .filter(r=> r.sana === date)
+        .sort((a,b)=> String(b.id).localeCompare(String(a.id)));
+      const note = document.getElementById("agentBaseNote");
+      if(note) note.innerHTML = agentBaseNote(D);
       body.innerHTML = list.length
-        ? list.map((r,i)=>`<tr>
-            <td>${i+1}</td><td>${fmtDate(r.sana)}</td><td>${esc(r.mashina)}</td>
-            <td>${esc(r.shofyor||"—")}</td><td>${fmt(r.tushum)}</td>
-            <td>${r.topshirilgan==null?"—":fmt(r.topshirilgan)}</td>
-            <td><span class="pill" style="background:${r.claimed?'#1f7a4d':'#c9a227'};color:#fff;">${r.claimed?'Қабул қилинди':'Юборилди'}</span></td>
-          </tr>`).join("")
+        ? list.map((r,i)=>{
+            const isPending = pendingIds.has(r.id);
+            const byAgent = isPending || (r.manba && String(r.manba).indexOf("агент")===0);
+            const badge = isPending
+              ? `<span class="pill" style="background:#c9a227;color:#fff;">Юборилди</span>`
+              : byAgent
+                ? `<span class="pill" style="background:#1f7a4d;color:#fff;">Қабул қилинди</span>`
+                : `<span class="pill" style="background:#3b7dd8;color:#fff;">Раҳбар киритган</span>`;
+            return `<tr>
+              <td>${i+1}</td><td>${fmtDate(r.sana)}</td><td>${esc(r.mashina)}</td>
+              <td>${esc(r.shofyor||"—")}</td><td>${fmt(r.tushum)}</td>
+              <td>${r.topshirilgan==null?"—":fmt(r.topshirilgan)}</td>
+              <td>${badge}</td>
+            </tr>`;
+          }).join("")
         : `<tr><td colspan="7" class="empty">Бу санада ёзув йўқ.</td></tr>`;
     }catch(e){
+      console.error(e);
       body.innerHTML = `<tr><td colspan="7" class="empty">Рўйхатни юклаб бўлмади (интернет?).</td></tr>`;
     }
   }
-  document.getElementById("ag_sana")?.addEventListener("change", renderAgentToday);
+  document.getElementById("ag_sana")?.addEventListener("change", ()=>{ renderAgentToday(); renderAgentDupHint(); });
+  document.getElementById("ag_mashina")?.addEventListener("change", renderAgentDupHint);
+  document.getElementById("agTodayRefreshBtn")?.addEventListener("click", ()=>{
+    agentDataCache = null;
+    renderAgentToday();
+    renderAgentPivot();
+  });
+
+  /* ---- Раҳбар белгилаган майдонларни қўллаш ---- */
+  function applyAgentFields(){
+    const cfg = (agentDataCache && agentDataCache.fields) ? agentDataCache.fields : null;
+    const on = k => !cfg || cfg[k] !== false;      // созлама йўқ бўлса — ҳаммаси кўринади
+    document.querySelectorAll("[data-agf]").forEach(el=>{
+      el.style.display = on(el.dataset.agf) ? "" : "none";
+    });
+    // "Қўшимча" бўлимида кўринадиган майдон қолмаса — тугмани ҳам яширамиз
+    const more = ["yol","boshqa","km"].some(on);
+    const mt = document.getElementById("agMoreToggle");
+    const mw = document.getElementById("agMoreWrap");
+    if(mt) mt.style.display = more ? "" : "none";
+    if(mw && !more) mw.classList.add("hidden");
+  }
+
+  /* ---- Агент: такрорий ёзув огоҳлантириши ---- */
+  function renderAgentDupHint(){
+    const el = document.getElementById("agDupHint");
+    if(!el) return;
+    const sana = document.getElementById("ag_sana").value;
+    const mashina = document.getElementById("ag_mashina").value;
+    if(!sana || !mashina || !agentDataCache){ el.innerHTML = ""; return; }
+    const dups = findDuplicates(sana, mashina, null, agentDataCache.all);
+    if(!dups.length){ el.innerHTML = ""; return; }
+    const jami = dups.reduce((a,d)=> a + Number(d.tushum||0), 0);
+    el.innerHTML = `<div class="notice" style="margin:0;">
+      ⚠️ <b>Бу кун ва мошина учун ${dups.length} та ёзув бор</b> (жами: ${fmt(jami)}).
+      Иккинчи рейс бўлса давом этинг, акс ҳолда аввал рўйхатни текширинг.
+    </div>`;
+  }
 
   /* ---- Агент: жонли соат ---- */
   function updateAgentClock(){
@@ -5418,7 +5778,9 @@
     const [y,m]  = month.split("-").map(Number);
     const daysInMonth = new Date(y, m, 0).getDate();
 
-    const list = await CLOUD.fetchAgentMonthRecords(currentAgent.name, month);
+    // Умумий базадан — раҳбар киритганлари ҳам, агентнинг йўлдагилари ҳам
+    const D = await loadAgentData(true);
+    const list = D.all.filter(r=> r.sana && String(r.sana).slice(0,7) === month);
     const byCar = {};
     list.forEach(r=>{
       const car = r.mashina || "(Номаълум)";
@@ -5575,11 +5937,7 @@
   </WorksheetOptions>
  </Worksheet>
 </Workbook>`;
-    const blob = new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `agent_hisobot_${currentAgent.name}_${P.month}.xls`;
-    a.click();
+    downloadFile(new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"}), `agent_hisobot_${currentAgent.name}_${P.month}.xls`, "application/vnd.ms-excel");
     toast("Excel файл юкланди ✓");
   }
 
@@ -5590,71 +5948,7 @@
     }
     const html = document.getElementById("agPivotWrap").innerHTML;
     if(!html.trim()){ alert("Аввал жадвал шаклланиши керак."); return; }
-    const w = window.open("", "_blank");
-    w.document.write(`<html><head><meta charset="utf-8"><title>Ойлик ҳисобот</title>
-      <style>
-        body{font-family:Arial,sans-serif;padding:14px;color:#152036;}
-        table{border-collapse:collapse;width:100%;font-size:11px;}
-        th,td{border:1px solid #999;padding:3px 5px;text-align:right;white-space:nowrap;}
-        th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left;}
-        thead th{background:#0f2440;color:#fff;}
-        tfoot td,.pv-total{background:#fff6cf;font-weight:bold;}
-        @page{size:landscape;margin:10mm;}
-      
-  /* ============================================================
-     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
-     ============================================================ */
-  #agentPanel header{flex-wrap:wrap;gap:10px;}
-  #agentPanel main{padding-bottom:30px;}
-  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  #agentPanel .entry .full{grid-column:1/-1;}
-  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
-
-  @media(max-width:760px){
-    #agentPanel header{padding:12px 14px;}
-    #agentPanel header h1{font-size:17px;}
-    #agentPanel header p{font-size:11.5px;}
-    #agentClock{font-size:12px !important;padding:5px 9px !important;}
-    #agentPanel main{padding:12px 10px;}
-    #agentPanel .card{padding:14px 12px;border-radius:12px;}
-    #agentPanel .card h2{font-size:16px;}
-
-    /* Форма — телефонда битта устун, катта майдонлар */
-    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
-    #agentPanel input, #agentPanel select{
-      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
-      padding:12px 12px;
-      min-height:46px;
-    }
-    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
-    #agentPanel .btn{min-height:48px;font-size:15px;}
-    #agentPanel .actions-row{flex-direction:column;}
-    #agentPanel .actions-row .btn{width:100%;}
-
-    /* Фильтр тугмалари — иккитадан */
-    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    #agentPanel .filters .fld{min-width:0;}
-    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
-
-    /* Жадваллар — ёнга сурилади, устунлар тор */
-    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
-    #agentPanel table{font-size:12.5px;}
-    #agentPanel th, #agentPanel td{padding:7px 6px;}
-    #agentPanel .pivot-table{font-size:11px;}
-    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
-
-    /* Агент кириш экрани */
-    #agentLogin .lockbox{padding:22px 18px;}
-    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
-  }
-
-  @media(max-width:420px){
-    #agentPanel .filters{grid-template-columns:1fr;}
-    #agentPanel header h1{font-size:16px;}
-  }
-</style></head><body>${html}
-      <script>window.print()<\/script></body></html>`);
-    w.document.close();
+    printHtmlBlock(html, "");
   }
 
   document.getElementById("agPivotRefreshBtn")?.addEventListener("click", renderAgentPivot);
