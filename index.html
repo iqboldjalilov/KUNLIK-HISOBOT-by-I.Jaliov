@@ -349,7 +349,8 @@
         <p>Кунлик тушум ёзувини киритиш</p>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div id="agentClock" style="color:#e7ecf5;font-size:13px;font-variant-numeric:tabular-nums;background:rgba(255,255,255,.08);padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);"></div>
       <span id="agentCloudDot" style="font-size:13px;color:#e7ecf5;"></span>
       <button id="agentExitBtn" style="background:transparent;border:1px solid rgba(255,120,100,.5);color:#ffb4a3;padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;">⏻ Чиқиш</button>
     </div>
@@ -390,9 +391,48 @@
         Ёзувни ўчириш ёки таҳрирлаш фақат раҳбарда мумкин. Хато киритсангиз, раҳбарга хабар беринг.
       </p>
     </div>
+
+    <div class="card" style="border-left:4px solid var(--gold);">
+      <h2>📅 Ойлик ҳисобот</h2>
+      <p style="margin-top:-8px;font-size:13px;color:var(--muted);">
+        Сиз киритган ёзувлар бўйича кунма-кун жадвал. Excel ёки PDF кўринишида юклаб олиш мумкин.
+      </p>
+      <div class="filters">
+        <div class="fld">
+          <label>Ой</label>
+          <input type="month" id="agPivotMonth">
+        </div>
+        <div class="fld">
+          <label>Кўрсаткич</label>
+          <select id="agPivotMetric">
+            <option value="tushum">Тушум</option>
+            <option value="sof">Соф тушум</option>
+            <option value="topshirilgan">Топширилган сумма</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Бирлик</label>
+          <select id="agPivotUnit">
+            <option value="1000">Минг сўмда</option>
+            <option value="1">Тўлиқ</option>
+          </select>
+        </div>
+        <div class="fld">
+          <button class="btn outline" id="agPivotRefreshBtn">🔄 Янгилаш</button>
+        </div>
+        <div class="fld">
+          <button class="btn gold" id="agPivotExcelBtn">📊 Excel</button>
+        </div>
+        <div class="fld">
+          <button class="btn outline" id="agPivotPdfBtn">🖨 PDF</button>
+        </div>
+      </div>
+      <div class="table-wrap" id="agPivotWrap" style="overflow-x:auto;"></div>
+    </div>
   </main>
 </div>
 
+<div id="mainApp">
 <header>
   <div class="brand">
     <div class="mark" id="logoMark">К</div>
@@ -1080,7 +1120,8 @@
 
 </main>
 
-<footer>Кунлик Хисобот дастури (by Iqbol Jalilov) · Барча маълумот шу компьютерда, локал сақланади · Интернетсиз ишлайди</footer>
+<footer>Кунлик Хисобот дастури (by Iqbol Jalilov) · Интернетсиз ишлайди · Маълумот булутга ҳам захираланади</footer>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1250,6 +1291,18 @@
         ...rec, agentName, createdAt: Date.now(), claimed: false
       });
     }
+    // Агентнинг бир ойлик ёзувлари (ой филтри JS томонда — индекс керак бўлмайди)
+    async function fetchAgentMonthRecords(agentName, month){
+      if(!ready) return [];
+      const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
+      const out = [];
+      snap.forEach(d=>{
+        const r = {id:d.id, ...d.data()};
+        if(r.sana && String(r.sana).slice(0,7) === month) out.push(r);
+      });
+      return out;
+    }
+
     async function fetchAgentTodayRecords(agentName, date){
       if(!ready) return [];
       const snap = await db.collection(COLL_INBOX)
@@ -1329,7 +1382,7 @@
         if(!confirm("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?")) return;
         if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
       },
-      pushAgentRecord, fetchAgentTodayRecords, listenAgentInbox, markClaimed,
+      pushAgentRecord, fetchAgentTodayRecords, fetchAgentMonthRecords, listenAgentInbox, markClaimed,
       saveAgentsToCloud, loadAgentsFromCloud, setStatus
     };
   })();
@@ -1452,7 +1505,7 @@
     return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : String(iso);
   }
 
-  const fmt = n => Number(n||0).toLocaleString("ru-RU") + " сўм";
+  const fmt = n => Number(n||0).toLocaleString("ru-RU");
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 
   function toast(msg){
@@ -4810,6 +4863,7 @@ ${rows}
 
   async function openAgentLogin(){
     document.getElementById("lockScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "none";
     document.getElementById("agentLogin").style.display = "flex";
     const sel = document.getElementById("agentSelect");
     sel.innerHTML = `<option>Юкланмоқда...</option>`;
@@ -4836,12 +4890,14 @@ ${rows}
     currentAgent = a;
     const ls = document.getElementById("lockScreen");
     if(ls) ls.style.display = "none";
+    document.getElementById("mainApp").style.display = "none";
     document.getElementById("agentPanel").style.display = "block";
     document.getElementById("agentGreeting").textContent = "Салом, " + name + "!";
     initAgentPanel();
   })();
   document.getElementById("agentBack")?.addEventListener("click", ()=>{
     document.getElementById("agentLogin").style.display = "none";
+    document.getElementById("mainApp").style.display = "";
     document.getElementById("lockScreen").style.display = "flex";
   });
 
@@ -4859,6 +4915,7 @@ ${rows}
     currentAgent = a;
     sessionStorage.setItem("kh_agent", name);
     document.getElementById("agentLogin").style.display = "none";
+    document.getElementById("mainApp").style.display = "none";   // раҳбар ойнасини яширамиз
     document.getElementById("agentPanel").style.display = "block";
     document.getElementById("agentGreeting").textContent = "Салом, " + name + "!";
     initAgentPanel();
@@ -4873,13 +4930,32 @@ ${rows}
     document.getElementById("ag_sana").valueAsDate = new Date();
     // Мошиналар рўйхати — булутдан ёки локалдан
     const sel = document.getElementById("ag_mashina");
-    sel.innerHTML = cars.map(c=> `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
+    sel.innerHTML = `<option value="">Мошинани танланг</option>` +
+      cars.map(c=> `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
+    // Мошина танланганда унга бириктирилган шофёр автомат тўлдирилади
+    sel.onchange = ()=>{
+      const c = cars.find(x=> x.name === sel.value);
+      const drv = document.getElementById("ag_shofyor");
+      if(c && c.driver){
+        drv.value = c.driver;
+      }else if(c){
+        // Созламада шофёр белгиланмаган бўлса — тарихдан энг сўнггисини оламиз
+        const last = records.filter(r=> r.mashina === c.name && r.shofyor)
+                            .sort((a,b)=> String(b.sana).localeCompare(String(a.sana)))[0];
+        drv.value = last ? last.shofyor : "";
+      }
+      agComputePreview();
+    };
     // Шофёр ва йўналиш таклифлари
     const drivers = [...new Set(records.map(r=> r.shofyor).filter(Boolean))];
     const routes  = [...new Set(records.map(r=> r.yonalish).filter(Boolean))];
     document.getElementById("agDriverList").innerHTML = drivers.map(d=>`<option value="${esc(d)}">`).join("");
     document.getElementById("agRouteList").innerHTML  = routes.map(r=>`<option value="${esc(r)}">`).join("");
     renderAgentToday();
+    document.getElementById("agPivotMonth").value = localDateStr().slice(0,7);
+    updateAgentClock();
+    setInterval(updateAgentClock, 1000);
+    renderAgentPivot();
   }
 
   document.getElementById("agMoreToggle")?.addEventListener("click", ()=>{
@@ -4967,6 +5043,210 @@ ${rows}
     }
   }
   document.getElementById("ag_sana")?.addEventListener("change", renderAgentToday);
+
+  /* ---- Агент: жонли соат ---- */
+  function updateAgentClock(){
+    const el = document.getElementById("agentClock");
+    if(!el) return;
+    const d = new Date();
+    const wd = ["Якшанба","Душанба","Сешанба","Чоршанба","Пайшанба","Жума","Шанба"][d.getDay()];
+    const p = n => String(n).padStart(2,"0");
+    el.textContent = `${wd}, ${fmtDate(localDateStr(d))} · ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  }
+
+  /* ---- Агент: ойлик жадвал ---- */
+  let agPivotCache = null;
+
+  async function buildAgentPivot(){
+    const month  = document.getElementById("agPivotMonth").value || localDateStr().slice(0,7);
+    const metric = document.getElementById("agPivotMetric").value;
+    const unit   = Number(document.getElementById("agPivotUnit").value) || 1;
+    const [y,m]  = month.split("-").map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+
+    const list = await CLOUD.fetchAgentMonthRecords(currentAgent.name, month);
+    const byCar = {};
+    list.forEach(r=>{
+      const car = r.mashina || "(Номаълум)";
+      if(!byCar[car]) byCar[car] = {};
+      const day = Number(String(r.sana).slice(8,10));
+      byCar[car][day] = (byCar[car][day]||0) + pivotValue(r, metric);
+    });
+    const carNames = [];
+    cars.forEach(c=>{ if(byCar[c.name]) carNames.push(c.name); });
+    Object.keys(byCar).forEach(n=>{ if(!carNames.includes(n)) carNames.push(n); });
+
+    agPivotCache = { month, metric, unit, y, m, daysInMonth, byCar, carNames, count:list.length };
+    return agPivotCache;
+  }
+
+  async function renderAgentPivot(){
+    const el = document.getElementById("agPivotWrap");
+    if(!el || !currentAgent) return;
+    el.innerHTML = `<p class="empty">Юкланмоқда...</p>`;
+    let P;
+    try{ P = await buildAgentPivot(); }
+    catch(e){ el.innerHTML = `<p class="empty">Маълумотни юклаб бўлмади (интернет?).</p>`; return; }
+    if(!P.carNames.length){ el.innerHTML = `<p class="empty">Бу ойда ёзув йўқ.</p>`; return; }
+
+    const monthNames = ["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН",
+                        "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
+    const show = v => v ? Math.round(v/P.unit).toLocaleString("ru-RU") : "";
+
+    let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
+    for(let d=1; d<=P.daysInMonth; d++) head += `<th class="pv-num">${d}</th>`;
+    head += `<th class="pv-total">Жами</th></tr>`;
+
+    const dayTotals = {}; let grand = 0; let body = "";
+    P.carNames.forEach(name=>{
+      const c = cars.find(x=> x.name === name);
+      let rowSum = 0, tds = "";
+      for(let d=1; d<=P.daysInMonth; d++){
+        const v = P.byCar[name][d] || 0;
+        rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
+        tds += `<td class="pv-num">${show(v)}</td>`;
+      }
+      grand += rowSum;
+      body += `<tr><td><b>${esc(name)}</b></td><td>${esc(c && c.rusumi ? c.rusumi : "")}</td>${tds}<td class="pv-total">${show(rowSum)}</td></tr>`;
+    });
+    let foot = `<tr class="pv-foot"><td colspan="2">жами</td>`;
+    for(let d=1; d<=P.daysInMonth; d++) foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`;
+    foot += `<td class="pv-total">${show(grand)}</td></tr>`;
+
+    const metricLabel = P.metric==="tushum" ? "Тушум" : P.metric==="topshirilgan" ? "Топширилган" : "Соф тушум";
+    const now = new Date();
+    const pp = n => String(n).padStart(2,"0");
+    el.innerHTML = `
+      <div style="font-weight:800;font-size:17px;margin:6px 0 2px;">${P.y} йил ${monthNames[P.m-1]}ойи</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">
+        Агент: <b>${esc(currentAgent.name)}</b> · Кўрсаткич: <b>${metricLabel}</b> ·
+        ${P.unit===1000?"минг сўмда":"тўлиқ"} · ${P.count} та ёзув<br>
+        Шакллантирилди: ${fmtDate(localDateStr(now))} ${pp(now.getHours())}:${pp(now.getMinutes())}
+      </div>
+      <table class="pivot-table"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+  }
+
+  async function exportAgentPivotExcel(){
+    if(!agPivotCache){ await renderAgentPivot(); }
+    const P = agPivotCache;
+    if(!P || !P.carNames.length){ alert("Бу ойда ёзув йўқ."); return; }
+    const monthNames = ["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН",
+                        "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
+    const now = new Date();
+    const pp = n => String(n).padStart(2,"0");
+    const hdrCell = v => `<Cell ss:StyleID="hdr"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const sCell   = v => `<Cell><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const nCell   = v => `<Cell ss:StyleID="num"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
+    const bCell   = v => `<Cell ss:StyleID="bold"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const bnCell  = v => `<Cell ss:StyleID="boldnum"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
+
+    let head = hdrCell("Давлат рақами") + hdrCell("Русуми");
+    for(let d=1; d<=P.daysInMonth; d++) head += hdrCell(String(d));
+    head += hdrCell("Жами");
+
+    const dayTotals = {}; let grand = 0; let rows = "";
+    P.carNames.forEach(name=>{
+      const c = cars.find(x=> x.name === name);
+      let rowSum = 0, tds = "";
+      for(let d=1; d<=P.daysInMonth; d++){
+        const v = Math.round((P.byCar[name][d]||0)/P.unit);
+        rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
+        tds += nCell(v);
+      }
+      grand += rowSum;
+      rows += "<Row>" + sCell(name) + sCell(c && c.rusumi ? c.rusumi : "") + tds + bnCell(rowSum) + "</Row>";
+    });
+    let foot = bCell("жами") + bCell("");
+    for(let d=1; d<=P.daysInMonth; d++) foot += bnCell(dayTotals[d]||0);
+    foot += bnCell(grand);
+
+    const cols = `<Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="70"/>` +
+      Array.from({length:P.daysInMonth}, ()=> `<Column ss:AutoFitWidth="0" ss:Width="46"/>`).join("") +
+      `<Column ss:AutoFitWidth="0" ss:Width="80"/>`;
+
+    const title = `${P.y} йил ${monthNames[P.m-1]}ойи — агент: ${currentAgent.name}`;
+    const meta = `Шакллантирилди: ${fmtDate(localDateStr(now))} ${pp(now.getHours())}:${pp(now.getMinutes())} · ` +
+                 (P.unit===1000 ? "минг сўмда" : "тўлиқ сўмда");
+
+    const xml = `<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
+  <Style ss:ID="num"><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
+  <Style ss:ID="bold"><Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="boldnum"><Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
+  <Style ss:ID="title"><Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/><Borders/></Style>
+  <Style ss:ID="meta"><Font ss:Italic="1" ss:Size="10" ss:Color="#6B7280"/><Borders/></Style>
+ </Styles>
+ <Worksheet ss:Name="Ойлик ҳисобот">
+  <Table>${cols}
+   <Row><Cell ss:StyleID="title"><Data ss:Type="String">${xmlEscape(title)}</Data></Cell></Row>
+   <Row><Cell ss:StyleID="meta"><Data ss:Type="String">${xmlEscape(meta)}</Data></Cell></Row>
+   <Row></Row>
+   <Row>${head}</Row>
+   ${rows}
+   <Row>${foot}</Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print><ValidPrinterInfo/><FitWidth>1</FitWidth><FitHeight>0</FitHeight><PaperSizeIndex>9</PaperSizeIndex></Print>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>`;
+    const blob = new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `agent_hisobot_${currentAgent.name}_${P.month}.xls`;
+    a.click();
+    toast("Excel файл юкланди ✓");
+  }
+
+  async function exportAgentPivotPdf(){
+    const el = document.getElementById("agPivotWrap");
+    if(!el || !el.innerHTML.trim() || el.innerHTML.includes("empty")){
+      await renderAgentPivot();
+    }
+    const html = document.getElementById("agPivotWrap").innerHTML;
+    if(!html.trim()){ alert("Аввал жадвал шаклланиши керак."); return; }
+    const w = window.open("", "_blank");
+    w.document.write(`<html><head><meta charset="utf-8"><title>Ойлик ҳисобот</title>
+      <style>
+        body{font-family:Arial,sans-serif;padding:14px;color:#152036;}
+        table{border-collapse:collapse;width:100%;font-size:11px;}
+        th,td{border:1px solid #999;padding:3px 5px;text-align:right;white-space:nowrap;}
+        th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left;}
+        thead th{background:#0f2440;color:#fff;}
+        tfoot td,.pv-total{background:#fff6cf;font-weight:bold;}
+        @page{size:landscape;margin:10mm;}
+      </style></head><body>${html}
+      <script>window.print()<\/script></body></html>`);
+    w.document.close();
+  }
+
+  document.getElementById("agPivotRefreshBtn")?.addEventListener("click", renderAgentPivot);
+  document.getElementById("agPivotExcelBtn")?.addEventListener("click", exportAgentPivotExcel);
+  document.getElementById("agPivotPdfBtn")?.addEventListener("click", exportAgentPivotPdf);
+  ["agPivotMonth","agPivotMetric","agPivotUnit"].forEach(id=>{
+    document.getElementById(id)?.addEventListener("change", renderAgentPivot);
+  });
 
   // ---- Булут тугмалари ва ишга тушириш ----
   document.getElementById("cloudSyncNowBtn")?.addEventListener("click", ()=> CLOUD.uploadNow());
