@@ -11,6 +11,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Firebase — булутли захира ва агент режими учун -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --navy:#0f2440;
@@ -274,6 +277,20 @@
   .editing-row{background:#fff6da !important;}
   .btn.small{padding:5px 10px;font-size:12px;}
   .form-actions-note{font-size:12px;color:var(--gold);font-weight:600;}
+
+  /* ---- Ойлик жадвал (кунма-кун) ---- */
+  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
+  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
+  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
+  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
+  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
+  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
+  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
+  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
+  .pivot-table tbody tr:hover td{background:#faf8f2;}
+  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
+  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
+  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
 </style>
 </head>
 <body>
@@ -290,6 +307,26 @@
       <button class="btn gold" id="lockSubmit" style="width:100%;">Кириш</button>
     </div>
     <div class="forgot" id="lockForgot">Паролни унутдингизми?</div>
+    <div style="border-top:1px solid rgba(255,255,255,.2);margin-top:14px;padding-top:12px;">
+      <button class="btn outline" id="agentModeBtn" style="width:100%;color:#fff;border-color:rgba(255,255,255,.4);">
+        👤 Мен агентман
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="agentLogin" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);z-index:9998;align-items:center;justify-content:center;padding:20px;">
+  <div class="lockbox">
+    <div class="mark">👤</div>
+    <h2>Агент кириши</h2>
+    <p>Исмингизни танлаб, PIN киритинг</p>
+    <select id="agentSelect" style="width:100%;padding:12px;border-radius:10px;border:0;margin-bottom:10px;font-size:15px;"></select>
+    <input type="password" id="agentPin" inputmode="numeric" placeholder="PIN (4 хона)" maxlength="4" autocomplete="off">
+    <div class="err" id="agentErr"></div>
+    <div class="lockActions">
+      <button class="btn gold" id="agentSubmit" style="width:100%;">Кириш</button>
+    </div>
+    <div class="forgot" id="agentBack">← Орқага</div>
   </div>
 </div>
 
@@ -300,6 +337,60 @@
     <p>Маълумотларингиз хавфсиз сақланди.</p>
     <button class="btn gold" id="reEnterBtn" style="width:100%;">Қайта кириш</button>
   </div>
+</div>
+
+<!-- ====== АГЕНТ ЭКРАНИ (фақат ёзув киритиш) ====== -->
+<div id="agentPanel" style="display:none;">
+  <header>
+    <div class="brand">
+      <div class="mark">👤</div>
+      <div>
+        <h1 id="agentGreeting">Агент</h1>
+        <p>Кунлик тушум ёзувини киритиш</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="agentCloudDot" style="font-size:13px;color:#e7ecf5;"></span>
+      <button id="agentExitBtn" style="background:transparent;border:1px solid rgba(255,120,100,.5);color:#ffb4a3;padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;">⏻ Чиқиш</button>
+    </div>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Янги ёзув</h2>
+      <form class="entry" id="agentForm">
+        <div><label>Сана</label><input type="date" id="ag_sana" required></div>
+        <div><label>Мошина</label><select id="ag_mashina" required></select></div>
+        <div><label>Шофёр</label><input type="text" id="ag_shofyor" list="agDriverList"><datalist id="agDriverList"></datalist></div>
+        <div><label>Йўналиш</label><input type="text" id="ag_yonalish" list="agRouteList"><datalist id="agRouteList"></datalist></div>
+        <div><label>Умумий тушум (сўм)</label><input type="number" id="ag_tushum" min="0" step="1000" required></div>
+        <div><label>Ёқилғи харажати (сўм)</label><input type="number" id="ag_yoqilgi" min="0" step="1000" value="0"></div>
+        <div><label>Топширилган сумма (сўм)</label><input type="number" id="ag_topshirilgan" min="0" step="1000" placeholder="Шофёр топширган"></div>
+        <button type="button" class="more-toggle" id="agMoreToggle"><span class="chev">▸</span> Қўшимча (йўл, бошқа харажат, км)</button>
+        <div class="more-fields hidden" id="agMoreWrap">
+          <div><label>Йўл харажати (сўм)</label><input type="number" id="ag_yol" min="0" step="1000" value="0"></div>
+          <div><label>Бошқа харажат (сўм)</label><input type="number" id="ag_boshqa" min="0" step="1000" value="0"></div>
+          <div><label>Босилган масофа (км)</label><input type="number" id="ag_km" min="0" step="1"></div>
+        </div>
+        <div class="full" id="agPreview" style="font-size:13px;color:var(--muted);"></div>
+        <div class="full"><label>Изоҳ</label><input type="text" id="ag_izoh"></div>
+        <div class="full actions-row">
+          <button type="submit" class="btn gold">Сақлаш ва юбориш</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Бугун сиз киритган ёзувлар</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>№</th><th>Сана</th><th>Мошина</th><th>Шофёр</th><th>Тушум</th><th>Топширилган</th><th>Ҳолат</th></tr></thead>
+          <tbody id="agentTodayBody"></tbody>
+        </table>
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
+        Ёзувни ўчириш ёки таҳрирлаш фақат раҳбарда мумкин. Хато киритсангиз, раҳбарга хабар беринг.
+      </p>
+    </div>
+  </main>
 </div>
 
 <header>
@@ -411,6 +502,41 @@
 
   <!-- RECORDS VIEW -->
   <section class="view" id="view-records">
+    <div class="card" style="border-left:4px solid var(--gold);">
+      <h2>📅 Ойлик жадвал (кунма-кун)</h2>
+      <p style="margin-top:-8px;font-size:13px;color:var(--muted);">
+        Ҳар бир мошина учун ойнинг кунлари бўйича кўрсаткич ва жами. Пастда — кунлик умумий йиғинди.
+      </p>
+      <div class="filters">
+        <div class="fld">
+          <label>Ой</label>
+          <input type="month" id="pivotMonth">
+        </div>
+        <div class="fld">
+          <label>Кўрсаткич</label>
+          <select id="pivotMetric">
+            <option value="tushum">Тушум</option>
+            <option value="sof">Соф тушум</option>
+            <option value="topshirilgan">Топширилган сумма</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Бирлик</label>
+          <select id="pivotUnit">
+            <option value="1000">Минг сўмда</option>
+            <option value="1">Сўмда (тўлиқ)</option>
+          </select>
+        </div>
+        <div class="fld">
+          <button class="btn outline" id="pivotExcelBtn">📊 Excelга чиқариш</button>
+        </div>
+        <div class="fld">
+          <button class="btn outline" id="pivotPrintBtn">🖨 Чоп этиш</button>
+        </div>
+      </div>
+      <div class="table-wrap" id="pivotWrap" style="overflow-x:auto;"></div>
+    </div>
+
     <div class="card">
       <h2>Барча ёзувлар</h2>
       <div class="filters">
@@ -717,12 +843,6 @@
           <label>Қопланган сана</label>
           <input type="date" id="ep_sana" required>
         </div>
-        <div style="grid-column:span 2;">
-          <label>Қайси харажат қопланди</label>
-          <select id="ep_expense" required>
-            <option value="">Харажатни танланг</option>
-          </select>
-        </div>
         <div>
           <label>Қайси рақамли автомобильдан</label>
           <select id="ep_mashina" required>
@@ -730,10 +850,24 @@
           </select>
         </div>
         <div>
+          <label>Қоплаш усули</label>
+          <select id="ep_mode">
+            <option value="auto">Автомат тақсимлаш (кичикдан катта сари)</option>
+            <option value="manual">Қўлда — битта харажатни танлаш</option>
+          </select>
+        </div>
+        <div id="ep_expenseWrap" style="grid-column:span 2;display:none;">
+          <label>Қайси харажат қопланди</label>
+          <select id="ep_expense">
+            <option value="">Харажатни танланг</option>
+          </select>
+        </div>
+        <div>
           <label>Қопланган сумма (сўм)</label>
           <input type="number" id="ep_summa" min="1000" step="1000" required>
         </div>
-        <div class="full" id="ep_qoldiqPreview" style="font-size:13px;color:var(--muted);">Харажат танланмаган</div>
+        <div class="full" id="ep_qoldiqPreview" style="font-size:13px;color:var(--muted);">Автомобильни танланг</div>
+        <div class="full" id="ep_autoPreview" style="display:none;"></div>
         <div class="full">
           <label>Изоҳ (ихтиёрий)</label>
           <input type="text" id="ep_izoh" placeholder="Масалан: СТОга тўланди, солиқ қопланди...">
@@ -818,6 +952,39 @@
 
   <!-- SETTINGS VIEW -->
   <section class="view" id="view-settings">
+    <div class="card" id="cloudCard" style="border-left:4px solid var(--gold);">
+      <h2>☁️ Булутли захира ва онлайн режим</h2>
+      <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
+        Дастур аввалгидек тез ва интернетсиз ишлайверади. Ҳар бир ўзгариш булутга ҳам нусхаланади —
+        телефон синса ёки браузер тозаланса маълумот йўқолмайди. Агентлар киритган ёзувлар ҳам шу орқали келади.
+      </p>
+      <div class="grid-cards" style="margin-bottom:12px;">
+        <div class="stat"><div class="label">Ҳолат</div><div class="value" id="cloudStatus" style="font-size:15px;">Текширилмоқда...</div></div>
+        <div class="stat"><div class="label">Сўнгги сақлаш</div><div class="value" id="cloudLastSync" style="font-size:15px;">—</div></div>
+        <div class="stat"><div class="label">Агент ёзувлари</div><div class="value" id="cloudAgentCount" style="font-size:15px;">—</div></div>
+      </div>
+      <div class="actions-row">
+        <button class="btn gold" id="cloudSyncNowBtn">Ҳозир булутга сақлаш</button>
+        <button class="btn outline" id="cloudRestoreBtn">Булутдан тиклаш</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
+        «Булутдан тиклаш» шу қурилмадаги жорий маълумотни булутдаги нусха билан алмаштиради.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>👤 Агентлар</h2>
+      <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
+        Агент — сиз номингиздан кунлик тушум ёзувларини киритадиган ходим. У фақат ёзув киритиш ойнасини кўради,
+        молиявий хулосалар, қарзлар ва созламаларга кира олмайди.
+      </p>
+      <div id="agentsList"></div>
+      <div class="actions-row">
+        <button class="btn outline" id="addAgentBtn">+ Агент қўшиш</button>
+        <button class="btn gold" id="saveAgentsBtn">Сақлаш</button>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Бренд ва кўриниш</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">Логотипни (юқорида, "К" белгиси ўрнига) ёки дастур номини ўзингизникига мослаштиринг. Логотипни ўзгартириш учун header'даги белгини босишингиз ҳам мумкин.</p>
@@ -929,9 +1096,246 @@
   const LS_DEBTPAY = "kh_debtpay_v1";
   const LS_AUTOSEND = "kh_autosend_v1";
   const LS_LASTAUTOSENT = "kh_lastautosent_v1";
+  const LS_AGENTS = "kh_agents_v1";
+
+  /* =========================================================
+     БУЛУТ (Firestore): захира нусха + агентлар билан алмашиш
+     Дастур аввалгидек localStorage'да ишлайди — тез ва офлайн.
+     Булут иккита вазифани бажаради:
+       1) Барча маълумотнинг захира нусхаси
+       2) Агентлар киритган ёзувларни қабул қилиш
+     ========================================================= */
+  const CLOUD = (function(){
+    const firebaseConfig = {
+      apiKey: "AIzaSyCl6MVZoqZWrqgo0uZqsUKK9a8vVQ6Rbvo",
+      authDomain: "avtopark-boss.firebaseapp.com",
+      projectId: "avtopark-boss",
+      storageBucket: "avtopark-boss.firebasestorage.app",
+      messagingSenderId: "851157960361",
+      appId: "1:851157960361:web:a27db45a3bc40348998bb8"
+    };
+    const COLL_BACKUP = "kunlik_backup";      // захира нусха (чанкларга бўлинган)
+    const COLL_INBOX  = "kunlik_agent_inbox"; // агентлар киритган ёзувлар
+    const COLL_META   = "kunlik_meta";        // агентлар рўйхати, умумий маълумот
+    const DOC_MAIN = "main";
+    const CHUNK_SIZE = 700000;
+    const LS_LASTSYNC = "kh_lastsync_v1";
+    const LS_DEVICE   = "kh_deviceid_v1";
+
+    const SYNC_KEYS = [
+      "kh_records_v1","kh_cars_v1","kh_pw_v1","kh_audit_v1","kh_telegram_v1",
+      "kh_lockmin_v1","kh_debtpay_v1","kh_autosend_v1","kh_lastautosent_v1",
+      "kh_cashtaken_v1","kh_expenses_v1","kh_expense_payments_v1",
+      "kh_theme_v1","kh_logo_v1","kh_brand_v1","kh_agents_v1"
+    ];
+
+    let db = null, ready = false, syncTimer = null, syncing = false, inboxUnsub = null;
+
+    function deviceId(){
+      let id = localStorage.getItem(LS_DEVICE);
+      if(!id){ id = "dev_" + Math.random().toString(36).slice(2,10); localStorage.setItem(LS_DEVICE, id); }
+      return id;
+    }
+    function isReady(){ return ready; }
+    function getDb(){ return db; }
+
+    function init(){
+      try{
+        if(typeof firebase === "undefined") return false;
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        ready = true;
+        try{
+          const pers = db.enablePersistence && db.enablePersistence({synchronizeTabs:true});
+          if(pers && pers.catch) pers.catch(()=>{});
+        }catch(e){}
+        return true;
+      }catch(e){ console.warn("Булут ишга тушмади:", e && e.message); return false; }
+    }
+
+    function collectLocal(){
+      const data = {};
+      SYNC_KEYS.forEach(k=>{ const v = localStorage.getItem(k); if(v !== null) data[k] = v; });
+      return JSON.stringify(data);
+    }
+    function setStatus(t, color){
+      const el = document.getElementById("cloudStatus");
+      if(el){ el.textContent = t; el.style.color = color || ""; }
+      const dot = document.getElementById("agentCloudDot");
+      if(dot) dot.textContent = t;
+    }
+    function setLastSyncLabel(ts){
+      const el = document.getElementById("cloudLastSync");
+      if(!el) return;
+      if(!ts){ el.textContent = "—"; return; }
+      const d = new Date(ts);
+      el.textContent = fmtDate(localDateStr(d)) + " " + d.toLocaleTimeString("uz-UZ");
+    }
+
+    async function upload(silent){
+      if(!ready || syncing) return false;
+      syncing = true;
+      try{
+        setStatus("Сақланмоқда...");
+        const payload = collectLocal();
+        const chunks = [];
+        for(let i=0;i<payload.length;i+=CHUNK_SIZE) chunks.push(payload.slice(i,i+CHUNK_SIZE));
+        const now = Date.now();
+        let prevCount = 0;
+        try{
+          const prev = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
+          if(prev.exists) prevCount = prev.data().chunkCount || 0;
+        }catch(e){}
+        const batch = db.batch();
+        chunks.forEach((c,i)=> batch.set(db.collection(COLL_BACKUP).doc("chunk_"+i), {data:c}));
+        for(let i=chunks.length;i<prevCount;i++) batch.delete(db.collection(COLL_BACKUP).doc("chunk_"+i));
+        batch.set(db.collection(COLL_BACKUP).doc(DOC_MAIN), {
+          updatedAt: now, chunkCount: chunks.length, sizeBytes: payload.length, device: deviceId()
+        });
+        await batch.commit();
+        localStorage.setItem(LS_LASTSYNC, String(now));
+        setStatus("Сақланди ✓", "var(--good)");
+        setLastSyncLabel(now);
+        if(!silent) toast("Булутга сақланди ✓");
+        return true;
+      }catch(e){
+        console.error("Булутга сақлашда хато:", e);
+        setStatus("Сақланмади (офлайн?)", "var(--bad)");
+        if(!silent) toast("Булутга сақлаб бўлмади — интернетни текширинг");
+        return false;
+      }finally{ syncing = false; }
+    }
+
+    function scheduleUpload(){
+      if(!ready) return;
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(()=> upload(true), 3000);
+    }
+
+    async function fetchCloud(){
+      const main = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
+      if(!main.exists) return null;
+      const meta = main.data();
+      let payload = "";
+      for(let i=0;i<(meta.chunkCount||0);i++){
+        const c = await db.collection(COLL_BACKUP).doc("chunk_"+i).get();
+        if(!c.exists) throw new Error("Булутдаги нусха тўлиқ эмас");
+        payload += c.data().data;
+      }
+      return { meta, data: JSON.parse(payload) };
+    }
+
+    async function restore(){
+      if(!ready){ toast("Булут уланмаган"); return false; }
+      try{
+        setStatus("Тикланмоқда...");
+        const cloud = await fetchCloud();
+        if(!cloud){ toast("Булутда ҳали нусха йўқ"); return false; }
+        SYNC_KEYS.forEach(k=>{
+          if(cloud.data[k] !== undefined) localStorage.setItem(k, cloud.data[k]);
+          else localStorage.removeItem(k);
+        });
+        localStorage.setItem(LS_LASTSYNC, String(cloud.meta.updatedAt || Date.now()));
+        return true;
+      }catch(e){
+        console.error(e); toast("Тиклаб бўлмади"); return false;
+      }
+    }
+
+    // ---- Агент ёзувларини қабул қилиш ----
+    // Агент ёзувни inbox'га ёзади; раҳбар дастури уни ўқиб, ўз базасига қўшади.
+    async function pushAgentRecord(rec, agentName){
+      if(!ready) throw new Error("OFFLINE");
+      await db.collection(COLL_INBOX).doc(rec.id).set({
+        ...rec, agentName, createdAt: Date.now(), claimed: false
+      });
+    }
+    async function fetchAgentTodayRecords(agentName, date){
+      if(!ready) return [];
+      const snap = await db.collection(COLL_INBOX)
+        .where("agentName","==",agentName).where("sana","==",date).get();
+      const out = [];
+      snap.forEach(d=> out.push({id:d.id, ...d.data()}));
+      return out.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+    }
+
+    // Раҳбар дастури: янги агент ёзувларини ўз базасига қўшади
+    function listenAgentInbox(onNew){
+      if(!ready || inboxUnsub) return;
+      inboxUnsub = db.collection(COLL_INBOX).where("claimed","==",false)
+        .onSnapshot(snap=>{
+          const incoming = [];
+          snap.forEach(d=> incoming.push({id:d.id, ...d.data()}));
+          if(incoming.length) onNew(incoming);
+        }, e=> console.warn("Inbox кузатувида хато:", e && e.message));
+    }
+    async function markClaimed(ids){
+      if(!ready || !ids.length) return;
+      const batch = db.batch();
+      ids.forEach(id=> batch.update(db.collection(COLL_INBOX).doc(id), {claimed:true}));
+      await batch.commit();
+    }
+
+    // Агентлар рўйхатини булутда сақлаш (агент қурилмаси уни ўқийди)
+    async function saveAgentsToCloud(list){
+      if(!ready) return;
+      await db.collection(COLL_META).doc("agents").set({ list, updatedAt: Date.now() });
+    }
+    async function loadAgentsFromCloud(){
+      if(!ready) return null;
+      const d = await db.collection(COLL_META).doc("agents").get();
+      return d.exists ? (d.data().list || []) : null;
+    }
+
+    async function checkOnStart(){
+      if(!ready) return;
+      try{
+        const main = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
+        const localSync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
+        setLastSyncLabel(localSync || null);
+        if(!main.exists){
+          setStatus("Уланган (булутда нусха йўқ)");
+          if(localStorage.getItem("kh_records_v1")) upload(true);
+          return;
+        }
+        const meta = main.data();
+        if((meta.updatedAt||0) > localSync + 2000 && meta.device !== deviceId()){
+          setStatus("Булутда янгироқ нусха бор", "var(--bad)");
+          const d = new Date(meta.updatedAt);
+          if(confirm("Булутда бу қурилмадагидан янгироқ нусха бор.\n\nСанаси: " +
+                     d.toLocaleString("uz-UZ") + "\n\nБулутдагини юклаб олайликми?")){
+            if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
+          }
+        }else{
+          setStatus("Уланган ✓", "var(--good)");
+        }
+      }catch(e){ setStatus("Уланмади (офлайн?)", "var(--bad)"); }
+    }
+
+    return {
+      isReady, getDb,
+      start(){
+        if(!init()){ setStatus("Уланмади (интернет йўқ)", "var(--bad)"); return false; }
+        const origSet = localStorage.setItem.bind(localStorage);
+        const origRemove = localStorage.removeItem.bind(localStorage);
+        localStorage.setItem = function(k,v){ origSet(k,v); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
+        localStorage.removeItem = function(k){ origRemove(k); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
+        setLastSyncLabel(Number(localStorage.getItem(LS_LASTSYNC)||0) || null);
+        setTimeout(checkOnStart, 1200);
+        return true;
+      },
+      uploadNow(){ return upload(false); },
+      async restoreNow(){
+        if(!confirm("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?")) return;
+        if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
+      },
+      pushAgentRecord, fetchAgentTodayRecords, listenAgentInbox, markClaimed,
+      saveAgentsToCloud, loadAgentsFromCloud, setStatus
+    };
+  })();
   const DEFAULT_CARS = [
-    {name:"Мошина-1 (01A123AA)", driver:"", maqsad:0, normaSomKm:0, toSana:"", color:"#c9a227"},
-    {name:"Мошина-2 (01B456BB)", driver:"", maqsad:0, normaSomKm:0, toSana:"", color:"#3b7dd8"}
+    {name:"Мошина-1 (01A123AA)", rusumi:"", driver:"", maqsad:0, normaSomKm:0, toSana:"", color:"#c9a227"},
+    {name:"Мошина-2 (01B456BB)", rusumi:"", driver:"", maqsad:0, normaSomKm:0, toSana:"", color:"#3b7dd8"}
   ];
   const AUTO_CAR_COLORS = ["#c9a227","#3b7dd8","#1f7a4d","#b3402a","#7a4fb3","#c2669a","#2aa198","#d17a22"];
   function autoColorFor(name){
@@ -992,7 +1396,7 @@
   function loadRecords(){
     try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(e){ return []; }
   }
-  function saveRecords(recs){ localStorage.setItem(LS_KEY, JSON.stringify(recs)); }
+  function saveRecords(recs){ safeSave(LS_KEY, JSON.stringify(recs)); }
   function loadCars(){
     try{
       const c = JSON.parse(localStorage.getItem(LS_CARS));
@@ -1005,11 +1409,48 @@
       });
     }catch(e){ return DEFAULT_CARS.slice(); }
   }
-  function saveCars(cars){ localStorage.setItem(LS_CARS, JSON.stringify(cars)); }
+  function saveCars(cars){ safeSave(LS_CARS, JSON.stringify(cars)); }
 
   let records = loadRecords();
   let cars = loadCars();
   let editingId = null;
+
+  // Маҳаллий сана (UTC эмас!). toISOString() UTC беради — Ўзбекистонда (UTC+5)
+  // соат 00:00–05:00 оралиғида кечаги санани кўрсатиб қўяр эди.
+  // localStorage тўлиб қолса — маълумот ЖИМГИНА йўқолиб кетмаслиги учун ҳимоя.
+  // Браузерда одатда 5-10 МБ жой бор; логотип ва кўп ёзувлар уни тўлдириши мумкин.
+  function safeSave(key, value){
+    try{
+      localStorage.setItem(key, value);
+      return true;
+    }catch(e){
+      const isQuota = e && (e.name === "QuotaExceededError" ||
+                            e.name === "NS_ERROR_DOM_QUOTA_REACHED" || e.code === 22);
+      console.error("Сақлашда хато:", e);
+      alert(isQuota
+        ? "ДИҚҚАТ! Браузер хотираси тўлди — маълумот САҚЛАНМАДИ.\n\n" +
+          "Нима қилиш керак:\n" +
+          "1) Созламалар → Захира нусхани юклаб олинг\n" +
+          "2) Логотипни ўчиринг (у кўп жой эгаллайди)\n" +
+          "3) Эски ёзувларни экспорт қилиб, тозаланг"
+        : "Маълумотни сақлаб бўлмади. Саҳифани янгилаб, қайта уриниб кўринг.");
+      return false;
+    }
+  }
+
+  function localDateStr(d){
+    d = d || new Date();
+    return d.getFullYear() + "-" +
+           String(d.getMonth()+1).padStart(2,"0") + "-" +
+           String(d.getDate()).padStart(2,"0");
+  }
+
+  // Санани кўрсатиш формати: 2026-09-07 -> 07.09.2026
+  function fmtDate(iso){
+    if(!iso) return "";
+    const p = String(iso).slice(0,10).split("-");
+    return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : String(iso);
+  }
 
   const fmt = n => Number(n||0).toLocaleString("ru-RU") + " сўм";
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
@@ -1054,7 +1495,7 @@
     document.querySelectorAll(`[data-view="${viewName}"]`).forEach(b=>b.classList.add("active"));
     document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
     document.getElementById("view-"+viewName).classList.add("active");
-    if(viewName === "records") renderRecords();
+    if(viewName === "records"){ renderRecords(); renderPivot(); }
     if(viewName === "summary") renderSummary();
     if(viewName === "settings") { renderCarsList(); renderAuditLog(); }
     if(viewName === "expenses") renderExpenses();
@@ -1285,7 +1726,7 @@
   // ---- Entry page banners: missing today, maintenance due, daily target ----
   function renderEntryBanners(){
     const el = document.getElementById("entryBanners");
-    const today = new Date().toISOString().slice(0,10);
+    const today = localDateStr();
     let html = "";
 
     // Missing today's entry
@@ -1321,7 +1762,7 @@
         const color = pct>=100 ? "var(--good)" : pct>=50 ? "var(--gold)" : "var(--bad)";
         return `<div style="margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px;">
-            <span>${c.name}</span><span>${fmt(sofToday)} / ${fmt(c.maqsad)} (${pct}%)</span>
+            <span>${esc(c.name)}</span><span>${fmt(sofToday)} / ${fmt(c.maqsad)} (${pct}%)</span>
           </div>
           <div style="background:#e3ddcd;border-radius:6px;height:8px;overflow:hidden;">
             <div style="background:${color};height:100%;width:${pct}%;"></div>
@@ -1336,7 +1777,7 @@
 
   // ---- Today stats on entry page ----
   function renderTodayStats(){
-    const today = new Date().toISOString().slice(0,10);
+    const today = localDateStr();
     const todays = records.filter(r=>r.sana===today);
     const totalTushum = todays.reduce((s,r)=>s+r.tushum,0);
     const totalXarajat = todays.reduce((s,r)=>s+r.yoqilgi+r.yol+r.boshqa,0);
@@ -1380,7 +1821,7 @@
       const sof = r.tushum - xarajat;
       return `<tr>
         <td>${i+1}</td>
-        <td>${r.sana}</td>
+        <td>${fmtDate(r.sana)}</td>
         <td>${carPill(r.mashina)}</td>
         <td>${esc(r.shofyor)||"—"}</td>
         <td>${esc(r.yonalish)||"—"}</td>
@@ -1443,7 +1884,21 @@
       th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;}
       th{background:#0f2440;color:#fff;}
       tr:nth-child(even){background:#f6f4ee;}
-    </style></head><body>
+    
+  /* ---- Ойлик жадвал (кунма-кун) ---- */
+  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
+  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
+  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
+  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
+  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
+  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
+  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
+  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
+  .pivot-table tbody tr:hover td{background:#faf8f2;}
+  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
+  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
+  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+</style></head><body>
     <h1>${title}</h1>
     <p>Чоп этилган сана: ${new Date().toLocaleDateString("uz-UZ")} ${new Date().toLocaleTimeString("uz-UZ")}</p>
     ${table.outerHTML}
@@ -1476,7 +1931,7 @@
       const qoplangan = x.qoplangan||0;
       const qoldiq = x.summa-qoplangan;
       totalSumma += x.summa; totalQoplangan += qoplangan;
-      return `<tr><td>${i+1}</td><td>${x.sana}</td><td>${esc(x.turi)}</td><td>${x.mashina?carPill(x.mashina):"—"}</td><td>${fmt(x.summa)}</td><td>${fmt(qoplangan)}</td><td>${fmt(qoldiq)}</td><td>${esc(x.kimga)}</td><td>${esc(x.izoh)}</td></tr>`;
+      return `<tr><td>${i+1}</td><td>${fmtDate(x.sana)}</td><td>${esc(x.turi)}</td><td>${x.mashina?carPill(x.mashina):"—"}</td><td>${fmt(x.summa)}</td><td>${fmt(qoplangan)}</td><td>${fmt(qoldiq)}</td><td>${esc(x.kimga)}</td><td>${esc(x.izoh)}</td></tr>`;
     }).join("");
     const totalQoldiq = totalSumma-totalQoplangan;
 
@@ -1525,7 +1980,21 @@
       tr:nth-child(even){background:#f6f4ee;}
       footer{margin-top:26px;font-size:11px;color:#999;text-align:center;}
       @media print{ body{padding:10mm;} }
-    </style></head><body>
+    
+  /* ---- Ойлик жадвал (кунма-кун) ---- */
+  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
+  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
+  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
+  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
+  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
+  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
+  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
+  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
+  .pivot-table tbody tr:hover td{background:#faf8f2;}
+  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
+  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
+  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+</style></head><body>
     <h1>Кунлик Хисобот — Харажатлар ҳисоботи</h1>
     <p class="meta">${filterDesc} · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
     <div class="totals">
@@ -1575,7 +2044,7 @@
       const xarajat = r.yoqilgi+r.yol+r.boshqa;
       const sof = r.tushum - xarajat;
       recTushum += r.tushum; recXarajat += xarajat;
-      s1Rows += "<Row>" + cellN(i+1) + cellS(r.sana)+cellS(r.mashina)+cellS(r.shofyor)+cellS(r.yonalish)+
+      s1Rows += "<Row>" + cellN(i+1) + cellS(fmtDate(r.sana))+cellS(r.mashina)+cellS(r.shofyor)+cellS(r.yonalish)+
         cellN(r.tushum)+cellN(r.yoqilgi)+cellN(r.yol)+cellN(r.boshqa)+cellN(xarajat)+cellN(sof)+cellS(r.izoh)+"</Row>";
     });
     const recSof = recTushum - recXarajat;
@@ -1589,7 +2058,7 @@
       const qoplangan = x.qoplangan||0;
       const qoldiq = x.summa - qoplangan;
       expSumma += x.summa; expQoplangan += qoplangan;
-      s2Rows += "<Row>" + cellN(i+1) + cellS(x.sana)+cellS(x.turi)+cellS(x.mashina||"—")+cellN(x.summa)+cellN(qoplangan)+cellN(qoldiq)+cellS(x.kimga)+cellS(x.izoh)+"</Row>";
+      s2Rows += "<Row>" + cellN(i+1) + cellS(fmtDate(x.sana))+cellS(x.turi)+cellS(x.mashina||"—")+cellN(x.summa)+cellN(qoplangan)+cellN(qoldiq)+cellS(x.kimga)+cellS(x.izoh)+"</Row>";
     });
     const expQoldiq = expSumma - expQoplangan;
     s2Rows += "<Row>" + cellB("")+cellB("ЖАМИ")+cellB("")+cellB("")+cellBN(expSumma)+cellBN(expQoplangan)+cellBN(expQoldiq)+cellB("")+cellB("")+"</Row>";
@@ -1664,27 +2133,177 @@
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
  <Styles>
-  <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F2440" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>
-  <Style ss:ID="bold"><Font ss:Bold="1"/><Interior ss:Color="#F6F4EE" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="boldnum"><Font ss:Bold="1"/><Interior ss:Color="#F6F4EE" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0"/></Style>
-  <Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style>
-  <Style ss:ID="dateNote"><Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/></Style>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="hdr">
+   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
+   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="bold">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="boldnum">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="num">
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
+  <Style ss:ID="title">
+   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Borders/>
+  </Style>
+  <Style ss:ID="dateNote">
+   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
+   <Borders/>
+  </Style>
  </Styles>
  <Worksheet ss:Name="Кунлик хисобот">
-  <Table>${s1Rows}</Table>
- </Worksheet>
+  <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="140"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="75"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s1Rows}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
  <Worksheet ss:Name="Харажатлар">
-  <Table>${s2Rows}</Table>
- </Worksheet>
+  <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s2Rows}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
  <Worksheet ss:Name="Харажат-мошина хулосаси">
-  <Table>${s2bRows}</Table>
- </Worksheet>
+  <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="60"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/>${s2bRows}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
  <Worksheet ss:Name="Мошиналар хулосаси">
-  <Table>${s3Rows}</Table>
- </Worksheet>
+  <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="90"/>${s3Rows}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
  <Worksheet ss:Name="Умумий якуний хисобот">
-  <Table>${s4Rows}</Table>
- </Worksheet>
+  <Table><Column ss:AutoFitWidth="0" ss:Width="200"/><Column ss:AutoFitWidth="0" ss:Width="120"/>${s4Rows}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
 </Workbook>`;
   }
 
@@ -1693,7 +2312,7 @@
     const blob = new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "kunlik_hisobot_umumiy_"+new Date().toISOString().slice(0,10)+".xls";
+    a.download = "kunlik_hisobot_umumiy_"+localDateStr()+".xls";
     a.click();
     toast("Excel файл (4 sheet) юкланди ✓");
   }
@@ -1768,12 +2387,16 @@
   }
 
   // ---- Харажатлар бўлимида мошинага бириктирилган харажатларни йиғиш (шу ойда) ----
+  // Мошина бўйича ойлик бизнес харажати.
+  // МУҲИМ: қопланган (қайтарилган) сумма ҳақиқий харажат эмас — уни айирамиз,
+  // акс ҳолда фойда ноҳақ камайиб кўринади.
   function expensesByCarForMonth(month){
     const result = {};
     expenses.forEach(x=>{
       if(!x.mashina) return;
       if(!x.sana || x.sana.slice(0,7)!==month) return;
-      result[x.mashina] = (result[x.mashina]||0) + x.summa;
+      const sof = x.summa - (x.qoplangan||0);   // ҳақиқий (қопланмаган) харажат
+      result[x.mashina] = (result[x.mashina]||0) + sof;
     });
     return result;
   }
@@ -1955,7 +2578,21 @@
       tr:nth-child(even){background:#f6f4ee;}
       footer{margin-top:30px;font-size:11px;color:#999;text-align:center;}
       @media print{ body{padding:10mm;} }
-    </style></head><body>
+    
+  /* ---- Ойлик жадвал (кунма-кун) ---- */
+  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
+  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
+  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
+  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
+  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
+  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
+  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
+  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
+  .pivot-table tbody tr:hover td{background:#faf8f2;}
+  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
+  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
+  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+</style></head><body>
     <h1>Кунлик Хисобот — Ойлик отчет</h1>
     <p class="meta">Ой: <b>${month}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
     <div class="totals">
@@ -2043,7 +2680,7 @@
     list.slice().sort((a,b)=>a.sana.localeCompare(b.sana)).forEach(r=>{
       const xarajat = r.yoqilgi+r.yol+r.boshqa;
       const sof = r.tushum-xarajat;
-      s3Rows += "<Row>" + cellS(r.sana)+cellS(r.mashina)+cellS(r.shofyor)+cellS(r.yonalish)+cellN(r.tushum)+cellN(xarajat)+cellN(sof)+
+      s3Rows += "<Row>" + cellS(fmtDate(r.sana))+cellS(r.mashina)+cellS(r.shofyor)+cellS(r.yonalish)+cellN(r.tushum)+cellN(xarajat)+cellN(sof)+
         (r.topshirilgan!==null && r.topshirilgan!==undefined ? cellN(r.topshirilgan) : cellS("")) + cellS(r.izoh) + "</Row>";
     });
 
@@ -2054,21 +2691,131 @@
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
  <Styles>
-  <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F2440" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>
-  <Style ss:ID="bold"><Font ss:Bold="1"/><Interior ss:Color="#F6F4EE" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="boldnum"><Font ss:Bold="1"/><Interior ss:Color="#F6F4EE" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0"/></Style>
-  <Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style>
-  <Style ss:ID="dateNote"><Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/></Style>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="hdr">
+   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
+   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="bold">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="boldnum">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="num">
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
+  <Style ss:ID="title">
+   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Borders/>
+  </Style>
+  <Style ss:ID="dateNote">
+   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
+   <Borders/>
+  </Style>
  </Styles>
  <Worksheet ss:Name="Мошиналар хулосаси">
-  <Table>${s1Rows}</Table>
- </Worksheet>
+  <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="140"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="75"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s1Rows}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
  <Worksheet ss:Name="Шофёрлар рейтинги">
-  <Table>${s2Rows}</Table>
- </Worksheet>
+  <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s2Rows}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
  <Worksheet ss:Name="Кунлик ёзувлар">
-  <Table>${s3Rows}</Table>
- </Worksheet>
+  <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="90"/>${s3Rows}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
 </Workbook>`;
   }
   function downloadMonthlyWorkbook(){
@@ -2251,12 +2998,213 @@
   document.getElementById("yearlyYear").value = currentYearValue();
   document.getElementById("yearlyYear").addEventListener("change", renderYearly);
 
+  /* ============================================================
+     ОЙЛИК ЖАДВАЛ — мошиналар × ойнинг кунлари
+     Ҳар катакда: танланган кўрсаткич (тушум / соф / топширилган)
+     ============================================================ */
+  function pivotValue(r, metric){
+    if(metric === "tushum") return Number(r.tushum||0);
+    if(metric === "topshirilgan") return Number(r.topshirilgan||0);
+    return Number(r.tushum||0) - Number(r.yoqilgi||0) - Number(r.yol||0) - Number(r.boshqa||0);
+  }
+
+  function buildPivot(){
+    const month  = document.getElementById("pivotMonth").value || localDateStr().slice(0,7);
+    const metric = document.getElementById("pivotMetric").value;
+    const unit   = Number(document.getElementById("pivotUnit").value) || 1;
+    const [y, m] = month.split("-").map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+
+    const list = records.filter(r => r.sana && r.sana.slice(0,7) === month);
+
+    // мошина -> кун -> қиймат
+    const byCar = {};
+    list.forEach(r=>{
+      const car = r.mashina || "(Номаълум)";
+      if(!byCar[car]) byCar[car] = {};
+      const day = Number(String(r.sana).slice(8,10));
+      byCar[car][day] = (byCar[car][day] || 0) + pivotValue(r, metric);
+    });
+
+    // Мошиналар рўйхати: аввал созламадагилар, кейин ёзувларда учраганлар
+    const carNames = [];
+    cars.forEach(c=>{ if(byCar[c.name]) carNames.push(c.name); });
+    Object.keys(byCar).forEach(n=>{ if(!carNames.includes(n)) carNames.push(n); });
+
+    return { month, metric, unit, y, m, daysInMonth, byCar, carNames };
+  }
+
+  function renderPivot(){
+    const el = document.getElementById("pivotWrap");
+    if(!el) return;
+    const P = buildPivot();
+    if(!P.carNames.length){
+      el.innerHTML = `<p class="empty">Бу ойда ёзув йўқ.</p>`;
+      return;
+    }
+    const monthNames = ["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН",
+                        "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
+    const show = v => v ? Math.round(v / P.unit).toLocaleString("ru-RU") : "";
+
+    let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
+    for(let d=1; d<=P.daysInMonth; d++) head += `<th class="pv-num">${d}</th>`;
+    head += `<th class="pv-total">Жами</th></tr>`;
+
+    const dayTotals = {};
+    let grand = 0;
+    let body = "";
+    P.carNames.forEach(name=>{
+      const carObj = cars.find(c=> c.name === name);
+      const rusumi = carObj && carObj.rusumi ? carObj.rusumi : "";
+      let rowSum = 0;
+      let tds = "";
+      for(let d=1; d<=P.daysInMonth; d++){
+        const v = P.byCar[name][d] || 0;
+        rowSum += v;
+        dayTotals[d] = (dayTotals[d] || 0) + v;
+        tds += `<td class="pv-num">${show(v)}</td>`;
+      }
+      grand += rowSum;
+      body += `<tr><td><b>${esc(name)}</b></td><td>${esc(rusumi)}</td>${tds}` +
+              `<td class="pv-total">${show(rowSum)}</td></tr>`;
+    });
+
+    let foot = `<tr class="pv-foot"><td colspan="2">жами</td>`;
+    for(let d=1; d<=P.daysInMonth; d++) foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`;
+    foot += `<td class="pv-total">${show(grand)}</td></tr>`;
+
+    const metricLabel = P.metric === "tushum" ? "Тушум"
+                      : P.metric === "topshirilgan" ? "Топширилган" : "Соф тушум";
+    const unitLabel = P.unit === 1000 ? "минг сўмда" : "сўмда";
+
+    el.innerHTML = `
+      <div style="font-weight:800;font-size:17px;margin:6px 0 4px;">
+        ${P.y} йил ${monthNames[P.m-1]}ойи
+      </div>
+      <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">
+        Кўрсаткич: <b>${metricLabel}</b> · ${unitLabel}
+      </div>
+      <table class="pivot-table">
+        <thead>${head}</thead>
+        <tbody>${body}</tbody>
+        <tfoot>${foot}</tfoot>
+      </table>`;
+  }
+
+  function exportPivotExcel(){
+    const P = buildPivot();
+    if(!P.carNames.length){ alert("Бу ойда ёзув йўқ."); return; }
+    const monthNames = ["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН",
+                        "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
+    const esc2 = v => String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const cellS = v => `<Cell><Data ss:Type="String">${esc2(v)}</Data></Cell>`;
+    const cellN = v => `<Cell><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
+
+    let head = cellS("Давлат рақами") + cellS("Русуми");
+    for(let d=1; d<=P.daysInMonth; d++) head += cellS(String(d));
+    head += cellS("Жами");
+
+    const dayTotals = {}; let grand = 0; let rows = "";
+    P.carNames.forEach(name=>{
+      const carObj = cars.find(c=> c.name === name);
+      let rowSum = 0, tds = "";
+      for(let d=1; d<=P.daysInMonth; d++){
+        const v = Math.round((P.byCar[name][d]||0) / P.unit);
+        rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
+        tds += cellN(v);
+      }
+      grand += rowSum;
+      rows += "<Row>" + cellS(name) + cellS(carObj && carObj.rusumi ? carObj.rusumi : "") + tds + cellN(rowSum) + "</Row>";
+    });
+    let foot = cellS("жами") + cellS("");
+    for(let d=1; d<=P.daysInMonth; d++) foot += cellN(dayTotals[d]||0);
+    foot += cellN(grand);
+
+    const title = `${P.y} йил ${monthNames[P.m-1]}ойи`;
+    const xml = `<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Ойлик жадвал"><Table>
+<Row>${cellS(title)}</Row>
+<Row>${head}</Row>
+${rows}
+<Row>${foot}</Row>
+</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet></Workbook>`;
+    const blob = new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `oylik_jadval_${P.month}.xls`;
+    a.click();
+    toast("Excel файл юкланди ✓");
+  }
+
+  function printPivot(){
+    const el = document.getElementById("pivotWrap");
+    if(!el || !el.innerHTML.trim()){ alert("Аввал жадвал шаклланиши керак."); return; }
+    const w = window.open("", "_blank");
+    w.document.write(`<html><head><meta charset="utf-8"><title>Ойлик жадвал</title>
+      <style>
+        body{font-family:Arial,sans-serif;padding:14px;}
+        table{border-collapse:collapse;width:100%;font-size:11px;}
+        th,td{border:1px solid #999;padding:3px 5px;text-align:right;white-space:nowrap;}
+        th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left;}
+        thead th{background:#efefef;}
+        tfoot td{font-weight:bold;background:#f6f6f6;}
+        .pv-total{background:#fff7cc;font-weight:bold;}
+        @page{size:landscape;}
+      
+  /* ---- Ойлик жадвал (кунма-кун) ---- */
+  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
+  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
+  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
+  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
+  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
+  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
+  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
+  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
+  .pivot-table tbody tr:hover td{background:#faf8f2;}
+  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
+  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
+  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+</style></head><body>${el.innerHTML}
+      <script>window.print()<\/script></body></html>`);
+    w.document.close();
+  }
+
+  document.getElementById("pivotMonth").value = localDateStr().slice(0,7);
+  ["pivotMonth","pivotMetric","pivotUnit"].forEach(id=>{
+    document.getElementById(id).addEventListener("change", renderPivot);
+  });
+  document.getElementById("pivotExcelBtn").addEventListener("click", exportPivotExcel);
+  document.getElementById("pivotPrintBtn").addEventListener("click", printPivot);
+
   function renderYearly(){
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
     const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
     const body = document.getElementById("yearlyBody");
     let rows = "";
     const monthlySof = [];
+    let yTushum=0, yXarajat=0, yExp=0, yCount=0;   // йиллик жамланма
     for(let mIdx=1; mIdx<=12; mIdx++){
       const mStr = String(year)+"-"+String(mIdx).padStart(2,"0");
       const recList = records.filter(r=>r.sana && r.sana.slice(0,7)===mStr);
@@ -2264,8 +3212,10 @@
       const xarajat = recList.reduce((s,r)=>s+r.yoqilgi+r.yol+r.boshqa,0);
       const sof = tushum-xarajat;
       const expList = expenses.filter(x=>x.sana && x.sana.slice(0,7)===mStr);
-      const expTotal = expList.reduce((s,x)=>s+x.summa,0);
+      // Қопланган харажат ҳақиқий харажат эмас — уни айирамиз
+      const expTotal = expList.reduce((s,x)=>s + x.summa - (x.qoplangan||0), 0);
       monthlySof.push(sof);
+      yTushum += tushum; yXarajat += xarajat; yExp += expTotal; yCount += recList.length;
       rows += `<tr>
         <td>${monthNames[mIdx-1]}</td>
         <td>${fmt(tushum)}</td>
@@ -2275,6 +3225,16 @@
         <td>${recList.length}</td>
       </tr>`;
     }
+    // --- Йиллик жами қатори ---
+    const ySof = yTushum - yXarajat;
+    rows += `<tr style="background:var(--gold-soft);font-weight:800;border-top:2px solid var(--gold);">
+      <td>ЖАМИ (${year})</td>
+      <td>${fmt(yTushum)}</td>
+      <td>${fmt(yXarajat)}</td>
+      <td class="${ySof>=0?'pos':'neg'}">${arrowFmt(ySof)}</td>
+      <td>${fmt(yExp)}</td>
+      <td>${yCount}</td>
+    </tr>`;
     body.innerHTML = rows;
     renderYearlyTrendChart(year, monthlySof, monthNames);
   }
@@ -2343,7 +3303,21 @@
       tr:nth-child(even){background:#f6f4ee;}
       footer{margin-top:30px;font-size:11px;color:#999;text-align:center;}
       @media print{ body{padding:10mm;} }
-    </style></head><body>
+    
+  /* ---- Ойлик жадвал (кунма-кун) ---- */
+  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
+  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
+  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
+  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
+  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
+  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
+  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
+  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
+  .pivot-table tbody tr:hover td{background:#faf8f2;}
+  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
+  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
+  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+</style></head><body>
     <h1>Кунлик Хисобот — Йиллик отчет</h1>
     <p class="meta">Йил: <b>${year}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
     <div class="totals">
@@ -2392,15 +3366,85 @@
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
  <Styles>
-  <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F2440" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>
-  <Style ss:ID="bold"><Font ss:Bold="1"/><Interior ss:Color="#F6F4EE" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="boldnum"><Font ss:Bold="1"/><Interior ss:Color="#F6F4EE" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0"/></Style>
-  <Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style>
-  <Style ss:ID="dateNote"><Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/></Style>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="hdr">
+   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
+   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="bold">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="boldnum">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="num">
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
+  <Style ss:ID="title">
+   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Borders/>
+  </Style>
+  <Style ss:ID="dateNote">
+   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
+   <Borders/>
+  </Style>
  </Styles>
  <Worksheet ss:Name="Йиллик хулоса">
   <Table>${rows}</Table>
- </Worksheet>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>
+</Worksheet>
 </Workbook>`;
   }
   function downloadYearlyWorkbook(){
@@ -2420,7 +3464,7 @@
   function loadDebtPayments(){
     try{ return JSON.parse(localStorage.getItem(LS_DEBTPAY)) || []; }catch(e){ return []; }
   }
-  function saveDebtPayments(list){ localStorage.setItem(LS_DEBTPAY, JSON.stringify(list)); }
+  function saveDebtPayments(list){ safeSave(LS_DEBTPAY, JSON.stringify(list)); }
   let debtPayments = loadDebtPayments();
 
   function renderDebts(){
@@ -2471,7 +3515,7 @@
     }
     const sorted = debtPayments.slice().sort((a,b)=> b.sana.localeCompare(a.sana));
     body.innerHTML = sorted.map(p=>`<tr>
-      <td>${p.sana}</td>
+      <td>${fmtDate(p.sana)}</td>
       <td>${esc(p.shofyor)}</td>
       <td class="pos">${fmt(p.summa)}</td>
       <td>${esc(p.izoh)}</td>
@@ -2517,7 +3561,7 @@
   function loadCashTaken(){
     try{ return JSON.parse(localStorage.getItem(LS_CASHTAKEN)) || []; }catch(e){ return []; }
   }
-  function saveCashTaken(list){ localStorage.setItem(LS_CASHTAKEN, JSON.stringify(list)); }
+  function saveCashTaken(list){ safeSave(LS_CASHTAKEN, JSON.stringify(list)); }
   let cashTaken = loadCashTaken();
   let editingCashTakenId = null;
 
@@ -2598,7 +3642,7 @@
     }
     const sorted = cashTaken.slice().sort((a,b)=> b.sana.localeCompare(a.sana));
     body.innerHTML = sorted.map(c=>`<tr>
-      <td>${c.sana}</td>
+      <td>${fmtDate(c.sana)}</td>
       <td>${c.mashina ? carPill(c.mashina) : '<span style="color:var(--muted);">Умумий</span>'}</td>
       <td class="neg">${fmt(c.summa)}</td>
       <td>${esc(c.izoh)}</td>
@@ -2630,7 +3674,7 @@
           const c = cashTaken.find(x=>x.id===b.dataset.ctdel);
           cashTaken = cashTaken.filter(x=>x.id!==b.dataset.ctdel);
           saveCashTaken(cashTaken);
-          logAudit("Олинган нақд пул ёзуви ўчирилди", c ? `${c.sana} · ${fmt(c.summa)}` : "");
+          logAudit("Олинган нақд пул ёзуви ўчирилди", c ? `${fmtDate(c.sana)} · ${fmt(c.summa)}` : "");
           renderCashTaken();
           toast("Ёзув ўчирилди");
         });
@@ -2682,6 +3726,7 @@
       <div class="settings-row" style="flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:4px;">
         <input type="color" data-idx="${i}" data-field="color" value="${c.color||'#c9a227'}" title="Мошина ранги" style="width:44px;height:38px;padding:2px;flex:none;">
         <input type="text" data-idx="${i}" data-field="name" value="${(c.name||"").replace(/"/g,'&quot;')}" placeholder="Мошина номи/рақами" style="min-width:160px;">
+        <input type="text" data-idx="${i}" data-field="rusumi" value="${(c.rusumi||"").replace(/"/g,'&quot;')}" placeholder="Русуми (JAC, Isuzu...)" title="Мошина русуми/модели" style="min-width:120px;">
         <input type="text" data-idx="${i}" data-field="driver" value="${(c.driver||"").replace(/"/g,'&quot;')}" placeholder="Асосий ҳайдовчи" style="min-width:140px;">
         <input type="number" data-idx="${i}" data-field="maqsad" value="${c.maqsad||0}" placeholder="Кунлик мақсад (сўм)" title="Кунлик мақсад (сўм)" style="min-width:130px;">
         <input type="number" data-idx="${i}" data-field="normaSomKm" value="${c.normaSomKm||0}" placeholder="Ёқилғи норма (сўм/км)" title="Ёқилғи норма (сўм/км)" style="min-width:140px;">
@@ -2697,7 +3742,7 @@
     });
   }
   document.getElementById("addCarBtn").addEventListener("click", ()=>{
-    cars.push({name:"Янги мошина", driver:"", maqsad:0, normaSomKm:0, toSana:"", color: AUTO_CAR_COLORS[cars.length % AUTO_CAR_COLORS.length]});
+    cars.push({name:"Янги мошина", rusumi:"", driver:"", maqsad:0, normaSomKm:0, toSana:"", color: AUTO_CAR_COLORS[cars.length % AUTO_CAR_COLORS.length]});
     renderCarsList();
   });
   document.getElementById("saveCarsBtn").addEventListener("click", ()=>{
@@ -2706,6 +3751,7 @@
       const g = (f)=>row.querySelector(`[data-field="${f}"]`).value;
       return {
         name: g("name").trim(),
+        rusumi: g("rusumi").trim(),
         driver: g("driver").trim(),
         maqsad: Number(g("maqsad")||0),
         normaSomKm: Number(g("normaSomKm")||0),
@@ -2725,7 +3771,7 @@
     const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "kunlik_hisobot_zaxira_"+new Date().toISOString().slice(0,10)+".json";
+    a.download = "kunlik_hisobot_zaxira_"+localDateStr()+".json";
     a.click();
     toast("Захира нусха юкланди ✓");
   });
@@ -2821,7 +3867,7 @@
     const data = {records, cars, expenses, expensePayments, exportedAt: new Date().toISOString()};
     const jsonStr = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonStr], {type:"application/json"});
-    const fileName = "kunlik_hisobot_zaxira_"+new Date().toISOString().slice(0,10)+".json";
+    const fileName = "kunlik_hisobot_zaxira_"+localDateStr()+".json";
     const fd = new FormData();
     fd.append("chat_id", settings.chatId);
     fd.append("caption", "Кунлик Хисобот — захира (" + new Date().toLocaleString("uz-UZ") + ")");
@@ -3077,12 +4123,12 @@
   function loadExpenses(){
     try{ return JSON.parse(localStorage.getItem(LS_EXPENSES)) || []; }catch(e){ return []; }
   }
-  function saveExpenses(list){ localStorage.setItem(LS_EXPENSES, JSON.stringify(list)); }
+  function saveExpenses(list){ safeSave(LS_EXPENSES, JSON.stringify(list)); }
   let expenses = loadExpenses();
   function loadExpensePayments(){
     try{ return JSON.parse(localStorage.getItem(LS_EXPENSE_PAYMENTS)) || []; }catch(e){ return []; }
   }
-  function saveExpensePayments(list){ localStorage.setItem(LS_EXPENSE_PAYMENTS, JSON.stringify(list)); }
+  function saveExpensePayments(list){ safeSave(LS_EXPENSE_PAYMENTS, JSON.stringify(list)); }
   let expensePayments = loadExpensePayments();
   let editingExpenseId = null;
 
@@ -3239,7 +4285,7 @@
           expensePayments = expensePayments.filter(v=>v.id!==p.id);
           saveExpenses(expenses);
           saveExpensePayments(expensePayments);
-          logAudit("Харажат қоплаш ўчирилди", `${p.sana} · ${x ? x.turi : "ўчирилган харажат"} · ${fmt(p.summa)}`);
+          logAudit("Харажат қоплаш ўчирилди", `${fmtDate(p.sana)} · ${x ? x.turi : "ўчирилган харажат"} · ${fmt(p.summa)}`);
           refreshExpensePaymentSection();
           renderExpenseTodayStats();
           renderExpenses();
@@ -3253,44 +4299,159 @@
   document.getElementById("ep_summa")?.addEventListener("input", updateExpensePaymentPreview);
   document.getElementById("ep_sana")?.addEventListener("change", updateExpensePaymentPreview);
 
+  // ---- Танланган мошинанинг қопланмаган харажатлари (кичикдан катта сари) ----
+  function openExpensesFor(mashina){
+    return expenses
+      .filter(x => x.mashina === mashina && expenseRemaining(x) > 0)
+      .sort((a,b) => expenseRemaining(a) - expenseRemaining(b));   // аввал энг кичиги
+  }
+
+  // Киритилган суммани харажатларга тақсимлаш режасини тузади (ҳали сақламайди)
+  function planAutoCover(mashina, amount){
+    const plan = [];
+    let left = amount;
+    for(const x of openExpensesFor(mashina)){
+      if(left <= 0) break;
+      const rem = expenseRemaining(x);
+      const take = Math.min(rem, left);
+      plan.push({ x, take, rem, full: take >= rem });
+      left -= take;
+    }
+    return { plan, left };   // left — харажатлар тугаб, ортиб қолган сумма
+  }
+
+  // Тақсимлаш режасини экранда кўрсатиш (тасдиқлашдан олдин)
+  function renderAutoPreview(){
+    const box = document.getElementById("ep_autoPreview");
+    const mode = document.getElementById("ep_mode").value;
+    const mashina = document.getElementById("ep_mashina").value;
+    const amount = Number(document.getElementById("ep_summa").value || 0);
+    if(mode !== "auto" || !mashina || amount <= 0){ box.style.display = "none"; return; }
+
+    const { plan, left } = planAutoCover(mashina, amount);
+    if(!plan.length){
+      box.style.display = "block";
+      box.innerHTML = `<div class="notice">Бу автомобилда қопланмаган харажат йўқ.</div>`;
+      return;
+    }
+    const rows = plan.map(p => `<tr>
+        <td>${p.x.sana}</td>
+        <td>${esc(p.x.turi)}</td>
+        <td>${fmt(p.rem)}</td>
+        <td class="pos">${fmt(p.take)}</td>
+        <td>${p.full
+              ? '<span class="pill" style="background:#1f7a4d;color:#fff;">Тўлиқ ёпилади</span>'
+              : `<span class="pill">Қолди: ${fmt(p.rem - p.take)}</span>`}</td>
+      </tr>`).join("");
+    box.style.display = "block";
+    box.innerHTML = `
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Тақсимлаш режаси (кичик харажатлардан бошлаб):</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Сана</th><th>Харажат</th><th>Қолдиғи эди</th><th>Қопланади</th><th>Ҳолат</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      ${left > 0 ? `<div class="notice" style="margin-top:8px;">
+          Ортиқча <b>${fmt(left)}</b> — барча харажатлар ёпилди, бу сумма қайд этилмайди.
+          Суммани камайтиринг ёки янги харажат киритинг.</div>` : ""}`;
+  }
+
+  document.getElementById("ep_mode")?.addEventListener("change", ()=>{
+    const manual = document.getElementById("ep_mode").value === "manual";
+    document.getElementById("ep_expenseWrap").style.display = manual ? "" : "none";
+    document.getElementById("ep_expense").required = manual;
+    renderAutoPreview();
+    updateEpQoldiqPreview();
+  });
+  document.getElementById("ep_mashina")?.addEventListener("change", ()=>{
+    renderAutoPreview(); updateEpQoldiqPreview();
+  });
+  document.getElementById("ep_summa")?.addEventListener("input", renderAutoPreview);
+
+  function updateEpQoldiqPreview(){
+    const el = document.getElementById("ep_qoldiqPreview");
+    const mashina = document.getElementById("ep_mashina").value;
+    if(!mashina){ el.textContent = "Автомобильни танланг"; return; }
+    const open = openExpensesFor(mashina);
+    const total = open.reduce((s,x)=> s + expenseRemaining(x), 0);
+    el.innerHTML = open.length
+      ? `Бу автомобилда <b>${open.length}</b> та қопланмаган харажат, жами қолдиқ: <b>${fmt(total)}</b>`
+      : "Бу автомобилда қопланмаган харажат йўқ.";
+  }
+
   document.getElementById("expensePaymentForm")?.addEventListener("submit", e=>{
     e.preventDefault();
-    const expenseId = document.getElementById("ep_expense").value;
-    const x = expenses.find(v=>v.id===expenseId);
+    const mode = document.getElementById("ep_mode").value;
     const mashina = document.getElementById("ep_mashina").value;
     const amount = Number(document.getElementById("ep_summa").value||0);
     const date = document.getElementById("ep_sana").value;
     const note = document.getElementById("ep_izoh").value.trim();
-    if(!x){ alert("Аввало қайси харажат қопланаётганини танланг."); return; }
-    const remaining = expenseRemaining(x);
+
+    if(!mashina){ alert("Автомобильни танланг."); return; }
     if(amount <= 0){ alert("Қопланадиган сумма 0 дан катта бўлиши керак."); return; }
-    if(amount > remaining){
-      alert(`Қоплаш суммаси харажат қолдиғидан ошмаслиги керак.\nҚолдиқ: ${fmt(remaining)}`);
-      return;
+
+    let applied = [];   // [{expenseId, turi, take}]
+
+    if(mode === "manual"){
+      const expenseId = document.getElementById("ep_expense").value;
+      const x = expenses.find(v=>v.id===expenseId);
+      if(!x){ alert("Аввало қайси харажат қопланаётганини танланг."); return; }
+      const remaining = expenseRemaining(x);
+      if(amount > remaining){
+        alert(`Қоплаш суммаси харажат қолдиғидан ошмаслиги керак.\nҚолдиқ: ${fmt(remaining)}`);
+        return;
+      }
+      x.qoplangan = Number(x.qoplangan||0) + amount;
+      applied.push({ expenseId: x.id, turi: x.turi, take: amount });
+    }else{
+      // --- Автомат тақсимлаш: кичик харажатлардан бошлаб ёпамиз ---
+      const { plan, left } = planAutoCover(mashina, amount);
+      if(!plan.length){
+        alert("Бу автомобилда қопланмаган харажат йўқ.");
+        return;
+      }
+      if(left > 0){
+        const ok = confirm(
+          `Киритилган сумма барча харажатларни ёпишга етади ва ортиб қолади.\n\n` +
+          `Ортиқча: ${fmt(left)}\n\n` +
+          `Фақат ${fmt(amount - left)} қайд этилсинми?`);
+        if(!ok) return;
+      }
+      plan.forEach(p=>{
+        p.x.qoplangan = Number(p.x.qoplangan||0) + p.take;
+        applied.push({ expenseId: p.x.id, turi: p.x.turi, take: p.take });
+      });
     }
-    x.qoplangan = Number(x.qoplangan||0) + amount;
-    expensePayments.push({
-      id: uid(),
-      expenseId,
-      mashina,
-      sana: date,
-      summa: amount,
-      izoh: note,
-      createdAt: new Date().toISOString()
+
+    // Ҳар бир харажат учун алоҳида тўлов ёзуви — тарих аниқ бўлиши учун
+    applied.forEach(a=>{
+      expensePayments.push({
+        id: uid(),
+        expenseId: a.expenseId,
+        mashina,
+        sana: date,
+        summa: a.take,
+        izoh: note,
+        createdAt: new Date().toISOString()
+      });
     });
+
     saveExpenses(expenses);
     saveExpensePayments(expensePayments);
-    logAudit("Харажат қопланди", `${date} · ${x.turi} · ${fmt(amount)}`);
+    const jami = applied.reduce((s,a)=> s + a.take, 0);
+    logAudit("Харажат қопланди",
+      `${date} · ${mashina} · ${applied.length} та харажат · ${fmt(jami)}`);
     document.getElementById("expensePaymentForm").reset();
     document.getElementById("ep_sana").valueAsDate = new Date();
+    document.getElementById("ep_expenseWrap").style.display = "none";
+    document.getElementById("ep_autoPreview").style.display = "none";
     refreshExpensePaymentSection();
     renderExpenseTodayStats();
     renderExpenses();
-    toast("Харажат қопланиши қайд этилди ✓");
+    toast(`${applied.length} та харажат қопланди · ${fmt(jami)} ✓`);
   });
 
   function renderExpenseTodayStats(){
-    const today = new Date().toISOString().slice(0,10);
+    const today = localDateStr();
     const month = today.slice(0,7);
     const todaysTotal = expenses.filter(x=>x.sana===today).reduce((s,x)=>s+x.summa,0);
     const monthList = expenses.filter(x=>x.sana && x.sana.slice(0,7)===month);
@@ -3337,7 +4498,7 @@
       const qoldiq = x.summa - qoplangan;
       return `<tr>
       <td>${i+1}</td>
-      <td>${x.sana}</td>
+      <td>${fmtDate(x.sana)}</td>
       <td><span class="pill">${esc(x.turi)}</span></td>
       <td>${x.mashina ? carPill(x.mashina) : '<span style="color:var(--muted);">—</span>'}</td>
       <td class="neg">${fmt(x.summa)}</td>
@@ -3359,7 +4520,7 @@
             const x = expenses.find(i=>i.id===b.dataset.edel);
             expenses = expenses.filter(x=>x.id!==b.dataset.edel);
             saveExpenses(expenses);
-            logAudit("Харажат ўчирилди", x ? `${x.sana} · ${x.turi} · ${fmt(x.summa)}` : "");
+            logAudit("Харажат ўчирилди", x ? `${fmtDate(x.sana)} · ${x.turi} · ${fmt(x.summa)}` : "");
             updateExpenseCatList();
             refreshExpensePaymentSection();
             renderExpenses();
@@ -3525,7 +4686,7 @@
         canvas.width = w; canvas.height = h;
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-        localStorage.setItem(LS_LOGO, dataUrl);
+        if(!safeSave(LS_LOGO, dataUrl)) return;
         applyLogo();
         toast("Логотип ўрнатилди ✓");
       };
@@ -3557,6 +4718,262 @@
     applyBrandName();
     toast("Дастур номи сақланди ✓");
   });
+
+  /* ============================================================
+     АГЕНТЛАР — раҳбар томонида бошқарув
+     ============================================================ */
+  function loadAgents(){
+    try{ return JSON.parse(localStorage.getItem(LS_AGENTS)) || []; }catch(e){ return []; }
+  }
+  function saveAgents(list){ safeSave(LS_AGENTS, JSON.stringify(list)); }
+  let agents = loadAgents();
+
+  function renderAgentsList(){
+    const el = document.getElementById("agentsList");
+    if(!el) return;
+    if(!agents.length){
+      el.innerHTML = `<p class="empty">Ҳали агент қўшилмаган.</p>`;
+      return;
+    }
+    el.innerHTML = agents.map((a,i)=>`
+      <div class="settings-row" style="flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:4px;">
+        <input type="text" data-aidx="${i}" data-afield="name" value="${esc(a.name||"")}" placeholder="Агент исми" style="min-width:170px;">
+        <input type="text" data-aidx="${i}" data-afield="pin" value="${esc(a.pin||"")}" placeholder="PIN (4 хона)" maxlength="4" inputmode="numeric" style="min-width:110px;">
+        <span class="pill" style="background:${a.active===false?'#b3402a':'#1f7a4d'};color:#fff;">${a.active===false?'Тўхтатилган':'Фаол'}</span>
+        <button class="btn outline" data-atoggle="${i}">${a.active===false?'Фаоллаштириш':'Тўхтатиш'}</button>
+        <button class="btn danger" data-arm="${i}">Ўчириш</button>
+      </div>`).join("");
+    el.querySelectorAll("[data-arm]").forEach(b=> b.addEventListener("click", ()=>{
+      if(!confirm("Ушбу агентни ўчирасизми?")) return;
+      agents.splice(Number(b.dataset.arm),1); renderAgentsList();
+    }));
+    el.querySelectorAll("[data-atoggle]").forEach(b=> b.addEventListener("click", ()=>{
+      const i = Number(b.dataset.atoggle);
+      agents[i].active = agents[i].active === false;
+      renderAgentsList();
+    }));
+  }
+  document.getElementById("addAgentBtn")?.addEventListener("click", ()=>{
+    agents.push({name:"Янги агент", pin:"", active:true});
+    renderAgentsList();
+  });
+  document.getElementById("saveAgentsBtn")?.addEventListener("click", ()=>{
+    const rows = document.querySelectorAll("#agentsList .settings-row");
+    const list = Array.from(rows).map((row,i)=>{
+      const g = f => row.querySelector(`[data-afield="${f}"]`).value.trim();
+      return { name: g("name"), pin: g("pin"), active: agents[i] ? agents[i].active !== false : true };
+    }).filter(a=> a.name);
+    const bad = list.find(a=> !/^\d{4}$/.test(a.pin));
+    if(bad){ alert(`"${bad.name}" учун PIN 4 хонали рақам бўлиши керак.`); return; }
+    const names = list.map(a=> a.name.toLowerCase());
+    if(new Set(names).size !== names.length){ alert("Агент исмлари такрорланмаслиги керак."); return; }
+    agents = list;
+    saveAgents(agents);
+    renderAgentsList();
+    CLOUD.saveAgentsToCloud(agents).catch(()=>{});
+    toast("Агентлар сақланди ✓");
+  });
+  renderAgentsList();
+
+  /* ---- Раҳбар: агентлар киритган ёзувларни қабул қилиш ---- */
+  function startAgentInboxListener(){
+    CLOUD.listenAgentInbox(async incoming=>{
+      const existing = new Set(records.map(r=> r.id));
+      const fresh = incoming.filter(r=> !existing.has(r.id));
+      if(fresh.length){
+        fresh.forEach(r=>{
+          records.push({
+            id: r.id, sana: r.sana, mashina: r.mashina, shofyor: r.shofyor||"",
+            yonalish: r.yonalish||"", tushum: Number(r.tushum||0), yoqilgi: Number(r.yoqilgi||0),
+            yol: Number(r.yol||0), boshqa: Number(r.boshqa||0),
+            topshirilgan: (r.topshirilgan===null||r.topshirilgan===undefined)?null:Number(r.topshirilgan),
+            km: r.km||null, izoh: r.izoh||"",
+            manba: "агент: " + (r.agentName||"")
+          });
+        });
+        saveRecords(records);
+        logAudit("Агент ёзувлари қабул қилинди", `${fresh.length} та ёзув`);
+        renderRecords(); renderEntryBanners(); renderSummary();
+        toast(`Агентдан ${fresh.length} та янги ёзув келди ✓`);
+      }
+      const el = document.getElementById("cloudAgentCount");
+      if(el) el.textContent = incoming.length + " та";
+      // Қабул қилинганларни белгилаймиз
+      CLOUD.markClaimed(incoming.map(r=> r.id)).catch(()=>{});
+    });
+  }
+
+  /* ============================================================
+     АГЕНТ РЕЖИМИ — соддалаштирилган ойна
+     ============================================================ */
+  let currentAgent = null;
+
+  async function openAgentLogin(){
+    document.getElementById("lockScreen").style.display = "none";
+    document.getElementById("agentLogin").style.display = "flex";
+    const sel = document.getElementById("agentSelect");
+    sel.innerHTML = `<option>Юкланмоқда...</option>`;
+    let list = agents;
+    try{
+      const cloudList = await CLOUD.loadAgentsFromCloud();
+      if(cloudList) list = cloudList;
+    }catch(e){}
+    const act = list.filter(a=> a.active !== false && a.name);
+    sel.innerHTML = act.length
+      ? act.map(a=> `<option value="${esc(a.name)}">${esc(a.name)}</option>`).join("")
+      : `<option value="">Агент рўйхати бўш — раҳбарга мурожаат қилинг</option>`;
+    sel._list = list;
+  }
+
+  document.getElementById("agentModeBtn")?.addEventListener("click", openAgentLogin);
+
+  // Агент сессияси сақланган бўлса — қулф экранисиз дарҳол агент ойнаси
+  (function restoreAgentSession(){
+    const name = sessionStorage.getItem("kh_agent");
+    if(!name) return;
+    const a = agents.find(x=> x.name === name && x.active !== false);
+    if(!a) { sessionStorage.removeItem("kh_agent"); return; }
+    currentAgent = a;
+    const ls = document.getElementById("lockScreen");
+    if(ls) ls.style.display = "none";
+    document.getElementById("agentPanel").style.display = "block";
+    document.getElementById("agentGreeting").textContent = "Салом, " + name + "!";
+    initAgentPanel();
+  })();
+  document.getElementById("agentBack")?.addEventListener("click", ()=>{
+    document.getElementById("agentLogin").style.display = "none";
+    document.getElementById("lockScreen").style.display = "flex";
+  });
+
+  document.getElementById("agentSubmit")?.addEventListener("click", async ()=>{
+    const sel = document.getElementById("agentSelect");
+    const name = sel.value;
+    const pin = document.getElementById("agentPin").value.trim();
+    const err = document.getElementById("agentErr");
+    if(!name){ err.textContent = "Исмингизни танланг."; return; }
+    const list = sel._list || agents;
+    const a = list.find(x=> x.name === name);
+    if(!a || a.pin !== pin){ err.textContent = "PIN нотўғри."; return; }
+    if(a.active === false){ err.textContent = "Кириш ҳуқуқингиз тўхтатилган."; return; }
+    err.textContent = "";
+    currentAgent = a;
+    sessionStorage.setItem("kh_agent", name);
+    document.getElementById("agentLogin").style.display = "none";
+    document.getElementById("agentPanel").style.display = "block";
+    document.getElementById("agentGreeting").textContent = "Салом, " + name + "!";
+    initAgentPanel();
+  });
+
+  document.getElementById("agentExitBtn")?.addEventListener("click", ()=>{
+    sessionStorage.removeItem("kh_agent");
+    location.reload();
+  });
+
+  async function initAgentPanel(){
+    document.getElementById("ag_sana").valueAsDate = new Date();
+    // Мошиналар рўйхати — булутдан ёки локалдан
+    const sel = document.getElementById("ag_mashina");
+    sel.innerHTML = cars.map(c=> `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
+    // Шофёр ва йўналиш таклифлари
+    const drivers = [...new Set(records.map(r=> r.shofyor).filter(Boolean))];
+    const routes  = [...new Set(records.map(r=> r.yonalish).filter(Boolean))];
+    document.getElementById("agDriverList").innerHTML = drivers.map(d=>`<option value="${esc(d)}">`).join("");
+    document.getElementById("agRouteList").innerHTML  = routes.map(r=>`<option value="${esc(r)}">`).join("");
+    renderAgentToday();
+  }
+
+  document.getElementById("agMoreToggle")?.addEventListener("click", ()=>{
+    const w = document.getElementById("agMoreWrap");
+    const t = document.getElementById("agMoreToggle");
+    w.classList.toggle("hidden");
+    t.classList.toggle("open");
+  });
+
+  function agComputePreview(){
+    const n = id => Number(document.getElementById(id).value||0);
+    const tushum = n("ag_tushum"), xarajat = n("ag_yoqilgi")+n("ag_yol")+n("ag_boshqa");
+    const sof = tushum - xarajat;
+    const top = document.getElementById("ag_topshirilgan").value;
+    let html = `Жами харажат: <b>${fmt(xarajat)}</b> · Соф тушум: <b style="color:${sof>=0?'#1f7a4d':'#b3402a'}">${fmt(sof)}</b>`;
+    if(top !== ""){
+      const qarz = sof - Number(top||0);
+      html += ` · Қарз: <b style="color:${qarz>0?'#b3402a':'#1f7a4d'}">${fmt(qarz)}</b>`;
+    }
+    document.getElementById("agPreview").innerHTML = html;
+  }
+  ["ag_tushum","ag_yoqilgi","ag_yol","ag_boshqa","ag_topshirilgan"].forEach(id=>{
+    document.getElementById(id)?.addEventListener("input", agComputePreview);
+  });
+
+  document.getElementById("agentForm")?.addEventListener("submit", async e=>{
+    e.preventDefault();
+    if(!currentAgent) return;
+    const btn = e.target.querySelector('button[type="submit"]');
+    const v = id => document.getElementById(id).value;
+    const n = id => Number(document.getElementById(id).value||0);
+    const topRaw = v("ag_topshirilgan");
+    const rec = {
+      id: uid(),
+      sana: v("ag_sana"),
+      mashina: v("ag_mashina"),
+      shofyor: v("ag_shofyor").trim(),
+      yonalish: v("ag_yonalish").trim(),
+      tushum: n("ag_tushum"),
+      yoqilgi: n("ag_yoqilgi"),
+      yol: n("ag_yol"),
+      boshqa: n("ag_boshqa"),
+      topshirilgan: topRaw === "" ? null : Number(topRaw),
+      km: n("ag_km") || null,
+      izoh: v("ag_izoh").trim()
+    };
+    if(!rec.sana || !rec.mashina || rec.tushum <= 0){
+      alert("Сана, мошина ва тушумни тўғри киритинг."); return;
+    }
+    btn.disabled = true; btn.textContent = "Юборилмоқда...";
+    try{
+      await CLOUD.pushAgentRecord(rec, currentAgent.name);
+      document.getElementById("agentForm").reset();
+      document.getElementById("ag_sana").valueAsDate = new Date();
+      document.getElementById("agPreview").innerHTML = "";
+      document.getElementById("agMoreWrap").classList.add("hidden");
+      toast("Ёзув юборилди ✓");
+      renderAgentToday();
+    }catch(err){
+      console.error(err);
+      alert(err && err.message === "OFFLINE"
+        ? "Интернет йўқ. Уланиб, қайта уриниб кўринг."
+        : "Юборилмади. Интернетни текшириб, қайта уриниб кўринг.");
+    }finally{
+      btn.disabled = false; btn.textContent = "Сақлаш ва юбориш";
+    }
+  });
+
+  async function renderAgentToday(){
+    const body = document.getElementById("agentTodayBody");
+    if(!body || !currentAgent) return;
+    const date = document.getElementById("ag_sana").value || localDateStr();
+    try{
+      const list = await CLOUD.fetchAgentTodayRecords(currentAgent.name, date);
+      body.innerHTML = list.length
+        ? list.map((r,i)=>`<tr>
+            <td>${i+1}</td><td>${fmtDate(r.sana)}</td><td>${esc(r.mashina)}</td>
+            <td>${esc(r.shofyor||"—")}</td><td>${fmt(r.tushum)}</td>
+            <td>${r.topshirilgan==null?"—":fmt(r.topshirilgan)}</td>
+            <td><span class="pill" style="background:${r.claimed?'#1f7a4d':'#c9a227'};color:#fff;">${r.claimed?'Қабул қилинди':'Юборилди'}</span></td>
+          </tr>`).join("")
+        : `<tr><td colspan="7" class="empty">Бу санада ёзув йўқ.</td></tr>`;
+    }catch(e){
+      body.innerHTML = `<tr><td colspan="7" class="empty">Рўйхатни юклаб бўлмади (интернет?).</td></tr>`;
+    }
+  }
+  document.getElementById("ag_sana")?.addEventListener("change", renderAgentToday);
+
+  // ---- Булут тугмалари ва ишга тушириш ----
+  document.getElementById("cloudSyncNowBtn")?.addEventListener("click", ()=> CLOUD.uploadNow());
+  document.getElementById("cloudRestoreBtn")?.addEventListener("click", ()=> CLOUD.restoreNow());
+  if(CLOUD.start()){
+    startAgentInboxListener();
+  }
 
   // ---- Pull-to-refresh (телефонда рўйхатни пастга тортиб янгилаш) ----
   (function(){
