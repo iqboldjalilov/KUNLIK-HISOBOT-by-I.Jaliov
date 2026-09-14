@@ -491,7 +491,7 @@
     <div class="card" style="border-left:4px solid var(--gold);">
       <h2>📅 Ойлик ҳисобот</h2>
       <p style="margin-top:-8px;font-size:13px;color:var(--muted);">
-        Сиз киритган ёзувлар бўйича кунма-кун жадвал. Excel ёки PDF кўринишида юклаб олиш мумкин.
+        Раҳбар базасидаги барча ёзувлар бўйича кунма-кун жадвал. Excel ёки PDF кўринишида юклаб олиш мумкин.
       </p>
       <div class="filters">
         <div class="fld">
@@ -1100,6 +1100,7 @@
         <div class="stat"><div class="label">Сўнгги сақлаш</div><div class="value" id="cloudLastSync" style="font-size:15px;">—</div></div>
         <div class="stat"><div class="label">Агент ёзувлари</div><div class="value" id="cloudAgentCount" style="font-size:15px;">—</div></div>
       </div>
+      <div id="cloudConflictWarn" style="display:none;"></div>
       <div class="actions-row">
         <button class="btn gold" id="cloudSyncNowBtn">Ҳозир булутга сақлаш</button>
         <button class="btn outline" id="cloudRestoreBtn">Булутдан тиклаш</button>
@@ -1180,9 +1181,26 @@
         <button class="btn outline" id="setPwBtn">Парол ўрнатиш / ўзгартириш</button>
         <button class="btn outline" id="removePwBtn">Паролни ўчириш</button>
       </div>
-      <div style="margin-top:14px;">
-        <label>Фаолиятсизликдан кейин автомат қулфлаш (дақиқа, 0 = ўчирилган)</label>
-        <input type="number" id="autoLockMin" min="0" max="120" style="max-width:120px;">
+      <div class="entry" style="grid-template-columns:1fr 1fr;margin-top:14px;">
+        <div>
+          <label>Фаолиятсизликдан кейин автомат қулфлаш (дақиқа, 0 = ўчирилган)</label>
+          <input type="number" id="autoLockMin" min="0" max="120">
+        </div>
+        <div>
+          <label>Паролни қайта сўрамаслик муддати (соат, 0 = ҳар сафар сўралсин)</label>
+          <input type="number" id="trustHoursInp" min="0" max="720">
+        </div>
+        <div>
+          <label>Таҳрирлаш паролини қайта сўрамаслик (дақиқа)</label>
+          <input type="number" id="editGraceInp" min="0" max="240">
+        </div>
+        <div class="full">
+          <p style="font-size:12.5px;color:var(--muted);margin:0;">
+            <b>Паролни қайта сўрамаслик муддати</b> — шу муддат давомида дастурни қайта очганда парол сўралмайди
+            (телефонда илова фонга ўтиб қайтганда ҳам). «⏻ Чиқиш» тугмаси босилса ёки автомат қулфлаш ишласа —
+            муддат бекор бўлади ва парол қайтадан сўралади.
+          </p>
+        </div>
       </div>
     </div>
 
@@ -1217,7 +1235,7 @@
 
     <div class="card">
       <h2>Маълумотлар</h2>
-      <p style="font-size:13px;color:var(--muted);">Барча маълумот ушбу компьютердаги браузер хотирасида сақланади (интернет талаб қилинмайди). Файлни бошқа компьютерга кўчирсангиз, маълумотлар автоматик ўтмайди — шунинг учун вақти-вақти билан "Захира нусха олиш" тугмасидан фойдаланинг.</p>
+      <p style="font-size:13px;color:var(--muted);">Маълумот ушбу қурилма хотирасида сақланади (интернетсиз ишлайди) ва булутга ҳам автомат захираланади. Булут орқали бошқа қурилмада тиклаш мумкин. Қўшимча хавфсизлик учун вақти-вақти билан "Захира нусха олиш" тугмасидан ҳам фойдаланинг.</p>
       <div class="actions-row">
         <button class="btn outline" id="backupBtn">Захира нусха олиш (.json)</button>
         <button class="btn outline" id="restoreBtn">Захирадан тиклаш</button>
@@ -1253,6 +1271,8 @@
   const LS_AUDIT = "kh_audit_v1";
   const LS_TG = "kh_telegram_v1";
   const LS_LOCKMIN = "kh_lockmin_v1";
+  const LS_TRUST = "kh_trust_until_v1";
+  const LS_TRUSTH = "kh_trust_hours_v1";
   const LS_PWRESET = "kh_pwreset_v1";
   const LS_DEBTPAY = "kh_debtpay_v1";
   const LS_AUTOSEND = "kh_autosend_v1";
@@ -1338,6 +1358,52 @@
       syncing = true;
       try{
         setStatus("Сақланмоқда...");
+
+        // ⚠️ ҲИМОЯ: юклашдан олдин булутда бошқа қурилма ёзиб кетмаганини текширамиз.
+        // Акс ҳолда иккита қурилма бир-бирининг маълумотини ўчириб юбориши мумкин.
+        try{
+          const cur = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
+          if(cur.exists){
+            const meta = cur.data();
+            const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
+            if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 2000){
+              const d = new Date(meta.updatedAt);
+              if(silent){
+                // Фон синхронизацияси — фойдаланувчини тўхтатмаймиз.
+                // Сақламаймиз, фақат огоҳлантириш кўрсатамиз.
+                setStatus("⚠️ Булутда янгироқ нусха бор — сақланмади", "var(--bad)");
+                const warn = document.getElementById("cloudConflictWarn");
+                if(warn){
+                  warn.style.display = "";
+                  warn.innerHTML = `<div class="notice" style="margin:10px 0 0;">
+                    <b>⚠️ Булутдаги нусха бошқа қурилмада янгиланган</b>
+                    (${d.toLocaleString("uz-UZ")}).<br>
+                    Шунинг учун ўзгаришларингиз булутга сақланмаяпти.<br>
+                    Қуйидагилардан бирини танланг:
+                    <ul style="margin:6px 0 0 18px;padding:0;">
+                      <li><b>«Булутдан тиклаш»</b> — булутдагини олиб, ўз ишингизни устига қайта киритасиз</li>
+                      <li><b>«Ҳозир булутга сақлаш»</b> — сизники булутдагини алмаштиради</li>
+                    </ul>
+                  </div>`;
+                }
+                syncing = false;
+                return false;
+              }
+              const ok = confirm(
+                "ДИҚҚАТ! Булутдаги нусха бошқа қурилмада янгиланган.\n\n" +
+                "Булут: " + d.toLocaleString("uz-UZ") + "\n\n" +
+                "«OK» — сизнинг маълумотингиз булутдагини АЛМАШТИРАДИ\n" +
+                "«Бекор» — сақланмайди, аввал «Булутдан тиклаш» қилинг"
+              );
+              if(!ok){
+                setStatus("Сақланмади — булутда янгироқ нусха бор", "var(--bad)");
+                syncing = false;
+                return false;
+              }
+            }
+          }
+        }catch(e){ /* текширув имкони бўлмаса — давом этамиз */ }
+
         const payload = collectLocal();
         const chunks = [];
         for(let i=0;i<payload.length;i+=CHUNK_SIZE) chunks.push(payload.slice(i,i+CHUNK_SIZE));
@@ -1355,6 +1421,8 @@
         });
         await batch.commit();
         localStorage.setItem(LS_LASTSYNC, String(now));
+        const warnEl = document.getElementById("cloudConflictWarn");
+        if(warnEl){ warnEl.style.display = "none"; warnEl.innerHTML = ""; }
         setStatus("Сақланди ✓", "var(--good)");
         setLastSyncLabel(now);
         if(!silent) toast("Булутга сақланди ✓");
@@ -1604,12 +1672,26 @@
   }
 
   // Password check helper — used to gate editing actions
+  /* Таҳрирлаш/ўчириш учун парол.
+     Бир марта киритилгач, қисқа муддат (стандарт 15 дақиқа) қайта сўралмайди —
+     кетма-кет бир нечта ёзувни тузатаётганда ҳар сафар терилмаслиги учун. */
+  let editGrantedUntil = 0;
+  function editGraceMs(){
+    const v = localStorage.getItem("kh_edit_grace_min_v1");
+    const min = v === null ? 15 : Number(v);
+    return min * 60 * 1000;
+  }
   function requirePasswordThen(callback){
     const hash = getPwHash();
     if(!hash){ callback(); return; }
+    if(Date.now() < editGrantedUntil){ callback(); return; }
     const pw = prompt("Таҳрирлаш учун паролни киритинг:");
     if(pw === null) return;
-    if(simpleHash(pw) === hash){ callback(); }
+    if(simpleHash(pw) === hash){
+      const g = editGraceMs();
+      if(g > 0) editGrantedUntil = Date.now() + g;
+      callback();
+    }
     else { alert("Парол нотўғри."); }
   }
 
@@ -2449,6 +2531,85 @@
   document.getElementById("printExpenses").addEventListener("click", printExpensesReport);
 
   // ---- Умумий кўп-sheet Excel экспорти (тушум + харажат + умумий хисобот) ----
+  /* Excel учун умумий шаблонлар — такрорланмасин деб бир жойда сақланади */
+  const XL_STYLES = ` <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="hdr">
+   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
+   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="bold">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="boldnum">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="num">
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
+  <Style ss:ID="title">
+   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Borders/>
+  </Style>
+  <Style ss:ID="dateNote">
+   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
+   <Borders/>
+  </Style>
+ </Styles>`;
+  const XL_PAGE = `  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>`;
+
   function xmlEscape(v){
     return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
@@ -2559,177 +2720,26 @@
  xmlns:o="urn:schemas-microsoft-com:office:office"
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Default" ss:Name="Normal">
-   <Alignment ss:Vertical="Center"/>
-   <Font ss:FontName="Calibri" ss:Size="11"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="hdr">
-   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
-   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
-   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="bold">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="boldnum">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="num">
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
-  </Style>
-  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
-  <Style ss:ID="title">
-   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
-   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
-   <Borders/>
-  </Style>
-  <Style ss:ID="dateNote">
-   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
-   <Borders/>
-  </Style>
- </Styles>
+${XL_STYLES}
  <Worksheet ss:Name="Кунлик хисобот">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="140"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="75"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s1Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Харажатлар">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s2Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Харажат-мошина хулосаси">
   <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="60"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/>${s2bRows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Мошиналар хулосаси">
   <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="90"/>${s3Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Умумий якуний хисобот">
   <Table><Column ss:AutoFitWidth="0" ss:Width="200"/><Column ss:AutoFitWidth="0" ss:Width="120"/>${s4Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
 </Workbook>`;
   }
@@ -3161,131 +3171,18 @@
  xmlns:o="urn:schemas-microsoft-com:office:office"
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Default" ss:Name="Normal">
-   <Alignment ss:Vertical="Center"/>
-   <Font ss:FontName="Calibri" ss:Size="11"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="hdr">
-   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
-   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
-   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="bold">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="boldnum">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="num">
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
-  </Style>
-  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
-  <Style ss:ID="title">
-   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
-   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
-   <Borders/>
-  </Style>
-  <Style ss:ID="dateNote">
-   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
-   <Borders/>
-  </Style>
- </Styles>
+${XL_STYLES}
  <Worksheet ss:Name="Мошиналар хулосаси">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="140"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="75"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s1Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Шофёрлар рейтинги">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s2Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Кунлик ёзувлар">
   <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="90"/>${s3Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
 </Workbook>`;
   }
@@ -3891,85 +3788,10 @@
  xmlns:o="urn:schemas-microsoft-com:office:office"
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Default" ss:Name="Normal">
-   <Alignment ss:Vertical="Center"/>
-   <Font ss:FontName="Calibri" ss:Size="11"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="hdr">
-   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
-   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
-   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="bold">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="boldnum">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="num">
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
-  </Style>
-  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
-  <Style ss:ID="title">
-   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
-   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
-   <Borders/>
-  </Style>
-  <Style ss:ID="dateNote">
-   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
-   <Borders/>
-  </Style>
- </Styles>
+${XL_STYLES}
  <Worksheet ss:Name="Йиллик хулоса">
   <Table>${rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
 </Workbook>`;
   }
@@ -4456,6 +4278,8 @@
 
   // ---- Чиқиш тугмаси: Telegram'га захира юборишни сўраш, сўнг қулфлаш/чиқиш ----
   function doExit(){
+    clearTrust();                       // "Чиқиш" — ишончни бекор қилади
+    editGrantedUntil = 0;
     if(getPwHash()){
       document.getElementById("lockScreen").classList.remove("hidden");
       setTimeout(()=>document.getElementById("lockInput").focus(), 100);
@@ -4487,12 +4311,32 @@
     toast("Сақланди ✓");
   });
 
+  // Ишонч муддати ва таҳрирлаш муҳлати созламалари
+  document.getElementById("trustHoursInp").value = trustHours();
+  document.getElementById("trustHoursInp").addEventListener("change", function(){
+    const h = Math.max(0, Number(this.value||0));
+    setTrustHours(h);
+    if(h === 0) clearTrust(); else markTrusted();
+    toast("Сақланди ✓");
+  });
+
+  document.getElementById("editGraceInp").value =
+    localStorage.getItem("kh_edit_grace_min_v1") === null ? 15 : Number(localStorage.getItem("kh_edit_grace_min_v1"));
+  document.getElementById("editGraceInp").addEventListener("change", function(){
+    const m = Math.max(0, Number(this.value||0));
+    localStorage.setItem("kh_edit_grace_min_v1", String(m));
+    editGrantedUntil = 0;
+    toast("Сақланди ✓");
+  });
+
   let idleTimer = null;
   function resetIdleTimer(){
     if(idleTimer) clearTimeout(idleTimer);
     const minutes = loadLockMin();
     if(!minutes || !getPwHash()) return;
     idleTimer = setTimeout(()=>{
+      clearTrust();
+      editGrantedUntil = 0;
       document.getElementById("lockScreen").classList.remove("hidden");
       setTimeout(()=>document.getElementById("lockInput").focus(), 100);
     }, minutes * 60 * 1000);
@@ -4538,6 +4382,27 @@
     }
   }
 
+  /* ============================================================
+     ИШОНЧЛИ ҚУРИЛМА
+     Парол киритилгач, белгиланган муддат давомида қайта сўралмайди.
+     Телефонда илова фонга ўтиб қайта юкланганда ҳам парол сўрамайди.
+     "Чиқиш" тугмаси эса дарҳол қулфлайди.
+     ============================================================ */
+  function trustHours(){
+    const v = localStorage.getItem(LS_TRUSTH);
+    return v === null ? 12 : Number(v);   // стандарт: 12 соат
+  }
+  function setTrustHours(h){ localStorage.setItem(LS_TRUSTH, String(h)); }
+  function markTrusted(){
+    const h = trustHours();
+    if(h > 0) localStorage.setItem(LS_TRUST, String(Date.now() + h*3600*1000));
+  }
+  function isTrusted(){
+    const t = Number(localStorage.getItem(LS_TRUST) || 0);
+    return t > Date.now();
+  }
+  function clearTrust(){ localStorage.removeItem(LS_TRUST); }
+
   function tryUnlock(){
     const input = document.getElementById("lockInput").value;
     const hash = getPwHash();
@@ -4546,6 +4411,7 @@
       document.getElementById("lockErr").textContent = "";
       toast("Бисмиллаҳир роҳманир роҳим — хуш келибсиз!");
       document.getElementById("lockScreen").classList.add("hidden");
+      markTrusted();
     } else {
       document.getElementById("lockErr").textContent = "Парол нотўғри, қайта уриниб кўринг";
       document.getElementById("lockInput").value = "";
@@ -5246,6 +5112,25 @@
   function saveAgents(list){ safeSave(LS_AGENTS, JSON.stringify(list)); }
   let agents = loadAgents();
 
+  // Эски форматдаги агентларни (очиқ PIN) хавфсиз форматга ўтказамиз — бир марта
+  (function migrateAgentPins(){
+    let changed = false;
+    agents = agents.map(a=>{
+      if(a && a.pin && !a.pinHash){
+        changed = true;
+        return { name:a.name, pinHash: simpleHash(a.pin), pinLen: String(a.pin).length,
+                 active: a.active !== false };
+      }
+      // pinLen йўқ бўлса — тиклаймиз (валидация тўғри ишлаши учун)
+      if(a && a.pinHash && !a.pinLen){ changed = true; return { ...a, pinLen: 4 }; }
+      return a;
+    });
+    if(changed){
+      saveAgents(agents);
+      console.log("Агент PIN'лари хавфсиз форматга ўтказилди");
+    }
+  })();
+
   function renderAgentsList(){
     const el = document.getElementById("agentsList");
     if(!el) return;
@@ -5256,7 +5141,7 @@
     el.innerHTML = agents.map((a,i)=>`
       <div class="settings-row" style="flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:4px;">
         <input type="text" data-aidx="${i}" data-afield="name" value="${esc(a.name||"")}" placeholder="Агент исми" style="min-width:170px;">
-        <input type="text" data-aidx="${i}" data-afield="pin" value="${esc(a.pin||"")}" placeholder="PIN (4 хона)" maxlength="4" inputmode="numeric" style="min-width:110px;">
+        <input type="text" data-aidx="${i}" data-afield="pin" value="${a.pinHash ? "••••" : ""}" placeholder="PIN (4 хона)" maxlength="4" inputmode="numeric" title="Ўзгартириш учун янги PIN ёзинг" style="min-width:110px;">
         <span class="pill" style="background:${a.active===false?'#b3402a':'#1f7a4d'};color:#fff;">${a.active===false?'Тўхтатилган':'Фаол'}</span>
         <button class="btn outline" data-atoggle="${i}">${a.active===false?'Фаоллаштириш':'Тўхтатиш'}</button>
         <button class="btn danger" data-arm="${i}">Ўчириш</button>
@@ -5279,10 +5164,21 @@
     const rows = document.querySelectorAll("#agentsList .settings-row");
     const list = Array.from(rows).map((row,i)=>{
       const g = f => row.querySelector(`[data-afield="${f}"]`).value.trim();
-      return { name: g("name"), pin: g("pin"), active: agents[i] ? agents[i].active !== false : true };
+      const rawPin = g("pin");
+      const prev = agents[i];
+      // PIN ўзгартирилмаган бўлса — эски hash сақланади
+      const keepOld = !!(prev && prev.pinHash && rawPin === "••••");
+      const pinHash = keepOld ? prev.pinHash : simpleHash(rawPin);
+      const pinLen  = keepOld ? (prev.pinLen || 4) : rawPin.length;
+      return { name: g("name"), pinHash, pinLen,
+               active: prev ? prev.active !== false : true };
     }).filter(a=> a.name);
-    const bad = list.find(a=> !/^\d{4}$/.test(a.pin));
-    if(bad){ alert(`"${bad.name}" учун PIN 4 хонали рақам бўлиши керак.`); return; }
+    const bad = list.find(a=> a.pinLen !== 4);
+    if(bad){
+      alert(`"${bad.name}" учун PIN 4 хонали рақам бўлиши керак.\n\n` +
+            `Эслатма: мавжуд агентда PIN «••••» кўринади — уни ўзгартирмасангиз, шундай қолдиринг.`);
+      return;
+    }
     const names = list.map(a=> a.name.toLowerCase());
     if(new Set(names).size !== names.length){ alert("Агент исмлари такрорланмаслиги керак."); return; }
     agents = list;
@@ -5504,7 +5400,9 @@
     if(!name){ err.textContent = "Исмингизни танланг."; return; }
     const list = sel._list || agents;
     const a = list.find(x=> x.name === name);
-    if(!a || a.pin !== pin){ err.textContent = "PIN нотўғри."; return; }
+    // Эски форматдаги (очиқ PIN) агентлар билан ҳам мослик сақланади
+    const okPin = a && ((a.pinHash && simpleHash(pin) === a.pinHash) || (a.pin && a.pin === pin));
+    if(!okPin){ err.textContent = "PIN нотўғри."; return; }
     if(a.active === false){ err.textContent = "Кириш ҳуқуқингиз тўхтатилган."; return; }
     err.textContent = "";
     currentAgent = a;
@@ -5551,7 +5449,7 @@
     // Шофёр ва йўналиш таклифлари
     let baseRecs = records;
     try{
-      const D = await loadAgentData(true);
+      const D = await loadAgentData(false);
       if(D && D.all.length) baseRecs = D.all;
     }catch(e){}
     const drivers = [...new Set(baseRecs.map(r=> r.shofyor).filter(Boolean))];
@@ -5615,7 +5513,7 @@
     }
     // --- Такрорий ёзув текшируви (умумий базага нисбатан) ---
     try{
-      const D = await loadAgentData(true);
+      const D = await loadAgentData(false);   // кэшдан — трафик тежалади
       const dups = findDuplicates(rec.sana, rec.mashina, null, D.all);
       if(dups.length){
         if(!confirm(duplicateWarningText(dups, rec.sana, rec.mashina))) return;
@@ -5779,7 +5677,7 @@
     const daysInMonth = new Date(y, m, 0).getDate();
 
     // Умумий базадан — раҳбар киритганлари ҳам, агентнинг йўлдагилари ҳам
-    const D = await loadAgentData(true);
+    const D = await loadAgentData(false);   // кэшдан
     const list = D.all.filter(r=> r.sana && String(r.sana).slice(0,7) === month);
     const byCar = {};
     list.forEach(r=>{
@@ -6020,7 +5918,7 @@
     resetIdleTimer();
   }
 
-  if(getPwHash()){
+  if(getPwHash() && !isTrusted()){
     document.getElementById("lockScreen").classList.remove("hidden");
     setTimeout(()=>document.getElementById("lockInput").focus(), 100);
   } else {
