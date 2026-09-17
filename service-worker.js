@@ -1,7 +1,9 @@
 // Кунлик Хисобот — Service Worker
 // Offline ишлаш ва PWA сифатида ўрнатиш учун
+// v2: HTML доим тармоқдан олинади — GitHub'га қўйилган янгиланиш дарҳол кўринади.
+//     Расм/manifest каби ўзгармас файллар эса кэшдан (тезроқ, интернет тежайди).
 
-const CACHE_NAME = "kunlik-hisobot-v1";
+const CACHE_NAME = "kunlik-hisobot-v2";
 const APP_SHELL = [
   "./index.html",
   "./manifest.json",
@@ -31,30 +33,49 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// ---- Сўровларни ушлаш: аввал кэш, бўлмаса тармоқ ----
+// ---- Сўровларни ушлаш ----
 self.addEventListener("fetch", (event) => {
-  // Фақат GET сўровлар учун
   if (event.request.method !== "GET") return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+  const url = new URL(event.request.url);
 
-      return fetch(event.request)
+  // Бошқа доменлар (Firebase, фонтлар) — кэшламаймиз, тўғридан-тўғри тармоқдан
+  if (url.origin !== self.location.origin) return;
+
+  const isHTML =
+    event.request.mode === "navigate" ||
+    url.pathname.endsWith(".html") ||
+    url.pathname.endsWith("/");
+
+  if (isHTML) {
+    // HTML учун: аввал тармоқ (энг янги нусха), интернет йўқ бўлса — кэшдан
+    event.respondWith(
+      fetch(event.request)
         .then((response) => {
-          // Муваффақиятли жавобни кэшга сақлаш (масалан, фонтлар)
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
         })
-        .catch(() => {
-          // Интернет йўқ ва кэшда ҳам топилмади — асосий саҳифани қайтариш
-          if (event.request.mode === "navigate") {
-            return caches.match("./index.html");
-          }
-        });
+        .catch(() =>
+          caches.match(event.request).then((cached) => cached || caches.match("./index.html"))
+        )
+    );
+    return;
+  }
+
+  // Расм, manifest каби статик файллар учун: аввал кэш (тезроқ)
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      });
     })
   );
 });
