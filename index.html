@@ -286,6 +286,13 @@
   .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
   .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
   .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
+  /* Топширилган сумма нақд пул билан қопланган кунлар — яшил белги */
+  .pivot-table .pv-taken{background:#bfe8c9;}
+  .pivot-table thead th.pv-taken{background:#8fd4a3;color:#0f2440;}
+  .pivot-table tfoot td.pv-taken{background:#a7dfb6;}
+  [data-theme="dark"] .pivot-table .pv-taken{background:#1f4d33;color:#d7f5df;}
+  [data-theme="dark"] .pivot-table thead th.pv-taken{background:#2a6b45;color:#fff;}
+  [data-theme="dark"] .pivot-table tfoot td.pv-taken{background:#245c3c;}
   .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
   .pivot-table tbody tr:hover td{background:#faf8f2;}
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
@@ -885,6 +892,20 @@
           <tbody id="cashTakenByCarBody"></tbody>
         </table>
       </div>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:20px 0;">
+      <h3 style="margin:0 0 4px;">📅 Ойлар кесимида</h3>
+      <p style="margin:0 0 12px;font-size:13px;color:var(--muted);">
+        Ҳар ойда жами топширилган сумма, ўша ойда сиз олган нақд пул ва ой якунидаги қолдиқ. Юқоридаги умумий кўрсаткич ўзгармасдан сақланади.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Ой</th><th>Топширилган</th><th>Олинган</th><th>Ой қолдиғи</th><th>Ортиб келган (жамланма)</th></tr>
+          </thead>
+          <tbody id="cashTakenByMonthBody"></tbody>
+        </table>
+      </div>
       <form class="entry" id="cashTakenForm" style="margin-top:16px;">
         <div>
           <label>Олинган сана</label>
@@ -1311,6 +1332,7 @@
     ];
 
     let db = null, ready = false, syncTimer = null, syncing = false, inboxUnsub = null;
+    let agentMode = false;   // ТРУЕ бўлса — бу қурилма фақат ЎҚИЙДИ, булутга ҳеч нарса ёзмайди
 
     function deviceId(){
       let id = localStorage.getItem(LS_DEVICE);
@@ -1354,6 +1376,10 @@
     }
 
     async function upload(silent){
+      // Агент қурилмаси ҳеч қачон умумий захирага ёзмайди — фақат ўз ёзувини
+      // "inbox" орқали юборади. Бусиз агент телефони раҳбарнинг тўлиқ
+      // (Август-Сентябр каби) тарихини ўзининг бўш нусхаси билан БОСИБ КЕТИШИ мумкин эди.
+      if(agentMode) return false;
       if(!ready || syncing) return false;
       syncing = true;
       try{
@@ -1436,7 +1462,7 @@
     }
 
     function scheduleUpload(){
-      if(!ready) return;
+      if(agentMode || !ready) return;
       clearTimeout(syncTimer);
       syncTimer = setTimeout(()=> upload(true), 3000);
     }
@@ -1548,6 +1574,30 @@
           if(incoming.length) onNew(incoming);
         }, e=> console.warn("Inbox кузатувида хато:", e && e.message));
     }
+
+    /* ============================================================
+       ЖОНЛИ КУЗАТУВ (реал вақт) — АГЕНТ учун.
+       Раҳбар маълумот сақлаган заҳоти (yoki bошqa agent yozganda),
+       agent экрани ЎЗИ, тугма босилмасдан янгиланади.
+       ============================================================ */
+    let backupMetaUnsub = null;
+    function watchBackupMeta(onChange){
+      if(!ready || backupMetaUnsub) return;
+      backupMetaUnsub = db.collection(COLL_BACKUP).doc(DOC_MAIN)
+        .onSnapshot(doc=>{
+          if(doc.exists) onChange(doc.data());
+        }, e=> console.warn("Захира кузатувида хато:", e && e.message));
+    }
+    let ownInboxUnsub = null;
+    function watchOwnInbox(agentName, onChange){
+      if(!ready || ownInboxUnsub) return;
+      ownInboxUnsub = db.collection(COLL_INBOX).where("agentName","==",agentName)
+        .onSnapshot(()=> onChange(), e=> console.warn("Агент почтаси кузатувида хато:", e && e.message));
+    }
+    function stopLiveWatches(){
+      if(backupMetaUnsub){ backupMetaUnsub(); backupMetaUnsub = null; }
+      if(ownInboxUnsub){ ownInboxUnsub(); ownInboxUnsub = null; }
+    }
     // Раҳбар ёзувни ўчирса — булутдаги нусхаси ҳам ўчирилади (агентда ҳам йўқолади)
     async function deleteInboxRecord(id){
       if(!ready) return;
@@ -1611,6 +1661,17 @@
 
     return {
       isReady, getDb,
+      // Агентни ёзувга умуман рухсат бермасдан белгилайди.
+      // Ҳатто аввал start() (раҳбар режими) чақирилган бўлса ҳам,
+      // шу лаҳзадан кейин upload/scheduleUpload ҳеч нарса қилмайди.
+      setAgentMode(v){ agentMode = !!v; },
+      // Агент қурилмаси учун — фақат ЎҚИШ. localStorage'ни ушламайди,
+      // булутдаги конфликтни текширмайди, ҳеч нарса юкламайди.
+      startReadOnly(){
+        agentMode = true;
+        if(!init()){ return false; }
+        return true;
+      },
       start(){
         if(!init()){ setStatus("Уланмади (интернет йўқ)", "var(--bad)"); return false; }
         const origSet = localStorage.setItem.bind(localStorage);
@@ -1618,9 +1679,11 @@
         localStorage.setItem = function(k,v){ origSet(k,v); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
         localStorage.removeItem = function(k){ origRemove(k); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
         setLastSyncLabel(Number(localStorage.getItem(LS_LASTSYNC)||0) || null);
-        setTimeout(checkOnStart, 1200);
         return true;
       },
+      // Булутдаги конфликтни текшириш — энди БУЛ ФУНКЦИЯ АЛОҲИДА чақирилади
+      // (парол кирилгандан КЕЙИН), шунинг учун у логин жараёнини бузмайди.
+      runCheck(){ if(!agentMode) checkOnStart(); },
       uploadNow(){ return upload(false); },
       async restoreNow(){
         if(!confirm("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?")) return;
@@ -1629,6 +1692,7 @@
       pushAgentRecord, fetchAgentTodayRecords, fetchAgentTodayRecordsAll, fetchAgentMonthRecords,
       fetchSharedRecords, fetchSharedCars, fetchSharedAll,
       listenAgentInbox, markClaimed, removeFromInbox, deleteInboxRecord,
+      watchBackupMeta, watchOwnInbox, stopLiveWatches,
       saveAgentsToCloud, loadAgentsFromCloud, setStatus
     };
   })();
@@ -2349,8 +2413,7 @@
   function printTable(title, tableSelector){
     const table = document.querySelector(tableSelector);
     if(!table){ toast("Жадвал топилмади"); return; }
-    const w = window.open("", "_blank");
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
     <style>
       body{font-family:Arial,sans-serif;padding:20px;color:#1c2430;}
       h1{font-size:18px;color:#0f2440;}
@@ -2363,10 +2426,9 @@
     <h1>${title}</h1>
     <p>Чоп этилган сана: ${new Date().toLocaleDateString("uz-UZ")} ${new Date().toLocaleTimeString("uz-UZ")}</p>
     ${table.outerHTML}
-    </body></html>`);
-    w.document.close();
-    w.focus();
-    setTimeout(()=>{ w.print(); }, 300);
+    </body></html>`;
+    // Попап блокланган бўлса ҳам ишлайдиган усул (телефонда муҳим)
+    printFullHtmlDoc(html);
   }
   document.getElementById("printRecords").addEventListener("click", ()=>{
     printTable("Кунлик Хисобот — Барча ёзувлар (by Iqbol Jalilov)", "#view-records table");
@@ -3372,6 +3434,33 @@ ${XL_PAGE}
     return Number(r.tushum||0) - Number(r.yoqilgi||0) - Number(r.yol||0) - Number(r.boshqa||0);
   }
 
+  /* ============================================================
+     "МЕН ОЛГАН НАҚД ПУЛ" бўйича — қайси кунгача пул олинган?
+     "Топширилган" суммаси кунма-кун (жамики мошиналар бўйича) ЙИҲИНДИ
+     ҳисобланади, хронологик тартибда. Жамланма сумма "Мен олган нақд пул"
+     умумий суммасидан ошмагунча — ўша кунлар "олинган" ҳисобланади.
+     МУҲИМ: бу ҲАР ДОИМ "Топширилган" майдонига асосланади (кўрсаткич
+     танловидан қатъи назар), чунki "Мен олган нақд пул" худди шу
+     майдондан олинади.
+     ============================================================ */
+  function computeTakenCutoff(){
+    const dayTotals = {};   // "YYYY-MM-DD" -> шу куннинг жами топширилган суммаси
+    records.forEach(r=>{
+      if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
+      dayTotals[r.sana] = (dayTotals[r.sana] || 0) + Number(r.topshirilgan);
+    });
+    const days = Object.keys(dayTotals).sort();   // хронологик тартиб
+    const totalTaken = cashTaken.reduce((s,c)=> s + Number(c.summa||0), 0);
+
+    let running = 0, cutoffDate = null;
+    for(const d of days){
+      running += dayTotals[d];
+      if(running <= totalTaken) cutoffDate = d;
+      else break;
+    }
+    return { cutoffDate, totalTaken, dayTotals };
+  }
+
   function buildPivot(){
     const month  = document.getElementById("pivotMonth").value || localDateStr().slice(0,7);
     const metric = document.getElementById("pivotMetric").value;
@@ -3421,8 +3510,17 @@ ${XL_PAGE}
     const days = P.activeDays;
     if(!days.length){ el.innerHTML = `<p class="empty">Бу ойда ёзув йўқ.</p>`; return; }
 
+    // Қайси кунлар "олинган" (топширилган суммаси нақд пул билан қопланган)
+    const taken = computeTakenCutoff();
+    const monthPrefix = P.month;   // "YYYY-MM"
+    const isTaken = d=>{
+      if(!taken.cutoffDate) return false;
+      const ds = `${monthPrefix}-${String(d).padStart(2,"0")}`;
+      return ds <= taken.cutoffDate;
+    };
+
     let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
-    days.forEach(d=> head += `<th class="pv-num">${d}</th>`);
+    days.forEach(d=> head += `<th class="pv-num${isTaken(d)?' pv-taken':''}">${d}</th>`);
     head += `<th class="pv-total">Жами</th></tr>`;
 
     const dayTotals = {};
@@ -3437,7 +3535,7 @@ ${XL_PAGE}
         const v = P.byCar[name][d] || 0;
         rowSum += v;
         dayTotals[d] = (dayTotals[d] || 0) + v;
-        tds += `<td class="pv-num">${show(v)}</td>`;
+        tds += `<td class="pv-num${isTaken(d)?' pv-taken':''}">${show(v)}</td>`;
       });
       grand += rowSum;
       body += `<tr><td><b>${esc(name)}</b></td><td>${esc(rusumi)}</td>${tds}` +
@@ -3445,7 +3543,7 @@ ${XL_PAGE}
     });
 
     let foot = `<tr class="pv-foot"><td colspan="2">жами</td>`;
-    days.forEach(d=> foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`);
+    days.forEach(d=> foot += `<td class="pv-num${isTaken(d)?' pv-taken':''}">${show(dayTotals[d]||0)}</td>`);
     foot += `<td class="pv-total">${show(grand)}</td></tr>`;
 
     const metricLabel = P.metric === "tushum" ? "Тушум"
@@ -3457,7 +3555,12 @@ ${XL_PAGE}
         ${P.y} йил ${monthNames[P.m-1]}ойи
       </div>
       <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">
-        Кўрсаткич: <b>${metricLabel}</b> · ${unitLabel}
+        Кўрсаткич: <b>${metricLabel}</b> · ${unitLabel} ·
+        <span style="display:inline-flex;align-items:center;gap:5px;margin-left:6px;">
+          <span style="width:12px;height:12px;border-radius:3px;background:#bfe8c9;display:inline-block;"></span>
+          — топширилган сумма нақд пул билан қопланган кунлар
+          ${taken.cutoffDate ? `(${fmtDate(taken.cutoffDate)}гача)` : ""}
+        </span>
       </div>
       <table class="pivot-table">
         <thead>${head}</thead>
@@ -3920,9 +4023,73 @@ ${XL_PAGE}
     exitCashTakenEditMode();
   });
 
+  /* ============================================================
+     "МЕН ОЛГАН НАҚД ПУЛ" — ОЙЛАР КЕСИМИДА
+     Ҳар ой учун: ўша ойда топширилган, ўша ойда олинган, ой қолдиғи.
+     "Ортиб келган (жамланма)" — энг биринчи ойдан то шу ойгача бўлган
+     ЙИҒИНДИ қолдиқ (пул бир ойда топширилиб, кейинги ойда олиниши мумкин,
+     шунинг учун ҳақиқий "қўлимда қолиши керак бўлган пул" — жамланма орқали кўринади).
+     ============================================================ */
+  function renderCashTakenByMonth(){
+    const body = document.getElementById("cashTakenByMonthBody");
+    if(!body) return;
+
+    const topByMonth = {};
+    records.forEach(r=>{
+      if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
+      const mo = String(r.sana).slice(0,7);
+      topByMonth[mo] = (topByMonth[mo]||0) + Number(r.topshirilgan);
+    });
+    const takenByMonth = {};
+    cashTaken.forEach(c=>{
+      if(!c.sana) return;
+      const mo = String(c.sana).slice(0,7);
+      takenByMonth[mo] = (takenByMonth[mo]||0) + Number(c.summa||0);
+    });
+
+    const months = [...new Set([...Object.keys(topByMonth), ...Object.keys(takenByMonth)])].sort();
+    if(!months.length){
+      body.innerHTML = `<tr><td colspan="5" class="empty">Ҳозирча маълумот йўқ.</td></tr>`;
+      return;
+    }
+
+    const monthNames = ["январь","февраль","март","апрель","май","июнь",
+                        "июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+    let running = 0;
+    const rows = months.map(mo=>{
+      const [y,m] = mo.split("-").map(Number);
+      const top = topByMonth[mo] || 0;
+      const taken = takenByMonth[mo] || 0;
+      const monthNet = top - taken;
+      running += monthNet;
+      return `<tr>
+        <td><b>${monthNames[m-1]} ${y}</b></td>
+        <td>${fmt(top)}</td>
+        <td>${fmt(taken)}</td>
+        <td class="${monthNet<0?'neg':'pos'}">${fmt(monthNet)}</td>
+        <td class="${running<0?'neg':'pos'}" style="font-weight:700;">${fmt(running)}</td>
+      </tr>`;
+    }).join("");
+
+    // Якуний қатор — юқоридаги умумий кўрсаткичлар билан айнан мос келади
+    const grandTop = Object.values(topByMonth).reduce((s,v)=>s+v,0);
+    const grandTaken = Object.values(takenByMonth).reduce((s,v)=>s+v,0);
+    const grandNet = grandTop - grandTaken;
+    const footer = `<tr style="background:var(--gold-soft);font-weight:800;border-top:2px solid var(--gold);">
+      <td>ЖАМИ</td>
+      <td>${fmt(grandTop)}</td>
+      <td>${fmt(grandTaken)}</td>
+      <td class="${grandNet<0?'neg':'pos'}">${fmt(grandNet)}</td>
+      <td class="${grandNet<0?'neg':'pos'}">${fmt(grandNet)}</td>
+    </tr>`;
+
+    body.innerHTML = rows + footer;
+  }
+
   function renderCashTaken(){
     const box = document.getElementById("ct_topshirilgan");
     if(!box) return;
+    renderCashTakenByMonth();
     const totalTopshirilgan = records.reduce((s,r)=> s + (r.topshirilgan || 0), 0);
     const totalOlingan = cashTaken.reduce((s,c)=> s + c.summa, 0);
     const qoldiq = totalTopshirilgan - totalOlingan;
@@ -4412,6 +4579,9 @@ ${XL_PAGE}
       toast("Бисмиллаҳир роҳманир роҳим — хуш келибсиз!");
       document.getElementById("lockScreen").classList.add("hidden");
       markTrusted();
+      // Булутдаги конфликтни ФАҚАТ киргандан кейин текширамиз —
+      // шунда у логин экранини бузиб, "яна кир" деган таассурот қолдирмайди.
+      setTimeout(()=> CLOUD.runCheck(), 1200);
     } else {
       document.getElementById("lockErr").textContent = "Парол нотўғри, қайта уриниб кўринг";
       document.getElementById("lockInput").value = "";
@@ -5320,6 +5490,11 @@ ${XL_PAGE}
   /* ---- Раҳбар: агентлар киритган ёзувларни қабул қилиш ---- */
   function startAgentInboxListener(){
     CLOUD.listenAgentInbox(async incoming=>{
+      // ҲИМОЯ: агар шу қурилма (аввал раҳбар сифатида очилиб, кейин)
+      // агент режимига ўтган бўлса — бу ерда ҳеч нарса қилмаймиз.
+      // Акс ҳолда агент ўз ёзувини ўзи "қабул қилиб", inbox'дан ўчириб,
+      // лекин ЎЗ БЎШ базасига сақлаб қўяр эди — ёзув бутунлай йўқолар эди.
+      if(currentAgent) return;
       const existing = new Set(records.map(r=> r.id));
       const fresh = incoming.filter(r=> !existing.has(r.id));
       if(fresh.length){
@@ -5406,6 +5581,12 @@ ${XL_PAGE}
     if(a.active === false){ err.textContent = "Кириш ҳуқуқингиз тўхтатилган."; return; }
     err.textContent = "";
     currentAgent = a;
+    // МУҲИМ: биринчи марта кирганда CLOUD.start() аллақачон "раҳбар режими"да
+    // ишга тушган бўлади (сайт очилганда currentAgent ҳали null эди).
+    // Шу лаҳзадан бошлаб ёзишни бутунлай тақиқлаймиз — акс ҳолда бу қурилма
+    // раҳбарнинг тўлиқ тарихини (масалан Август-Сентябр) ўзининг бўш
+    // нусхаси билан алмаштириб қўйиши мумкин эди.
+    CLOUD.setAgentMode(true);
     sessionStorage.setItem("kh_agent", name);
     document.getElementById("agentLogin").style.display = "none";
     document.getElementById("mainApp").style.display = "none";   // раҳбар ойнасини яширамиз
@@ -5421,6 +5602,7 @@ ${XL_PAGE}
 
   async function initAgentPanel(){
     document.getElementById("ag_sana").valueAsDate = new Date();
+    startAgentLiveWatch();   // ана — жонли кузатувни ёқамиз
     // Мошиналар рўйхати — булутдан ёки локалдан
     // Мошиналар рўйхати — булутдан (раҳбар базасидан), бўлмаса локалдан
     try{
@@ -5546,6 +5728,26 @@ ${XL_PAGE}
      Шунинг учун раҳбар ўчирган ёзув агентда ҳам дарҳол йўқолади,
      ва агент раҳбар киритган ёзувларни ҳам кўради. */
   let agentDataCache = null;
+
+  /* ---- Агент: жонли янгиланиш (реал вақт) ----
+     Раҳбар ёзув сақлаган заҳоти ёки ўзининг юборган ёзуви қабул қилинганда,
+     агент экрани ЎЗИ, тугма босилмасдан янгиланади — худди сайтлардагидек. */
+  let liveWatchTimer = null;
+  function scheduleLiveRefresh(){
+    // Бир нечта ўзгариш кетма-кет келса — фақат бир марта янгилаймиз (1 сония)
+    clearTimeout(liveWatchTimer);
+    liveWatchTimer = setTimeout(async ()=>{
+      agentDataCache = null;
+      await renderAgentToday();
+      await renderAgentPivot();
+      toast("Янгиланди");
+    }, 1000);
+  }
+  function startAgentLiveWatch(){
+    if(!currentAgent) return;
+    CLOUD.watchBackupMeta(()=> scheduleLiveRefresh());
+    CLOUD.watchOwnInbox(currentAgent.name, ()=> scheduleLiveRefresh());
+  }
 
   async function loadAgentData(force){
     if(agentDataCache && !force) return agentDataCache;
@@ -5859,8 +6061,22 @@ ${XL_PAGE}
   // ---- Булут тугмалари ва ишга тушириш ----
   document.getElementById("cloudSyncNowBtn")?.addEventListener("click", ()=> CLOUD.uploadNow());
   document.getElementById("cloudRestoreBtn")?.addEventListener("click", ()=> CLOUD.restoreNow());
-  if(CLOUD.start()){
-    startAgentInboxListener();
+  if(currentAgent){
+    // Агент қурилмаси — фақат ЎҚИЙДИ. Умумий захирага ёзмайди,
+    // конфликт текширмайди, бошқа агентлар почтасини "қабул қилмайди".
+    CLOUD.startReadOnly();
+  }else{
+    if(CLOUD.start()){
+      startAgentInboxListener();
+      // Конфликтни текшириш: парол ўрнатилмаган ёки аллақачон ишончли
+      // (кейинги очишларда) бўлса — дарҳол; акс ҳолда логиндан кейин
+      // (tryUnlock ичида) чақирилади — логин экранини бузмаслик учун.
+      // "currentAgent"ни ижро пайтида ҳам текширамиз — агар шу 1.2 сония ичида
+      // фойдаланувчи "Мен агентман"га ўтиб улгурган бўлса, текширувни қиламиз.
+      if(!getPwHash() || isTrusted()){
+        setTimeout(()=>{ if(!currentAgent) CLOUD.runCheck(); }, 1200);
+      }
+    }
   }
 
   // ---- Pull-to-refresh (телефонда рўйхатни пастга тортиб янгилаш) ----
