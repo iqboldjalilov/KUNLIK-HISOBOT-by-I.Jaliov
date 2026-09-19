@@ -1387,45 +1387,19 @@
 
         // ⚠️ ҲИМОЯ: юклашдан олдин булутда бошқа қурилма ёзиб кетмаганини текширамиз.
         // Акс ҳолда иккита қурилма бир-бирининг маълумотини ўчириб юбориши мумкин.
-        try{
+                try{
           const cur = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
           if(cur.exists){
             const meta = cur.data();
             const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
             if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 2000){
-              const d = new Date(meta.updatedAt);
-              if(silent){
-                // Фон синхронизацияси — фойдаланувчини тўхтатмаймиз.
-                // Сақламаймиз, фақат огоҳлантириш кўрсатамиз.
-                setStatus("⚠️ Булутда янгироқ нусха бор — сақланмади", "var(--bad)");
-                const warn = document.getElementById("cloudConflictWarn");
-                if(warn){
-                  warn.style.display = "";
-                  warn.innerHTML = `<div class="notice" style="margin:10px 0 0;">
-                    <b>⚠️ Булутдаги нусха бошқа қурилмада янгиланган</b>
-                    (${d.toLocaleString("uz-UZ")}).<br>
-                    Шунинг учун ўзгаришларингиз булутга сақланмаяпти.<br>
-                    Қуйидагилардан бирини танланг:
-                    <ul style="margin:6px 0 0 18px;padding:0;">
-                      <li><b>«Булутдан тиклаш»</b> — булутдагини олиб, ўз ишингизни устига қайта киритасиз</li>
-                      <li><b>«Ҳозир булутга сақлаш»</b> — сизники булутдагини алмаштиради</li>
-                    </ul>
-                  </div>`;
-                }
-                syncing = false;
-                return false;
-              }
-              const ok = confirm(
-                "ДИҚҚАТ! Булутдаги нусха бошқа қурилмада янгиланган.\n\n" +
-                "Булут: " + d.toLocaleString("uz-UZ") + "\n\n" +
-                "«OK» — сизнинг маълумотингиз булутдагини АЛМАШТИРАДИ\n" +
-                "«Бекор» — сақланмайди, аввал «Булутдан тиклаш» қилинг"
-              );
-              if(!ok){
-                setStatus("Сақланмади — булутда янгироқ нусха бор", "var(--bad)");
-                syncing = false;
-                return false;
-              }
+              // Булут бизникидан янгироқ — ўзимизникини УСТИГА ЁЗМАЙМИЗ.
+              // Аввал булутдагини тортиб оламиз, сўнг саҳифа қайта юкланади.
+              setStatus("Булутдан янгиланмоқда...", "var(--gold)");
+              await restore();
+              syncing = false;
+              location.reload();
+              return false;
             }
           }
         }catch(e){ /* текширув имкони бўлмаса — давом этамиз */ }
