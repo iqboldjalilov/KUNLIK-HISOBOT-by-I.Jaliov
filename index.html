@@ -286,11 +286,108 @@
   .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
   .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
   .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
+  /* Топширилган сумма нақд пул билан қопланган кунлар — яшил белги */
+  .pivot-table .pv-taken{background:#bfe8c9;}
+  .pivot-table thead th.pv-taken{background:#8fd4a3;color:#0f2440;}
+  .pivot-table tfoot td.pv-taken{background:#a7dfb6;}
+  [data-theme="dark"] .pivot-table .pv-taken{background:#1f4d33;color:#d7f5df;}
+  [data-theme="dark"] .pivot-table thead th.pv-taken{background:#2a6b45;color:#fff;}
+  [data-theme="dark"] .pivot-table tfoot td.pv-taken{background:#245c3c;}
   .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
   .pivot-table tbody tr:hover td{background:#faf8f2;}
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
+
+  /* ============================================================
+     ЧОП ЭТИШ / PDF — саҳифа ичида (телефонда ҳам ишлайди)
+     ============================================================ */
+  #printArea{display:none;}
+  #printArea .print-title{font-size:18px;font-weight:800;color:#0f2440;margin-bottom:8px;}
+
+  @media print{
+    body.printing > *{display:none !important;}
+    body.printing #printArea{
+      display:block !important;
+      position:static;
+      padding:0;margin:0;
+      background:#fff;color:#000;
+    }
+    body.printing #printArea table{
+      border-collapse:collapse;width:100%;font-size:10.5px;
+    }
+    body.printing #printArea th,
+    body.printing #printArea td{
+      border:1px solid #999;padding:3px 5px;text-align:right;white-space:nowrap;
+      background:#fff !important;color:#000 !important;
+    }
+    body.printing #printArea th:first-child,
+    body.printing #printArea td:first-child,
+    body.printing #printArea th:nth-child(2),
+    body.printing #printArea td:nth-child(2){text-align:left;}
+    body.printing #printArea thead th{
+      background:#0f2440 !important;color:#fff !important;font-weight:bold;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    body.printing #printArea tfoot td,
+    body.printing #printArea .pv-total{
+      background:#fff6cf !important;font-weight:bold;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    @page{size:landscape;margin:8mm;}
+  }
 </style>
 </head>
 <body>
@@ -361,26 +458,31 @@
       <form class="entry" id="agentForm">
         <div><label>Сана</label><input type="date" id="ag_sana" required></div>
         <div><label>Мошина</label><select id="ag_mashina" required></select></div>
-        <div><label>Шофёр</label><input type="text" id="ag_shofyor" list="agDriverList"><datalist id="agDriverList"></datalist></div>
-        <div><label>Йўналиш</label><input type="text" id="ag_yonalish" list="agRouteList"><datalist id="agRouteList"></datalist></div>
-        <div><label>Умумий тушум (сўм)</label><input type="number" id="ag_tushum" min="0" step="1000" required></div>
-        <div><label>Ёқилғи харажати (сўм)</label><input type="number" id="ag_yoqilgi" min="0" step="1000" value="0"></div>
-        <div><label>Топширилган сумма (сўм)</label><input type="number" id="ag_topshirilgan" min="0" step="1000" placeholder="Шофёр топширган"></div>
+        <div data-agf="shofyor"><label>Шофёр</label><input type="text" id="ag_shofyor" list="agDriverList"><datalist id="agDriverList"></datalist></div>
+        <div data-agf="yonalish"><label>Йўналиш</label><input type="text" id="ag_yonalish" list="agRouteList"><datalist id="agRouteList"></datalist></div>
+        <div><label>Умумий тушум</label><input type="number" id="ag_tushum" min="0" step="1000" required></div>
+        <div data-agf="yoqilgi"><label>Ёқилғи харажати</label><input type="number" id="ag_yoqilgi" min="0" step="1000" value="0"></div>
+        <div data-agf="topshirilgan"><label>Топширилган сумма</label><input type="number" id="ag_topshirilgan" min="0" step="1000" placeholder="Шофёр топширган"></div>
         <button type="button" class="more-toggle" id="agMoreToggle"><span class="chev">▸</span> Қўшимча (йўл, бошқа харажат, км)</button>
         <div class="more-fields hidden" id="agMoreWrap">
-          <div><label>Йўл харажати (сўм)</label><input type="number" id="ag_yol" min="0" step="1000" value="0"></div>
-          <div><label>Бошқа харажат (сўм)</label><input type="number" id="ag_boshqa" min="0" step="1000" value="0"></div>
-          <div><label>Босилган масофа (км)</label><input type="number" id="ag_km" min="0" step="1"></div>
+          <div data-agf="yol"><label>Йўл харажати</label><input type="number" id="ag_yol" min="0" step="1000" value="0"></div>
+          <div data-agf="boshqa"><label>Бошқа харажат</label><input type="number" id="ag_boshqa" min="0" step="1000" value="0"></div>
+          <div data-agf="km"><label>Босилган масофа (км)</label><input type="number" id="ag_km" min="0" step="1"></div>
         </div>
+        <div class="full" id="agDupHint"></div>
         <div class="full" id="agPreview" style="font-size:13px;color:var(--muted);"></div>
-        <div class="full"><label>Изоҳ</label><input type="text" id="ag_izoh"></div>
+        <div class="full" data-agf="izoh"><label>Изоҳ</label><input type="text" id="ag_izoh"></div>
         <div class="full actions-row">
           <button type="submit" class="btn gold">Сақлаш ва юбориш</button>
         </div>
       </form>
     </div>
     <div class="card">
-      <h2>Бугун сиз киритган ёзувлар</h2>
+      <h2>Танланган санадаги ёзувлар</h2>
+      <div id="agentBaseNote"></div>
+      <div class="actions-row" style="margin-top:0;">
+        <button class="btn outline" id="agTodayRefreshBtn">🔄 Янгилаш</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>№</th><th>Сана</th><th>Мошина</th><th>Шофёр</th><th>Тушум</th><th>Топширилган</th><th>Ҳолат</th></tr></thead>
@@ -388,21 +490,21 @@
         </table>
       </div>
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
-        Ёзувни ўчириш ёки таҳрирлаш фақат раҳбарда мумкин. Хато киритсангиз, раҳбарга хабар беринг.
+        Бу ерда раҳбар базасидаги барча ёзувлар кўринади — сиз киритганлар ҳам, раҳбар киритганлар ҳам.
+        Ёзувни ўчириш ёки таҳрирлаш фақат раҳбарда мумкин.
       </p>
     </div>
 
     <div class="card" style="border-left:4px solid var(--gold);">
       <h2>📅 Ойлик ҳисобот</h2>
       <p style="margin-top:-8px;font-size:13px;color:var(--muted);">
-        Сиз киритган ёзувлар бўйича кунма-кун жадвал. Excel ёки PDF кўринишида юклаб олиш мумкин.
+        Раҳбар базасидаги барча ёзувлар бўйича кунма-кун жадвал. Excel ёки PDF кўринишида юклаб олиш мумкин.
       </p>
       <div class="filters">
         <div class="fld">
           <label>Ой</label>
           <input type="month" id="agPivotMonth">
         </div>
-          <div class="fld" style="min-width:180px;"><label>Булутдаги ойлар</label><select id="agPivotHistory"><option value="">Ойни танланг</option></select></div>
         <div class="fld">
           <label>Кўрсаткич</label>
           <select id="agPivotMetric">
@@ -523,6 +625,7 @@
           <input type="number" id="f_km" min="0" step="1" placeholder="Масалан: 320">
         </div>
         </div>
+        <div class="full" id="dupHint"></div>
         <div class="full" id="qarzPreview" style="font-size:13px;color:var(--muted);"></div>
         <div class="full" id="kmPreview" style="font-size:13px;color:var(--muted);"></div>
         <div class="full">
@@ -789,6 +892,20 @@
           <tbody id="cashTakenByCarBody"></tbody>
         </table>
       </div>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:20px 0;">
+      <h3 style="margin:0 0 4px;">📅 Ойлар кесимида</h3>
+      <p style="margin:0 0 12px;font-size:13px;color:var(--muted);">
+        Ҳар ойда жами топширилган сумма, ўша ойда сиз олган нақд пул ва ой якунидаги қолдиқ. Юқоридаги умумий кўрсаткич ўзгармасдан сақланади.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Ой</th><th>Топширилган</th><th>Олинган</th><th>Ой қолдиғи</th><th>Ортиб келган (жамланма)</th></tr>
+          </thead>
+          <tbody id="cashTakenByMonthBody"></tbody>
+        </table>
+      </div>
       <form class="entry" id="cashTakenForm" style="margin-top:16px;">
         <div>
           <label>Олинган сана</label>
@@ -1004,6 +1121,7 @@
         <div class="stat"><div class="label">Сўнгги сақлаш</div><div class="value" id="cloudLastSync" style="font-size:15px;">—</div></div>
         <div class="stat"><div class="label">Агент ёзувлари</div><div class="value" id="cloudAgentCount" style="font-size:15px;">—</div></div>
       </div>
+      <div id="cloudConflictWarn" style="display:none;"></div>
       <div class="actions-row">
         <button class="btn gold" id="cloudSyncNowBtn">Ҳозир булутга сақлаш</button>
         <button class="btn outline" id="cloudRestoreBtn">Булутдан тиклаш</button>
@@ -1011,6 +1129,18 @@
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
         «Булутдан тиклаш» шу қурилмадаги жорий маълумотни булутдаги нусха билан алмаштиради.
       </p>
+    </div>
+
+    <div class="card" id="dupCheckCard" style="border-left:4px solid #b3402a;">
+      <h2>🔍 Такрорий ёзувларни текшириш</h2>
+      <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
+        Бир кун + бир мошина учун бир нечта ёзув борми — шуни топади.
+        Бу сиз ва агент бир хил кунни киритиб қўйганда юз беради ва тушум икки марта ҳисобланиб кетади.
+      </p>
+      <div class="actions-row" style="margin-top:4px;">
+        <button class="btn gold" id="runDupCheckBtn">Текширишни бошлаш</button>
+      </div>
+      <div id="dupCheckResult"></div>
     </div>
 
     <div class="card">
@@ -1023,6 +1153,17 @@
       <div class="actions-row">
         <button class="btn outline" id="addAgentBtn">+ Агент қўшиш</button>
         <button class="btn gold" id="saveAgentsBtn">Сақлаш</button>
+      </div>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0;">
+      <h3 style="margin:0 0 4px;">Агент формасидаги майдонлар</h3>
+      <p style="font-size:13px;color:var(--muted);margin-top:0;">
+        Белгини олиб ташласангиз, ўша майдон агент ойнасида кўринмайди.
+        Сана, мошина ва тушум — мажбурий, уларни ўчириб бўлмайди.
+      </p>
+      <div id="agentFieldsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;"></div>
+      <div class="actions-row">
+        <button class="btn gold" id="saveAgentFieldsBtn">Майдонларни сақлаш</button>
       </div>
     </div>
 
@@ -1061,9 +1202,26 @@
         <button class="btn outline" id="setPwBtn">Парол ўрнатиш / ўзгартириш</button>
         <button class="btn outline" id="removePwBtn">Паролни ўчириш</button>
       </div>
-      <div style="margin-top:14px;">
-        <label>Фаолиятсизликдан кейин автомат қулфлаш (дақиқа, 0 = ўчирилган)</label>
-        <input type="number" id="autoLockMin" min="0" max="120" style="max-width:120px;">
+      <div class="entry" style="grid-template-columns:1fr 1fr;margin-top:14px;">
+        <div>
+          <label>Фаолиятсизликдан кейин автомат қулфлаш (дақиқа, 0 = ўчирилган)</label>
+          <input type="number" id="autoLockMin" min="0" max="120">
+        </div>
+        <div>
+          <label>Паролни қайта сўрамаслик муддати (соат, 0 = ҳар сафар сўралсин)</label>
+          <input type="number" id="trustHoursInp" min="0" max="720">
+        </div>
+        <div>
+          <label>Таҳрирлаш паролини қайта сўрамаслик (дақиқа)</label>
+          <input type="number" id="editGraceInp" min="0" max="240">
+        </div>
+        <div class="full">
+          <p style="font-size:12.5px;color:var(--muted);margin:0;">
+            <b>Паролни қайта сўрамаслик муддати</b> — шу муддат давомида дастурни қайта очганда парол сўралмайди
+            (телефонда илова фонга ўтиб қайтганда ҳам). «⏻ Чиқиш» тугмаси босилса ёки автомат қулфлаш ишласа —
+            муддат бекор бўлади ва парол қайтадан сўралади.
+          </p>
+        </div>
       </div>
     </div>
 
@@ -1098,7 +1256,7 @@
 
     <div class="card">
       <h2>Маълумотлар</h2>
-      <p style="font-size:13px;color:var(--muted);">Барча маълумот ушбу компьютердаги браузер хотирасида сақланади (интернет талаб қилинмайди). Файлни бошқа компьютерга кўчирсангиз, маълумотлар автоматик ўтмайди — шунинг учун вақти-вақти билан "Захира нусха олиш" тугмасидан фойдаланинг.</p>
+      <p style="font-size:13px;color:var(--muted);">Маълумот ушбу қурилма хотирасида сақланади (интернетсиз ишлайди) ва булутга ҳам автомат захираланади. Булут орқали бошқа қурилмада тиклаш мумкин. Қўшимча хавфсизлик учун вақти-вақти билан "Захира нусха олиш" тугмасидан ҳам фойдаланинг.</p>
       <div class="actions-row">
         <button class="btn outline" id="backupBtn">Захира нусха олиш (.json)</button>
         <button class="btn outline" id="restoreBtn">Захирадан тиклаш</button>
@@ -1121,7 +1279,7 @@
 
 </main>
 
-<footer>Кунлик Хисобот дастури (by Iqbol Jalilov) · Firebase асосий база · Локал кэш ва offline fallback</footer>
+<footer>Кунлик Хисобот дастури (by Iqbol Jalilov) · Интернетсиз ишлайди · Маълумот булутга ҳам захираланади</footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -1134,6 +1292,8 @@
   const LS_AUDIT = "kh_audit_v1";
   const LS_TG = "kh_telegram_v1";
   const LS_LOCKMIN = "kh_lockmin_v1";
+  const LS_TRUST = "kh_trust_until_v1";
+  const LS_TRUSTH = "kh_trust_hours_v1";
   const LS_PWRESET = "kh_pwreset_v1";
   const LS_DEBTPAY = "kh_debtpay_v1";
   const LS_AUTOSEND = "kh_autosend_v1";
@@ -1168,10 +1328,11 @@
       "kh_records_v1","kh_cars_v1","kh_pw_v1","kh_audit_v1","kh_telegram_v1",
       "kh_lockmin_v1","kh_debtpay_v1","kh_autosend_v1","kh_lastautosent_v1",
       "kh_cashtaken_v1","kh_expenses_v1","kh_expense_payments_v1",
-      "kh_theme_v1","kh_logo_v1","kh_brand_v1","kh_agents_v1"
+      "kh_theme_v1","kh_logo_v1","kh_brand_v1","kh_agents_v1","kh_agent_fields_v1"
     ];
 
     let db = null, ready = false, syncTimer = null, syncing = false, inboxUnsub = null;
+    let agentMode = false;   // ТРУЕ бўлса — бу қурилма фақат ЎҚИЙДИ, булутга ҳеч нарса ёзмайди
 
     function deviceId(){
       let id = localStorage.getItem(LS_DEVICE);
@@ -1215,10 +1376,60 @@
     }
 
     async function upload(silent){
+      // Агент қурилмаси ҳеч қачон умумий захирага ёзмайди — фақат ўз ёзувини
+      // "inbox" орқали юборади. Бусиз агент телефони раҳбарнинг тўлиқ
+      // (Август-Сентябр каби) тарихини ўзининг бўш нусхаси билан БОСИБ КЕТИШИ мумкин эди.
+      if(agentMode) return false;
       if(!ready || syncing) return false;
       syncing = true;
       try{
         setStatus("Сақланмоқда...");
+
+        // ⚠️ ҲИМОЯ: юклашдан олдин булутда бошқа қурилма ёзиб кетмаганини текширамиз.
+        // Акс ҳолда иккита қурилма бир-бирининг маълумотини ўчириб юбориши мумкин.
+        try{
+          const cur = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
+          if(cur.exists){
+            const meta = cur.data();
+            const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
+            if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 2000){
+              const d = new Date(meta.updatedAt);
+              if(silent){
+                // Фон синхронизацияси — фойдаланувчини тўхтатмаймиз.
+                // Сақламаймиз, фақат огоҳлантириш кўрсатамиз.
+                setStatus("⚠️ Булутда янгироқ нусха бор — сақланмади", "var(--bad)");
+                const warn = document.getElementById("cloudConflictWarn");
+                if(warn){
+                  warn.style.display = "";
+                  warn.innerHTML = `<div class="notice" style="margin:10px 0 0;">
+                    <b>⚠️ Булутдаги нусха бошқа қурилмада янгиланган</b>
+                    (${d.toLocaleString("uz-UZ")}).<br>
+                    Шунинг учун ўзгаришларингиз булутга сақланмаяпти.<br>
+                    Қуйидагилардан бирини танланг:
+                    <ul style="margin:6px 0 0 18px;padding:0;">
+                      <li><b>«Булутдан тиклаш»</b> — булутдагини олиб, ўз ишингизни устига қайта киритасиз</li>
+                      <li><b>«Ҳозир булутга сақлаш»</b> — сизники булутдагини алмаштиради</li>
+                    </ul>
+                  </div>`;
+                }
+                syncing = false;
+                return false;
+              }
+              const ok = confirm(
+                "ДИҚҚАТ! Булутдаги нусха бошқа қурилмада янгиланган.\n\n" +
+                "Булут: " + d.toLocaleString("uz-UZ") + "\n\n" +
+                "«OK» — сизнинг маълумотингиз булутдагини АЛМАШТИРАДИ\n" +
+                "«Бекор» — сақланмайди, аввал «Булутдан тиклаш» қилинг"
+              );
+              if(!ok){
+                setStatus("Сақланмади — булутда янгироқ нусха бор", "var(--bad)");
+                syncing = false;
+                return false;
+              }
+            }
+          }
+        }catch(e){ /* текширув имкони бўлмаса — давом этамиз */ }
+
         const payload = collectLocal();
         const chunks = [];
         for(let i=0;i<payload.length;i+=CHUNK_SIZE) chunks.push(payload.slice(i,i+CHUNK_SIZE));
@@ -1236,6 +1447,8 @@
         });
         await batch.commit();
         localStorage.setItem(LS_LASTSYNC, String(now));
+        const warnEl = document.getElementById("cloudConflictWarn");
+        if(warnEl){ warnEl.style.display = "none"; warnEl.innerHTML = ""; }
         setStatus("Сақланди ✓", "var(--good)");
         setLastSyncLabel(now);
         if(!silent) toast("Булутга сақланди ✓");
@@ -1249,7 +1462,7 @@
     }
 
     function scheduleUpload(){
-      if(!ready) return;
+      if(agentMode || !ready) return;
       clearTimeout(syncTimer);
       syncTimer = setTimeout(()=> upload(true), 3000);
     }
@@ -1292,41 +1505,52 @@
         ...rec, agentName, createdAt: Date.now(), claimed: false
       });
     }
+    // Раҳбарнинг умумий базасидаги ЖОРИЙ ёзувлар (захира нусхадан ўқилади).
+    // Агент шу орқали барча ёзувларни кўради — ўчирилганлар ҳам йўқолади.
+    // Булут нусхасини бир марта ўқиб, кэшда сақлаймиз (қайта-қайта тортмаслик учун)
+    let sharedCache = null, sharedCacheAt = 0;
+    async function getShared(force){
+      if(!ready) return null;
+      if(sharedCache && !force && (Date.now() - sharedCacheAt) < 30000) return sharedCache;
+      const cloud = await fetchCloud();
+      if(!cloud || !cloud.data) return null;
+      const parse = k =>{
+        const raw = cloud.data[k];
+        if(!raw) return null;
+        try{ return JSON.parse(raw); }catch(e){ return null; }
+      };
+      sharedCache = {
+        records: parse("kh_records_v1") || [],
+        cars:    parse("kh_cars_v1"),
+        fields:  parse("kh_agent_fields_v1"),
+        updatedAt: cloud.meta && cloud.meta.updatedAt ? cloud.meta.updatedAt : 0
+      };
+      sharedCacheAt = Date.now();
+      return sharedCache;
+    }
+    async function fetchSharedAll(force){ return await getShared(force); }
+    async function fetchSharedRecords(force){ const d = await getShared(force); return d ? d.records : null; }
+    async function fetchSharedCars(force){ const d = await getShared(force); return d ? d.cars : null; }
+
     // Агентнинг бир ойлик ёзувлари (ой филтри JS томонда — индекс керак бўлмайди)
     async function fetchAgentMonthRecords(agentName, month){
       if(!ready) return [];
-      const byId = new Map();
-      try{
-        const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
-        snap.forEach(d=>{
-          const r = {id:d.id, ...d.data()};
-          if(r.sana && String(r.sana).slice(0,7) === month) byId.set(r.id, r);
-        });
-      }catch(e){ console.warn("Агент inbox ойлик маълумотини олишда хато:", e); }
-      // Раҳбар қабул қилган ёзувлар асосий cloud backup'да ҳам бўлади.
-      // Шунинг учун ўтган ойлар ҳисоботи inbox'гагина боғланиб қолмайди.
-      try{
-        const cloud = await fetchCloud();
-        const raw = cloud && cloud.data && cloud.data[LS_KEY];
-        if(raw){
-          const mainRecords = JSON.parse(raw) || [];
-          mainRecords.forEach(r=>{
-            const owner = r.agentName || (String(r.manba||"").startsWith("агент: ") ? String(r.manba).slice(7).trim() : "");
-            if(owner === agentName && r.sana && String(r.sana).slice(0,7) === month){
-              byId.set(r.id, {...r, agentName: owner, claimed:true});
-            }
-          });
-        }
-      }catch(e){ console.warn("Асосий backup'дан агент ойлик маълумотини олишда хато:", e); }
-      return Array.from(byId.values()).sort((a,b)=> String(a.sana).localeCompare(String(b.sana)) || (a.createdAt||0)-(b.createdAt||0));
+      const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
+      const out = [];
+      snap.forEach(d=>{
+        const r = {id:d.id, ...d.data()};
+        if(r.sana && String(r.sana).slice(0,7) === month) out.push(r);
+      });
+      return out;
     }
 
-    async function fetchAgentMonths(agentName){
+    // Агентнинг БАРЧА юборган ёзувлари (сана филтрисиз)
+    async function fetchAgentTodayRecordsAll(agentName){
       if(!ready) return [];
       const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
-      const months = new Set();
-      snap.forEach(d=>{ const r=d.data()||{}; if(r.sana && String(r.sana).length>=7) months.add(String(r.sana).slice(0,7)); });
-      return Array.from(months).sort().reverse();
+      const out = [];
+      snap.forEach(d=> out.push({id:d.id, ...d.data()}));
+      return out;
     }
 
     async function fetchAgentTodayRecords(agentName, date){
@@ -1341,13 +1565,46 @@
     // Раҳбар дастури: янги агент ёзувларини ўз базасига қўшади
     function listenAgentInbox(onNew){
       if(!ready || inboxUnsub) return;
-      inboxUnsub = db.collection(COLL_INBOX).where("claimed","==",false)
+      // Inbox'даги БАРЧА ёзувлар — қабул қилингач улар ўчирилади,
+      // шунинг учун бу ерда фақат "йўлдагилар" қолади
+      inboxUnsub = db.collection(COLL_INBOX)
         .onSnapshot(snap=>{
           const incoming = [];
           snap.forEach(d=> incoming.push({id:d.id, ...d.data()}));
           if(incoming.length) onNew(incoming);
         }, e=> console.warn("Inbox кузатувида хато:", e && e.message));
     }
+
+    /* ============================================================
+       ЖОНЛИ КУЗАТУВ (реал вақт) — АГЕНТ учун.
+       Раҳбар маълумот сақлаган заҳоти (yoki bошqa agent yozganda),
+       agent экрани ЎЗИ, тугма босилмасдан янгиланади.
+       ============================================================ */
+    let backupMetaUnsub = null;
+    function watchBackupMeta(onChange){
+      if(!ready || backupMetaUnsub) return;
+      backupMetaUnsub = db.collection(COLL_BACKUP).doc(DOC_MAIN)
+        .onSnapshot(doc=>{
+          if(doc.exists) onChange(doc.data());
+        }, e=> console.warn("Захира кузатувида хато:", e && e.message));
+    }
+    let ownInboxUnsub = null;
+    function watchOwnInbox(agentName, onChange){
+      if(!ready || ownInboxUnsub) return;
+      ownInboxUnsub = db.collection(COLL_INBOX).where("agentName","==",agentName)
+        .onSnapshot(()=> onChange(), e=> console.warn("Агент почтаси кузатувида хато:", e && e.message));
+    }
+    function stopLiveWatches(){
+      if(backupMetaUnsub){ backupMetaUnsub(); backupMetaUnsub = null; }
+      if(ownInboxUnsub){ ownInboxUnsub(); ownInboxUnsub = null; }
+    }
+    // Раҳбар ёзувни ўчирса — булутдаги нусхаси ҳам ўчирилади (агентда ҳам йўқолади)
+    async function deleteInboxRecord(id){
+      if(!ready) return;
+      try{ await db.collection(COLL_INBOX).doc(id).delete(); }
+      catch(e){ console.warn("Булутдан ўчиришда хато:", e && e.message); }
+    }
+
     async function markClaimed(ids){
       if(!ready || !ids.length) return;
       const batch = db.batch();
@@ -1355,27 +1612,13 @@
       await batch.commit();
     }
 
-    // Раҳбар асосий жадвалдан агент ёзувини ўчирса, унинг булутдаги
-    // inbox нусхасини ҳам ўчирамиз. Акс ҳолда агентда эски ёзув қайта кўринади.
-    async function deleteAgentRecord(id, agentName){
-      if(!ready || !id) return false;
-      try{
-        const ref = db.collection(COLL_INBOX).doc(id);
-        const snap = await ref.get();
-        if(snap.exists){
-          const data = snap.data() || {};
-          if(!agentName || data.agentName === agentName){
-            await ref.delete();
-            return true;
-          }
-        }
-        // Эски версияларда ID ўзгарган бўлиши мумкин — агент номи + ёзув ID
-        // бўйича аниқ мослик топилмаса, хавфсизлик учун бошқа ёзувларни ўчирмаймиз.
-        return false;
-      }catch(e){
-        console.warn("Агент ёзувини булутдан ўчиришда хато:", e);
-        return false;
-      }
+    // Қабул қилинган ёзувларни inbox'дан бутунлай ўчириш.
+    // Улар энди раҳбар базасида — агент уларни умумий базадан кўради.
+    async function removeFromInbox(ids){
+      if(!ready || !ids.length) return;
+      const batch = db.batch();
+      ids.forEach(id=> batch.delete(db.collection(COLL_INBOX).doc(id)));
+      await batch.commit();
     }
 
     // Агентлар рўйхатини булутда сақлаш (агент қурилмаси уни ўқийди)
@@ -1396,8 +1639,8 @@
         const localSync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
         setLastSyncLabel(localSync || null);
         if(!main.exists){
-          setStatus("Уланган (булутда нусха йўқ)");
-          if(localStorage.getItem("kh_records_v1")) upload(true);
+          setStatus("Уланган (илк захира юкланмоқда...)");
+          await upload(true);      // илк марта — дарҳол юклаймиз, агент кўриши учун
           return;
         }
         const meta = main.data();
@@ -1410,27 +1653,46 @@
           }
         }else{
           setStatus("Уланган ✓", "var(--good)");
+          // Захира 6 соатдан эски бўлса — янгилаб қўямиз (агент янги маълумот кўрсин)
+          if(Date.now() - (meta.updatedAt||0) > 6*3600*1000) upload(true);
         }
       }catch(e){ setStatus("Уланмади (офлайн?)", "var(--bad)"); }
     }
 
     return {
       isReady, getDb,
-      start(){
-        if(!init()){ setStatus("Уланмади (интернет йўқ)", "var(--bad)"); return false; }
-        // V2: localStorage энди асосий база эмас. Legacy backup фақат қўшимча
-        // захира сифатида қолади; автоматик равишда Firebase backup'га босиб
-        // ёзиш ва конфликтда restore қилиш ўчирилди.
-        setLastSyncLabel(Number(localStorage.getItem(LS_LASTSYNC)||0) || null);
-        setStatus("Firebase базасига уланиш кутилмоқда…");
+      // Агентни ёзувга умуман рухсат бермасдан белгилайди.
+      // Ҳатто аввал start() (раҳбар режими) чақирилган бўлса ҳам,
+      // шу лаҳзадан кейин upload/scheduleUpload ҳеч нарса қилмайди.
+      setAgentMode(v){ agentMode = !!v; },
+      // Агент қурилмаси учун — фақат ЎҚИШ. localStorage'ни ушламайди,
+      // булутдаги конфликтни текширмайди, ҳеч нарса юкламайди.
+      startReadOnly(){
+        agentMode = true;
+        if(!init()){ return false; }
         return true;
       },
+      start(){
+        if(!init()){ setStatus("Уланмади (интернет йўқ)", "var(--bad)"); return false; }
+        const origSet = localStorage.setItem.bind(localStorage);
+        const origRemove = localStorage.removeItem.bind(localStorage);
+        localStorage.setItem = function(k,v){ origSet(k,v); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
+        localStorage.removeItem = function(k){ origRemove(k); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
+        setLastSyncLabel(Number(localStorage.getItem(LS_LASTSYNC)||0) || null);
+        return true;
+      },
+      // Булутдаги конфликтни текшириш — энди БУЛ ФУНКЦИЯ АЛОҲИДА чақирилади
+      // (парол кирилгандан КЕЙИН), шунинг учун у логин жараёнини бузмайди.
+      runCheck(){ if(!agentMode) checkOnStart(); },
       uploadNow(){ return upload(false); },
       async restoreNow(){
         if(!confirm("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?")) return;
         if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
       },
-      pushAgentRecord, fetchAgentTodayRecords, fetchAgentMonthRecords, fetchAgentMonths, listenAgentInbox, markClaimed, deleteAgentRecord,
+      pushAgentRecord, fetchAgentTodayRecords, fetchAgentTodayRecordsAll, fetchAgentMonthRecords,
+      fetchSharedRecords, fetchSharedCars, fetchSharedAll,
+      listenAgentInbox, markClaimed, removeFromInbox, deleteInboxRecord,
+      watchBackupMeta, watchOwnInbox, stopLiveWatches,
       saveAgentsToCloud, loadAgentsFromCloud, setStatus
     };
   })();
@@ -1474,12 +1736,26 @@
   }
 
   // Password check helper — used to gate editing actions
+  /* Таҳрирлаш/ўчириш учун парол.
+     Бир марта киритилгач, қисқа муддат (стандарт 15 дақиқа) қайта сўралмайди —
+     кетма-кет бир нечта ёзувни тузатаётганда ҳар сафар терилмаслиги учун. */
+  let editGrantedUntil = 0;
+  function editGraceMs(){
+    const v = localStorage.getItem("kh_edit_grace_min_v1");
+    const min = v === null ? 15 : Number(v);
+    return min * 60 * 1000;
+  }
   function requirePasswordThen(callback){
     const hash = getPwHash();
     if(!hash){ callback(); return; }
+    if(Date.now() < editGrantedUntil){ callback(); return; }
     const pw = prompt("Таҳрирлаш учун паролни киритинг:");
     if(pw === null) return;
-    if(simpleHash(pw) === hash){ callback(); }
+    if(simpleHash(pw) === hash){
+      const g = editGraceMs();
+      if(g > 0) editGrantedUntil = Date.now() + g;
+      callback();
+    }
     else { alert("Парол нотўғри."); }
   }
 
@@ -1497,7 +1773,7 @@
   function loadRecords(){
     try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(e){ return []; }
   }
-  function saveRecords(recs){ safeSave(LS_KEY, JSON.stringify(recs)); queuePrimarySync && queuePrimarySync("records", recs); }
+  function saveRecords(recs){ safeSave(LS_KEY, JSON.stringify(recs)); }
   function loadCars(){
     try{
       const c = JSON.parse(localStorage.getItem(LS_CARS));
@@ -1510,11 +1786,59 @@
       });
     }catch(e){ return DEFAULT_CARS.slice(); }
   }
-  function saveCars(cars){ safeSave(LS_CARS, JSON.stringify(cars)); queuePrimarySync && queuePrimarySync("cars", cars); }
+  function saveCars(cars){ safeSave(LS_CARS, JSON.stringify(cars)); }
 
   let records = loadRecords();
   let cars = loadCars();
   let editingId = null;
+
+  /* ============================================================
+     ТАКРОРИЙ ЁЗУВ ҲИМОЯСИ
+     Бир кун + бир мошина учун иккинчи ёзув киритилса, огоҳлантиради.
+     Бу айниқса раҳбар ва агент бирга ишлаганда муҳим —
+     иккови бир хил кунни киритиб қўйса, тушум икки марта ҳисобланади.
+     ============================================================ */
+  function findDuplicates(sana, mashina, excludeId, list){
+    const src = list || records;
+    if(!sana || !mashina) return [];
+    return src.filter(r =>
+      r.sana === sana &&
+      r.mashina === mashina &&
+      r.id !== excludeId
+    );
+  }
+
+  // Такрорий ёзувлар ҳақида тушунарли огоҳлантириш матни
+  function duplicateWarningText(dups, sana, mashina){
+    const lines = dups.map((d,i)=>{
+      const manba = d.manba ? ` (${d.manba})` : "";
+      return `${i+1}) Тушум: ${fmt(d.tushum)}` +
+             (d.shofyor ? ` · Шофёр: ${d.shofyor}` : "") +
+             (d.topshirilgan!=null ? ` · Топширилган: ${fmt(d.topshirilgan)}` : "") +
+             manba;
+    }).join("\n");
+    return `ДИҚҚАТ! Бу кун ва мошина учун ёзув аллақачон бор.\n\n` +
+           `Сана: ${fmtDate(sana)}\nМошина: ${mashina}\n\n` +
+           `Мавжуд ёзув${dups.length>1?"лар":""}:\n${lines}\n\n` +
+           `Агар бу ўша куннинг ИККИНЧИ рейси бўлса — «OK» босинг.\n` +
+           `Агар адашиб қайта киритаётган бўлсангиз — «Бекор» босинг.`;
+  }
+
+  // Форма тўлдирилаётганда — жонли огоҳлантириш (сақлашдан олдин кўринади)
+  function renderDupHint(){
+    const el = document.getElementById("dupHint");
+    if(!el) return;
+    const sana = document.getElementById("f_sana").value;
+    const mashina = document.getElementById("f_mashina").value;
+    const dups = findDuplicates(sana, mashina, editingId);
+    if(!dups.length){ el.innerHTML = ""; return; }
+    const jami = dups.reduce((a,d)=> a + Number(d.tushum||0), 0);
+    el.innerHTML = `<div class="notice" style="margin:0;">
+      ⚠️ <b>Бу кун ва мошина учун ${dups.length} та ёзув бор</b>
+      (жами тушум: ${fmt(jami)}).
+      Иккинчи рейс бўлса — давом этинг; адашган бўлсангиз, аввал мавжудини текширинг.
+    </div>`;
+  }
 
   // Маҳаллий сана (UTC эмас!). toISOString() UTC беради — Ўзбекистонда (UTC+5)
   // соат 00:00–05:00 оралиғида кечаги санани кўрсатиб қўяр эди.
@@ -1537,6 +1861,94 @@
         : "Маълумотни сақлаб бўлмади. Саҳифани янгилаб, қайта уриниб кўринг.");
       return false;
     }
+  }
+
+  // Файлни юклаб олиш — телефонда ҳам ишлайдиган усул.
+  // Айрим мобил браузерлар (iOS Safari) download атрибутини қўллаб-қувватламайди,
+  // шунда файл янги ойнада очилади ва фойдаланувчи уни сақлаб олади.
+  function downloadFile(content, filename, mime){
+    try{
+      const blob = (content instanceof Blob) ? content : new Blob([content], {type: mime || "application/octet-stream"});
+      // 1-йўл: стандарт юклаб олиш
+      if(window.navigator && window.navigator.msSaveOrOpenBlob){
+        window.navigator.msSaveOrOpenBlob(blob, filename);
+        return true;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const supportsDownload = "download" in a;
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      if(!supportsDownload) a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=> URL.revokeObjectURL(url), 20000);
+
+      // Телефонда юклаш ишламаса — фойдаланувчига йўл кўрсатамиз
+      if(!supportsDownload){
+        toast("Файл янги ойнада очилди — уни «Сақлаш» орқали юклаб олинг");
+      }
+      return true;
+    }catch(e){
+      console.error("Юклашда хато:", e);
+      alert("Файлни юклаб бўлмади. Браузер менюсидан «Саҳифани сақлаш» ни синаб кўринг.");
+      return false;
+    }
+  }
+
+  // Ҳисоботни чоп этиш / PDF — телефонда ҳам ишлайди.
+  // Янги ойна очиш ўрнига саҳифа ичида чоп этамиз (мобил браузерлар popup'ни блоклайди).
+  function printHtmlBlock(innerHtml, title){
+    const old = document.getElementById("printArea");
+    if(old) old.remove();
+    const area = document.createElement("div");
+    area.id = "printArea";
+    area.innerHTML = `<div class="print-title">${esc(title||"")}</div>` + innerHtml;
+    document.body.appendChild(area);
+    document.body.classList.add("printing");
+    const cleanup = ()=>{
+      document.body.classList.remove("printing");
+      const el = document.getElementById("printArea");
+      if(el) el.remove();
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    setTimeout(()=>{
+      window.print();
+      setTimeout(cleanup, 1500);   // afterprint ишламаса ҳам тозаласин
+    }, 120);
+  }
+
+  // Тўлиқ HTML ҳужжатни чоп этиш (ичида ўз стили бор).
+  // Телефонда popup блокланса — iframe орқали чоп этамиз.
+  function printFullHtmlDoc(html){
+    try{
+      const w = window.open("", "_blank");
+      if(w && w.document){
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        setTimeout(()=> w.print(), 400);
+        return;
+      }
+    }catch(e){ /* popup блокланган — iframe'га ўтамиз */ }
+
+    // Захира усул: яширин iframe (мобил браузерларда ишончли)
+    const old = document.getElementById("printFrame");
+    if(old) old.remove();
+    const f = document.createElement("iframe");
+    f.id = "printFrame";
+    f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+    document.body.appendChild(f);
+    const d = f.contentWindow.document;
+    d.open(); d.write(html); d.close();
+    setTimeout(()=>{
+      try{ f.contentWindow.focus(); f.contentWindow.print(); }
+      catch(e){ alert("Чоп этиб бўлмади. Браузер менюсидан «Чоп этиш» ни танланг."); }
+      setTimeout(()=> f.remove(), 2000);
+    }, 500);
   }
 
   function localDateStr(d){
@@ -1772,6 +2184,10 @@
     if(wrap.classList.contains("hidden")) openMoreFields(); else closeMoreFields();
   });
 
+  ["f_sana","f_mashina"].forEach(id=>{
+    document.getElementById(id)?.addEventListener("change", renderDupHint);
+  });
+
   document.getElementById("cancelEditBtn").addEventListener("click", ()=>{
     form.reset();
     document.getElementById("f_sana").valueAsDate = new Date();
@@ -1798,6 +2214,12 @@
       km: Number(document.getElementById("f_km").value||0),
       izoh: document.getElementById("f_izoh").value.trim(),
     };
+    // --- Такрорий ёзув текшируви ---
+    const dups = findDuplicates(data.sana, data.mashina, editingId);
+    if(dups.length){
+      if(!confirm(duplicateWarningText(dups, data.sana, data.mashina))) return;
+    }
+
     if(editingId){
       const idx = records.findIndex(r=>r.id===editingId);
       if(idx !== -1){
@@ -1819,6 +2241,7 @@
     document.getElementById("qarzPreview").innerHTML = "";
     document.getElementById("kmPreview").innerHTML = "";
     closeMoreFields();
+    document.getElementById("dupHint").innerHTML = "";
     updateDatalists();
     renderTodayStats();
     renderEntryBanners();
@@ -1917,12 +2340,23 @@
       body.innerHTML = `<tr><td colspan="10" class="empty">Ҳали ёзув йўқ. "Ёзув киритиш" бўлимидан қўшинг.</td></tr>`;
       return;
     }
+    // Такрорланувчи (сана+мошина) ёзувларни белгилаш учун
+    const dupKeys = new Set();
+    const seen = {};
+    records.forEach(r=>{
+      if(!r.sana || !r.mashina) return;
+      const k = r.sana + "||" + r.mashina;
+      if(seen[k]) dupKeys.add(k); else seen[k] = true;
+    });
+
     body.innerHTML = list.map((r,i)=>{
       const xarajat = r.yoqilgi+r.yol+r.boshqa;
       const sof = r.tushum - xarajat;
-      return `<tr>
-        <td>${i+1}</td>
-        <td>${fmtDate(r.sana)}</td>
+      const isDup = dupKeys.has(r.sana + "||" + r.mashina);
+      return `<tr${isDup ? ' style="background:#fff4f3;"' : ''}>
+        <td>${i+1}${isDup ? ' <span title="Бу кун ва мошина учун бир нечта ёзув бор" style="color:#b3402a;font-weight:800;">⚠</span>' : ''}</td>
+        <td>${fmtDate(r.sana)}${r.manba && r.manba.indexOf("агент")===0
+            ? `<br><span class="pill" style="background:#3b7dd8;color:#fff;font-size:10.5px;" title="${esc(r.manba)}">👤 агент</span>` : ""}</td>
         <td>${carPill(r.mashina)}</td>
         <td>${esc(r.shofyor)||"—"}</td>
         <td>${esc(r.yonalish)||"—"}</td>
@@ -1944,13 +2378,11 @@
             const rec = records.find(r=>r.id===b.dataset.del);
             records = records.filter(r=>r.id!==b.dataset.del);
             saveRecords(records);
-            primaryDelete("records", b.dataset.del).catch(e=>console.warn("Firebase delete:",e));
-            // Агар бу ёзув агент томонидан киритилган бўлса, Firestore inbox
-            // даги нусхасини ҳам ўчириш керак. Акс ҳолда агент тарихида қолиб кетади.
-            if(rec && rec.agentName){
-              CLOUD.deleteAgentRecord(rec.id, rec.agentName).catch(()=>{});
+            // Агент киритган ёзув бўлса — булутдан ҳам ўчирамиз, шунда агентда ҳам йўқолади
+            if(rec && rec.manba && rec.manba.indexOf("агент") === 0){
+              CLOUD.deleteInboxRecord(rec.id);
             }
-            logAudit("Ёзув ўчирилди", rec ? `${rec.sana} · ${rec.mashina} · ${fmt(rec.tushum)}` : "");
+            logAudit("Ёзув ўчирилди", rec ? `${fmtDate(rec.sana)} · ${rec.mashina} · ${fmt(rec.tushum)}` : "");
             updateDatalists();
             renderRecords();
             renderTodayStats();
@@ -1981,8 +2413,7 @@
   function printTable(title, tableSelector){
     const table = document.querySelector(tableSelector);
     if(!table){ toast("Жадвал топилмади"); return; }
-    const w = window.open("", "_blank");
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
     <style>
       body{font-family:Arial,sans-serif;padding:20px;color:#1c2430;}
       h1{font-size:18px;color:#0f2440;}
@@ -1991,28 +2422,13 @@
       th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;}
       th{background:#0f2440;color:#fff;}
       tr:nth-child(even){background:#f6f4ee;}
-    
-  /* ---- Ойлик жадвал (кунма-кун) ---- */
-  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
-  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
-  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
-  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
-  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
-  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
-  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
-  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
-  .pivot-table tbody tr:hover td{background:#faf8f2;}
-  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
-  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
-  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
 </style></head><body>
     <h1>${title}</h1>
     <p>Чоп этилган сана: ${new Date().toLocaleDateString("uz-UZ")} ${new Date().toLocaleTimeString("uz-UZ")}</p>
     ${table.outerHTML}
-    </body></html>`);
-    w.document.close();
-    w.focus();
-    setTimeout(()=>{ w.print(); }, 300);
+    </body></html>`;
+    // Попап блокланган бўлса ҳам ишлайдиган усул (телефонда муҳим)
+    printFullHtmlDoc(html);
   }
   document.getElementById("printRecords").addEventListener("click", ()=>{
     printTable("Кунлик Хисобот — Барча ёзувлар (by Iqbol Jalilov)", "#view-records table");
@@ -2101,6 +2517,58 @@
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style></head><body>
     <h1>Кунлик Хисобот — Харажатлар ҳисоботи</h1>
     <p class="meta">${filterDesc} · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -2120,15 +2588,90 @@
     </body></html>`;
   }
   function printExpensesReport(){
-    const w = window.open("", "_blank");
-    w.document.write(buildExpensesPrintHTML());
-    w.document.close();
-    w.focus();
-    setTimeout(()=>{ w.print(); }, 300);
+    printFullHtmlDoc(buildExpensesPrintHTML());
   }
   document.getElementById("printExpenses").addEventListener("click", printExpensesReport);
 
   // ---- Умумий кўп-sheet Excel экспорти (тушум + харажат + умумий хисобот) ----
+  /* Excel учун умумий шаблонлар — такрорланмасин деб бир жойда сақланади */
+  const XL_STYLES = ` <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="hdr">
+   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
+   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="bold">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="boldnum">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="num">
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
+  <Style ss:ID="title">
+   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Borders/>
+  </Style>
+  <Style ss:ID="dateNote">
+   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
+   <Borders/>
+  </Style>
+ </Styles>`;
+  const XL_PAGE = `  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <FitWidth>1</FitWidth>
+    <FitHeight>0</FitHeight>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+  </WorksheetOptions>`;
+
   function xmlEscape(v){
     return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
@@ -2239,188 +2782,33 @@
  xmlns:o="urn:schemas-microsoft-com:office:office"
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Default" ss:Name="Normal">
-   <Alignment ss:Vertical="Center"/>
-   <Font ss:FontName="Calibri" ss:Size="11"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="hdr">
-   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
-   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
-   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="bold">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="boldnum">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="num">
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
-  </Style>
-  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
-  <Style ss:ID="title">
-   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
-   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
-   <Borders/>
-  </Style>
-  <Style ss:ID="dateNote">
-   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
-   <Borders/>
-  </Style>
- </Styles>
+${XL_STYLES}
  <Worksheet ss:Name="Кунлик хисобот">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="140"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="75"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s1Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Харажатлар">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s2Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Харажат-мошина хулосаси">
   <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="60"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/>${s2bRows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Мошиналар хулосаси">
   <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="90"/>${s3Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Умумий якуний хисобот">
   <Table><Column ss:AutoFitWidth="0" ss:Width="200"/><Column ss:AutoFitWidth="0" ss:Width="120"/>${s4Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
 </Workbook>`;
   }
 
   function downloadFullWorkbook(){
     const xml = buildFullWorkbookXML();
-    const blob = new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "kunlik_hisobot_umumiy_"+localDateStr()+".xls";
-    a.click();
+    downloadFile(new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"}), "kunlik_hisobot_umumiy_"+localDateStr()+".xls", "application/vnd.ms-excel;charset=utf-8;");
     toast("Excel файл (4 sheet) юкланди ✓");
   }
 
@@ -2699,6 +3087,58 @@
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style></head><body>
     <h1>Кунлик Хисобот — Ойлик отчет</h1>
     <p class="meta">Ой: <b>${month}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -2719,11 +3159,7 @@
   }
   function printMonthlyReport(){
     const month = document.getElementById("summaryMonth").value || currentMonthValue();
-    const w = window.open("", "_blank");
-    w.document.write(buildMonthlyReportPrintHTML(month));
-    w.document.close();
-    w.focus();
-    setTimeout(()=>{ w.print(); }, 300);
+    printFullHtmlDoc(buildMonthlyReportPrintHTML(month));
   }
   document.getElementById("monthlyPdfBtn").addEventListener("click", printMonthlyReport);
 
@@ -2797,142 +3233,25 @@
  xmlns:o="urn:schemas-microsoft-com:office:office"
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Default" ss:Name="Normal">
-   <Alignment ss:Vertical="Center"/>
-   <Font ss:FontName="Calibri" ss:Size="11"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="hdr">
-   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
-   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
-   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="bold">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="boldnum">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="num">
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
-  </Style>
-  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
-  <Style ss:ID="title">
-   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
-   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
-   <Borders/>
-  </Style>
-  <Style ss:ID="dateNote">
-   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
-   <Borders/>
-  </Style>
- </Styles>
+${XL_STYLES}
  <Worksheet ss:Name="Мошиналар хулосаси">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="140"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="75"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s1Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Шофёрлар рейтинги">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s2Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Кунлик ёзувлар">
   <Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="90"/>${s3Rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
 </Workbook>`;
   }
   function downloadMonthlyWorkbook(){
     const month = document.getElementById("summaryMonth").value || currentMonthValue();
     const xml = buildMonthlyWorkbookXML(month);
-    const blob = new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "oylik_hisobot_"+month+".xls";
-    a.click();
+    downloadFile(new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"}), "oylik_hisobot_"+month+".xls", "application/vnd.ms-excel;charset=utf-8;");
     toast("Ойлик отчет Excel'га юкланди ✓ ("+month+")");
   }
   document.getElementById("monthlyExcelBtn").addEventListener("click", downloadMonthlyWorkbook);
@@ -3115,6 +3434,33 @@
     return Number(r.tushum||0) - Number(r.yoqilgi||0) - Number(r.yol||0) - Number(r.boshqa||0);
   }
 
+  /* ============================================================
+     "МЕН ОЛГАН НАҚД ПУЛ" бўйича — қайси кунгача пул олинган?
+     "Топширилган" суммаси кунма-кун (жамики мошиналар бўйича) ЙИҲИНДИ
+     ҳисобланади, хронологик тартибда. Жамланма сумма "Мен олган нақд пул"
+     умумий суммасидан ошмагунча — ўша кунлар "олинган" ҳисобланади.
+     МУҲИМ: бу ҲАР ДОИМ "Топширилган" майдонига асосланади (кўрсаткич
+     танловидан қатъи назар), чунki "Мен олган нақд пул" худди шу
+     майдондан олинади.
+     ============================================================ */
+  function computeTakenCutoff(){
+    const dayTotals = {};   // "YYYY-MM-DD" -> шу куннинг жами топширилган суммаси
+    records.forEach(r=>{
+      if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
+      dayTotals[r.sana] = (dayTotals[r.sana] || 0) + Number(r.topshirilgan);
+    });
+    const days = Object.keys(dayTotals).sort();   // хронологик тартиб
+    const totalTaken = cashTaken.reduce((s,c)=> s + Number(c.summa||0), 0);
+
+    let running = 0, cutoffDate = null;
+    for(const d of days){
+      running += dayTotals[d];
+      if(running <= totalTaken) cutoffDate = d;
+      else break;
+    }
+    return { cutoffDate, totalTaken, dayTotals };
+  }
+
   function buildPivot(){
     const month  = document.getElementById("pivotMonth").value || localDateStr().slice(0,7);
     const metric = document.getElementById("pivotMetric").value;
@@ -3138,7 +3484,15 @@
     cars.forEach(c=>{ if(byCar[c.name]) carNames.push(c.name); });
     Object.keys(byCar).forEach(n=>{ if(!carNames.includes(n)) carNames.push(n); });
 
-    return { month, metric, unit, y, m, daysInMonth, byCar, carNames };
+    // Фақат маълумоти бор кунларни оламиз — бўш ва келмаган кунлар кўрсатилмайди
+    const activeDays = [];
+    for(let d=1; d<=daysInMonth; d++){
+      let has = false;
+      for(const car of Object.keys(byCar)){ if(byCar[car][d]){ has = true; break; } }
+      if(has) activeDays.push(d);
+    }
+
+    return { month, metric, unit, y, m, daysInMonth, activeDays, byCar, carNames };
   }
 
   function renderPivot(){
@@ -3153,8 +3507,20 @@
                         "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
     const show = v => v ? Math.round(v / P.unit).toLocaleString("ru-RU") : "";
 
+    const days = P.activeDays;
+    if(!days.length){ el.innerHTML = `<p class="empty">Бу ойда ёзув йўқ.</p>`; return; }
+
+    // Қайси кунлар "олинган" (топширилган суммаси нақд пул билан қопланган)
+    const taken = computeTakenCutoff();
+    const monthPrefix = P.month;   // "YYYY-MM"
+    const isTaken = d=>{
+      if(!taken.cutoffDate) return false;
+      const ds = `${monthPrefix}-${String(d).padStart(2,"0")}`;
+      return ds <= taken.cutoffDate;
+    };
+
     let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
-    P.dayNumbers.forEach(d => head += `<th class="pv-num">${d}</th>`);
+    days.forEach(d=> head += `<th class="pv-num${isTaken(d)?' pv-taken':''}">${d}</th>`);
     head += `<th class="pv-total">Жами</th></tr>`;
 
     const dayTotals = {};
@@ -3165,19 +3531,19 @@
       const rusumi = carObj && carObj.rusumi ? carObj.rusumi : "";
       let rowSum = 0;
       let tds = "";
-      for(let d=1; d<=P.daysInMonth; d++){
+      days.forEach(d=>{
         const v = P.byCar[name][d] || 0;
         rowSum += v;
         dayTotals[d] = (dayTotals[d] || 0) + v;
-        tds += `<td class="pv-num">${show(v)}</td>`;
-      }
+        tds += `<td class="pv-num${isTaken(d)?' pv-taken':''}">${show(v)}</td>`;
+      });
       grand += rowSum;
       body += `<tr><td><b>${esc(name)}</b></td><td>${esc(rusumi)}</td>${tds}` +
               `<td class="pv-total">${show(rowSum)}</td></tr>`;
     });
 
     let foot = `<tr class="pv-foot"><td colspan="2">жами</td>`;
-    P.dayNumbers.forEach(d => foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`);
+    days.forEach(d=> foot += `<td class="pv-num${isTaken(d)?' pv-taken':''}">${show(dayTotals[d]||0)}</td>`);
     foot += `<td class="pv-total">${show(grand)}</td></tr>`;
 
     const metricLabel = P.metric === "tushum" ? "Тушум"
@@ -3189,7 +3555,12 @@
         ${P.y} йил ${monthNames[P.m-1]}ойи
       </div>
       <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">
-        Кўрсаткич: <b>${metricLabel}</b> · ${unitLabel}
+        Кўрсаткич: <b>${metricLabel}</b> · ${unitLabel} ·
+        <span style="display:inline-flex;align-items:center;gap:5px;margin-left:6px;">
+          <span style="width:12px;height:12px;border-radius:3px;background:#bfe8c9;display:inline-block;"></span>
+          — топширилган сумма нақд пул билан қопланган кунлар
+          ${taken.cutoffDate ? `(${fmtDate(taken.cutoffDate)}гача)` : ""}
+        </span>
       </div>
       <table class="pivot-table">
         <thead>${head}</thead>
@@ -3199,35 +3570,103 @@
   }
 
   function exportPivotExcel(){
-    const P=buildPivot(); if(!P.carNames.length){alert("Бу ойда ёзув йўқ.");return;}
-    const months=["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН","ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
-    const now=new Date(), pp=n=>String(n).padStart(2,"0");
-    const xe=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    const cs=(v,st="")=>`<Cell${st?` ss:StyleID="${st}"`:""}><Data ss:Type="String">${xe(v)}</Data></Cell>`;
-    const cn=(v,st="num")=>`<Cell ss:StyleID="${st}"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
-    const metric=P.metric==="tushum"?"Тушум":P.metric==="topshirilgan"?"Топширилган сумма":"Соф тушум";
-    const unit=P.unit===1000?"минг сўмда":"тўлиқ сўмда";
-    let head=cs("Давлат рақами","hdr")+cs("Русуми","hdr"); for(let d=1;d<=P.daysInMonth;d++) head+=cs(d,"hdr"); head+=cs("Жами","hdrTotal");
-    const totals={};let grand=0,rows="";
-    P.carNames.forEach(name=>{const c=cars.find(x=>x.name===name);let sum=0,td="";for(let d=1;d<=P.daysInMonth;d++){const v=Math.round((P.byCar[name][d]||0)/P.unit);sum+=v;totals[d]=(totals[d]||0)+v;td+=cn(v);}grand+=sum;rows+=`<Row ss:Height="22">${cs(name,"text")}${cs(c&&c.rusumi?c.rusumi:"","text")}${td}${cn(sum,"total")}</Row>`;});
-    let foot=cs("ЖАМИ","foot")+cs("","foot");for(let d=1;d<=P.daysInMonth;d++)foot+=cn(totals[d]||0,"footNum");foot+=cn(grand,"grand");
-    const cols=`<Column ss:Width="125"/><Column ss:Width="75"/>`+Array.from({length:P.daysInMonth},()=>`<Column ss:Width="45"/>`).join("")+`<Column ss:Width="90"/>`;
-    const xml=`<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Styles>
-<Style ss:ID="Default" ss:Name="Normal"><Font ss:FontName="Calibri" ss:Size="10"/><Alignment ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9D9D9"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9D9D9"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9D9D9"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9D9D9"/></Borders></Style>
-<Style ss:ID="title"><Font ss:Bold="1" ss:Size="16" ss:Color="#0F2440"/></Style><Style ss:ID="meta"><Font ss:Italic="1" ss:Size="10" ss:Color="#6B7280"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F2440" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style><Style ss:ID="hdrTotal"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#8B6F00" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style><Style ss:ID="text"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style><Style ss:ID="total"><Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style><Style ss:ID="foot"><Font ss:Bold="1"/><Interior ss:Color="#EDEDED" ss:Pattern="Solid"/></Style><Style ss:ID="footNum"><Font ss:Bold="1"/><Interior ss:Color="#EDEDED" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style><Style ss:ID="grand"><Font ss:Bold="1" ss:Size="11"/><Interior ss:Color="#FFE699" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style></Styles>
-<Worksheet ss:Name="Ойлик жадвал"><Table>${cols}<Row><Cell ss:MergeAcross="${P.daysInMonth+2}" ss:StyleID="title"><Data ss:Type="String">${xe(P.y+" йил "+months[P.m-1]+" ойи — Кунлик жадвал")}</Data></Cell></Row><Row><Cell ss:MergeAcross="${P.daysInMonth+2}" ss:StyleID="meta"><Data ss:Type="String">${xe("Кўрсаткич: "+metric+" · "+unit+" · Шакллантирилди: "+fmtDate(localDateStr(now))+" "+pp(now.getHours())+":"+pp(now.getMinutes()))}</Data></Cell></Row><Row></Row><Row ss:Height="24">${head}</Row>${rows}<Row>${foot}</Row></Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><PageSetup><Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/><PageMargins x:Bottom="0.4" x:Left="0.25" x:Right="0.25" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/></PageSetup><FitToPage/><Print><ValidPrinterInfo/><FitWidth>1</FitWidth><FitHeight>0</FitHeight><PaperSizeIndex>9</PaperSizeIndex></Print><FreezePanes/><FrozenNoSplit/><SplitHorizontal>3</SplitHorizontal><TopRowBottomPane>3</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions></Worksheet></Workbook>`;
-    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+xml],{type:"application/vnd.ms-excel;charset=utf-8;"}));a.download=`oylik_jadval_${P.month}.xls`;a.click();toast("Чиройли форматда Excel файл тайёр ✓");
+    const P = buildPivot();
+    const days = P.activeDays;
+    if(!days.length){ alert("Бу ойда ёзув йўқ."); return; }
+    const monthNames = ["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН",
+                        "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
+    const now = new Date();
+    const pp = n => String(n).padStart(2,"0");
+    const hdrCell = v => `<Cell ss:StyleID="hdr"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const sCell   = v => `<Cell ss:StyleID="txt"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const nCell   = v => `<Cell ss:StyleID="num"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
+    const bCell   = v => `<Cell ss:StyleID="bold"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const bnCell  = v => `<Cell ss:StyleID="boldnum"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
+
+    let head = hdrCell("Давлат рақами") + hdrCell("Русуми");
+    days.forEach(d=> head += hdrCell(String(d)));
+    head += hdrCell("Жами");
+
+    const dayTotals = {}; let grand = 0; let rows = "";
+    P.carNames.forEach(name=>{
+      const c = cars.find(x=> x.name === name);
+      let rowSum = 0, tds = "";
+      days.forEach(d=>{
+        const v = Math.round((P.byCar[name][d]||0)/P.unit);
+        rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
+        tds += nCell(v);
+      });
+      grand += rowSum;
+      rows += "<Row>" + sCell(name) + sCell(c && c.rusumi ? c.rusumi : "") + tds + bnCell(rowSum) + "</Row>";
+    });
+    let foot = bCell("жами") + bCell("");
+    days.forEach(d=> foot += bnCell(dayTotals[d]||0));
+    foot += bnCell(grand);
+
+    const cols = `<Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="70"/>` +
+      days.map(()=> `<Column ss:AutoFitWidth="0" ss:Width="52"/>`).join("") +
+      `<Column ss:AutoFitWidth="0" ss:Width="85"/>`;
+
+    const metricLabel = P.metric==="tushum" ? "Тушум" : P.metric==="topshirilgan" ? "Топширилган" : "Соф тушум";
+    const title = `${P.y} йил ${monthNames[P.m-1]}ойи`;
+    const meta = `Кўрсаткич: ${metricLabel} · ${P.unit===1000?"минг сўмда":"тўлиқ сўмда"} · ` +
+                 `Шакллантирилди: ${fmtDate(localDateStr(now))} ${pp(now.getHours())}:${pp(now.getMinutes())}`;
+
+    const xml = `<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
+  <Style ss:ID="txt"><Alignment ss:Vertical="Center"/></Style>
+  <Style ss:ID="num"><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
+  <Style ss:ID="bold"><Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="boldnum"><Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
+  <Style ss:ID="title"><Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/><Borders/></Style>
+  <Style ss:ID="meta"><Font ss:Italic="1" ss:Size="10" ss:Color="#6B7280"/><Borders/></Style>
+ </Styles>
+ <Worksheet ss:Name="Ойлик жадвал">
+  <Table>${cols}
+   <Row ss:Height="22"><Cell ss:StyleID="title"><Data ss:Type="String">${xmlEscape(title)}</Data></Cell></Row>
+   <Row><Cell ss:StyleID="meta"><Data ss:Type="String">${xmlEscape(meta)}</Data></Cell></Row>
+   <Row></Row>
+   <Row ss:Height="20">${head}</Row>
+   ${rows}
+   <Row ss:Height="20">${foot}</Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print><ValidPrinterInfo/><FitWidth>1</FitWidth><FitHeight>0</FitHeight><PaperSizeIndex>9</PaperSizeIndex></Print>
+   <FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>`;
+    downloadFile(new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"}), `oylik_jadval_${P.month}.xls`, "application/vnd.ms-excel");
+    toast("Excel файл юкланди ✓");
   }
 
   function printPivot(){
-    const P=buildPivot(); if(!P.carNames.length){alert("Бу ойда ёзув йўқ.");return;}
-    const months=["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН","ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
-    const metric=P.metric==="tushum"?"Тушум":P.metric==="topshirilgan"?"Топширилган сумма":"Соф тушум", unit=P.unit===1000?"минг сўмда":"тўлиқ сўмда", show=v=>v?Math.round(v/P.unit).toLocaleString("ru-RU"):"";
-    let totals={},grand=0,body="";P.carNames.forEach(name=>{const c=cars.find(x=>x.name===name);let sum=0,td="";for(let d=1;d<=P.daysInMonth;d++){const v=P.byCar[name][d]||0;sum+=v;totals[d]=(totals[d]||0)+v;td+=`<td>${show(v)}</td>`;}grand+=sum;body+=`<tr><td class="left"><b>${esc(name)}</b></td><td class="left">${esc(c&&c.rusumi?c.rusumi:"")}</td>${td}<td class="total">${show(sum)}</td></tr>`;});
-    let foot=`<tr class="foot"><td colspan="2">ЖАМИ</td>`;for(let d=1;d<=P.daysInMonth;d++)foot+=`<td>${show(totals[d]||0)}</td>`;foot+=`<td class="total">${show(grand)}</td></tr>`;
-    const now=new Date(),pp=n=>String(n).padStart(2,"0");
-    const html=`<!doctype html><html><head><meta charset="utf-8"><title>Ойлик жадвал</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;padding:7mm;color:#152036}h1{text-align:center;font-size:17px;margin:0 0 3px}.meta{text-align:center;color:#667085;font-size:9px;margin-bottom:8px}table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:8px}th,td{border:1px solid #9aa0a6;padding:2.5px 2px;text-align:right;white-space:nowrap;overflow:hidden}th{background:#0f2440;color:#fff;text-align:center}th:first-child,th:nth-child(2),td.left{text-align:left}.total{font-weight:700;background:#fff3cc}.foot td{font-weight:700;background:#ededed}.foot .total{background:#ffe699}@page{size:A4 landscape;margin:6mm}</style></head><body><h1>${P.y} йил ${months[P.m-1]} ойи — Кунлик жадвал</h1><div class="meta">Кўрсаткич: <b>${metric}</b> · ${unit} · ${fmtDate(localDateStr(now))} ${pp(now.getHours())}:${pp(now.getMinutes())}</div><table><thead><tr><th>Давлат рақами</th><th>Русуми</th>${Array.from({length:P.daysInMonth},(_,i)=>`<th>${i+1}</th>`).join("")}<th>Жами</th></tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>`;
-    const w=window.open("","_blank");if(!w){alert("Чоп ойнасини очишга браузер рухсат бермади.");return;}w.document.write(html);w.document.close();
+    const el = document.getElementById("pivotWrap");
+    if(!el || !el.innerHTML.trim() || el.innerHTML.includes("empty")){
+      alert("Бу ойда ёзув йўқ."); return;
+    }
+    printHtmlBlock(el.innerHTML, "");
   }
 
   document.getElementById("pivotMonth").value = localDateStr().slice(0,7);
@@ -3356,6 +3795,58 @@
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+
+  /* ============================================================
+     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
+     ============================================================ */
+  #agentPanel header{flex-wrap:wrap;gap:10px;}
+  #agentPanel main{padding-bottom:30px;}
+  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #agentPanel .entry .full{grid-column:1/-1;}
+  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
+
+  @media(max-width:760px){
+    #agentPanel header{padding:12px 14px;}
+    #agentPanel header h1{font-size:17px;}
+    #agentPanel header p{font-size:11.5px;}
+    #agentClock{font-size:12px !important;padding:5px 9px !important;}
+    #agentPanel main{padding:12px 10px;}
+    #agentPanel .card{padding:14px 12px;border-radius:12px;}
+    #agentPanel .card h2{font-size:16px;}
+
+    /* Форма — телефонда битта устун, катта майдонлар */
+    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
+    #agentPanel input, #agentPanel select{
+      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      padding:12px 12px;
+      min-height:46px;
+    }
+    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
+    #agentPanel .btn{min-height:48px;font-size:15px;}
+    #agentPanel .actions-row{flex-direction:column;}
+    #agentPanel .actions-row .btn{width:100%;}
+
+    /* Фильтр тугмалари — иккитадан */
+    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    #agentPanel .filters .fld{min-width:0;}
+    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
+
+    /* Жадваллар — ёнга сурилади, устунлар тор */
+    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
+    #agentPanel table{font-size:12.5px;}
+    #agentPanel th, #agentPanel td{padding:7px 6px;}
+    #agentPanel .pivot-table{font-size:11px;}
+    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
+
+    /* Агент кириш экрани */
+    #agentLogin .lockbox{padding:22px 18px;}
+    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
+  }
+
+  @media(max-width:420px){
+    #agentPanel .filters{grid-template-columns:1fr;}
+    #agentPanel header h1{font-size:16px;}
+  }
 </style></head><body>
     <h1>Кунлик Хисобот — Йиллик отчет</h1>
     <p class="meta">Йил: <b>${year}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -3372,11 +3863,7 @@
   }
   function printYearlyReport(){
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
-    const w = window.open("", "_blank");
-    w.document.write(buildYearlyReportPrintHTML(year));
-    w.document.close();
-    w.focus();
-    setTimeout(()=>{ w.print(); }, 300);
+    printFullHtmlDoc(buildYearlyReportPrintHTML(year));
   }
   document.getElementById("yearlyPdfBtn").addEventListener("click", printYearlyReport);
 
@@ -3404,96 +3891,17 @@
  xmlns:o="urn:schemas-microsoft-com:office:office"
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Default" ss:Name="Normal">
-   <Alignment ss:Vertical="Center"/>
-   <Font ss:FontName="Calibri" ss:Size="11"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFBFBF"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="hdr">
-   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
-   <Interior ss:Color="#0F2440" ss:Pattern="Solid"/>
-   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FFFFFF"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F2440"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="bold">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="boldnum">
-   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
-    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
-    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
-   </Borders>
-  </Style>
-  <Style ss:ID="num">
-   <NumberFormat ss:Format="#,##0"/>
-   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
-  </Style>
-  <Style ss:ID="txt"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>
-  <Style ss:ID="title">
-   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/>
-   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
-   <Borders/>
-  </Style>
-  <Style ss:ID="dateNote">
-   <Font ss:Italic="1" ss:Color="#6B7280" ss:Size="10"/>
-   <Borders/>
-  </Style>
- </Styles>
+${XL_STYLES}
  <Worksheet ss:Name="Йиллик хулоса">
   <Table>${rows}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <PageSetup>
-    <Layout x:Orientation="Landscape" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-    <PageMargins x:Bottom="0.4" x:Left="0.3" x:Right="0.3" x:Top="0.4" xmlns:x="urn:schemas-microsoft-com:office:excel"/>
-   </PageSetup>
-   <FitToPage/>
-   <Print>
-    <ValidPrinterInfo/>
-    <FitWidth>1</FitWidth>
-    <FitHeight>0</FitHeight>
-    <PaperSizeIndex>9</PaperSizeIndex>
-    <HorizontalResolution>600</HorizontalResolution>
-    <VerticalResolution>600</VerticalResolution>
-   </Print>
-   <FreezePanes/>
-   <FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-   <ActivePane>2</ActivePane>
-  </WorksheetOptions>
+${XL_PAGE}
 </Worksheet>
 </Workbook>`;
   }
   function downloadYearlyWorkbook(){
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
     const xml = buildYearlyWorkbookXML(year);
-    const blob = new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "yillik_hisobot_"+year+".xls";
-    a.click();
+    downloadFile(new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"}), "yillik_hisobot_"+year+".xls", "application/vnd.ms-excel;charset=utf-8;");
     toast("Йиллик отчет Excel'га юкланди ✓ ("+year+")");
   }
   document.getElementById("yearlyExcelBtn").addEventListener("click", downloadYearlyWorkbook);
@@ -3503,7 +3911,7 @@
   function loadDebtPayments(){
     try{ return JSON.parse(localStorage.getItem(LS_DEBTPAY)) || []; }catch(e){ return []; }
   }
-  function saveDebtPayments(list){ safeSave(LS_DEBTPAY, JSON.stringify(list)); queuePrimarySync && queuePrimarySync("debtPayments", list); }
+  function saveDebtPayments(list){ safeSave(LS_DEBTPAY, JSON.stringify(list)); }
   let debtPayments = loadDebtPayments();
 
   function renderDebts(){
@@ -3567,7 +3975,6 @@
           const p = debtPayments.find(x=>x.id===b.dataset.pdel);
           debtPayments = debtPayments.filter(x=>x.id!==b.dataset.pdel);
           saveDebtPayments(debtPayments);
-          primaryDelete("debtPayments", b.dataset.pdel).catch(e=>console.warn("Firebase delete:",e));
           logAudit("Қарз тўлови ўчирилди", p ? `${p.shofyor} · ${fmt(p.summa)}` : "");
           renderDebts();
           toast("Тўлов ёзуви ўчирилди");
@@ -3601,7 +4008,7 @@
   function loadCashTaken(){
     try{ return JSON.parse(localStorage.getItem(LS_CASHTAKEN)) || []; }catch(e){ return []; }
   }
-  function saveCashTaken(list){ safeSave(LS_CASHTAKEN, JSON.stringify(list)); queuePrimarySync && queuePrimarySync("cashTaken", list); }
+  function saveCashTaken(list){ safeSave(LS_CASHTAKEN, JSON.stringify(list)); }
   let cashTaken = loadCashTaken();
   let editingCashTakenId = null;
 
@@ -3616,9 +4023,73 @@
     exitCashTakenEditMode();
   });
 
+  /* ============================================================
+     "МЕН ОЛГАН НАҚД ПУЛ" — ОЙЛАР КЕСИМИДА
+     Ҳар ой учун: ўша ойда топширилган, ўша ойда олинган, ой қолдиғи.
+     "Ортиб келган (жамланма)" — энг биринчи ойдан то шу ойгача бўлган
+     ЙИҒИНДИ қолдиқ (пул бир ойда топширилиб, кейинги ойда олиниши мумкин,
+     шунинг учун ҳақиқий "қўлимда қолиши керак бўлган пул" — жамланма орқали кўринади).
+     ============================================================ */
+  function renderCashTakenByMonth(){
+    const body = document.getElementById("cashTakenByMonthBody");
+    if(!body) return;
+
+    const topByMonth = {};
+    records.forEach(r=>{
+      if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
+      const mo = String(r.sana).slice(0,7);
+      topByMonth[mo] = (topByMonth[mo]||0) + Number(r.topshirilgan);
+    });
+    const takenByMonth = {};
+    cashTaken.forEach(c=>{
+      if(!c.sana) return;
+      const mo = String(c.sana).slice(0,7);
+      takenByMonth[mo] = (takenByMonth[mo]||0) + Number(c.summa||0);
+    });
+
+    const months = [...new Set([...Object.keys(topByMonth), ...Object.keys(takenByMonth)])].sort();
+    if(!months.length){
+      body.innerHTML = `<tr><td colspan="5" class="empty">Ҳозирча маълумот йўқ.</td></tr>`;
+      return;
+    }
+
+    const monthNames = ["январь","февраль","март","апрель","май","июнь",
+                        "июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+    let running = 0;
+    const rows = months.map(mo=>{
+      const [y,m] = mo.split("-").map(Number);
+      const top = topByMonth[mo] || 0;
+      const taken = takenByMonth[mo] || 0;
+      const monthNet = top - taken;
+      running += monthNet;
+      return `<tr>
+        <td><b>${monthNames[m-1]} ${y}</b></td>
+        <td>${fmt(top)}</td>
+        <td>${fmt(taken)}</td>
+        <td class="${monthNet<0?'neg':'pos'}">${fmt(monthNet)}</td>
+        <td class="${running<0?'neg':'pos'}" style="font-weight:700;">${fmt(running)}</td>
+      </tr>`;
+    }).join("");
+
+    // Якуний қатор — юқоридаги умумий кўрсаткичлар билан айнан мос келади
+    const grandTop = Object.values(topByMonth).reduce((s,v)=>s+v,0);
+    const grandTaken = Object.values(takenByMonth).reduce((s,v)=>s+v,0);
+    const grandNet = grandTop - grandTaken;
+    const footer = `<tr style="background:var(--gold-soft);font-weight:800;border-top:2px solid var(--gold);">
+      <td>ЖАМИ</td>
+      <td>${fmt(grandTop)}</td>
+      <td>${fmt(grandTaken)}</td>
+      <td class="${grandNet<0?'neg':'pos'}">${fmt(grandNet)}</td>
+      <td class="${grandNet<0?'neg':'pos'}">${fmt(grandNet)}</td>
+    </tr>`;
+
+    body.innerHTML = rows + footer;
+  }
+
   function renderCashTaken(){
     const box = document.getElementById("ct_topshirilgan");
     if(!box) return;
+    renderCashTakenByMonth();
     const totalTopshirilgan = records.reduce((s,r)=> s + (r.topshirilgan || 0), 0);
     const totalOlingan = cashTaken.reduce((s,c)=> s + c.summa, 0);
     const qoldiq = totalTopshirilgan - totalOlingan;
@@ -3714,7 +4185,6 @@
           const c = cashTaken.find(x=>x.id===b.dataset.ctdel);
           cashTaken = cashTaken.filter(x=>x.id!==b.dataset.ctdel);
           saveCashTaken(cashTaken);
-          primaryDelete("cashTaken", b.dataset.ctdel).catch(e=>console.warn("Firebase delete:",e));
           logAudit("Олинган нақд пул ёзуви ўчирилди", c ? `${fmtDate(c.sana)} · ${fmt(c.summa)}` : "");
           renderCashTaken();
           toast("Ёзув ўчирилди");
@@ -3809,11 +4279,7 @@
   // ---- Backup / restore / wipe ----
   document.getElementById("backupBtn").addEventListener("click", ()=>{
     const data = {records, cars, expenses, expensePayments, exportedAt: new Date().toISOString()};
-    const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "kunlik_hisobot_zaxira_"+localDateStr()+".json";
-    a.click();
+    downloadFile(new Blob([JSON.stringify(data,null,2)], {type:"application/json"}), "kunlik_hisobot_zaxira_"+localDateStr()+".json", "application/json");
     toast("Захира нусха юкланди ✓");
   });
   document.getElementById("restoreBtn").addEventListener("click", ()=>{
@@ -3979,6 +4445,8 @@
 
   // ---- Чиқиш тугмаси: Telegram'га захира юборишни сўраш, сўнг қулфлаш/чиқиш ----
   function doExit(){
+    clearTrust();                       // "Чиқиш" — ишончни бекор қилади
+    editGrantedUntil = 0;
     if(getPwHash()){
       document.getElementById("lockScreen").classList.remove("hidden");
       setTimeout(()=>document.getElementById("lockInput").focus(), 100);
@@ -4010,12 +4478,32 @@
     toast("Сақланди ✓");
   });
 
+  // Ишонч муддати ва таҳрирлаш муҳлати созламалари
+  document.getElementById("trustHoursInp").value = trustHours();
+  document.getElementById("trustHoursInp").addEventListener("change", function(){
+    const h = Math.max(0, Number(this.value||0));
+    setTrustHours(h);
+    if(h === 0) clearTrust(); else markTrusted();
+    toast("Сақланди ✓");
+  });
+
+  document.getElementById("editGraceInp").value =
+    localStorage.getItem("kh_edit_grace_min_v1") === null ? 15 : Number(localStorage.getItem("kh_edit_grace_min_v1"));
+  document.getElementById("editGraceInp").addEventListener("change", function(){
+    const m = Math.max(0, Number(this.value||0));
+    localStorage.setItem("kh_edit_grace_min_v1", String(m));
+    editGrantedUntil = 0;
+    toast("Сақланди ✓");
+  });
+
   let idleTimer = null;
   function resetIdleTimer(){
     if(idleTimer) clearTimeout(idleTimer);
     const minutes = loadLockMin();
     if(!minutes || !getPwHash()) return;
     idleTimer = setTimeout(()=>{
+      clearTrust();
+      editGrantedUntil = 0;
       document.getElementById("lockScreen").classList.remove("hidden");
       setTimeout(()=>document.getElementById("lockInput").focus(), 100);
     }, minutes * 60 * 1000);
@@ -4032,7 +4520,6 @@
           expenses = [];
           saveRecords(records);
           saveExpenses(expenses);
-          Promise.all([primaryClear("records"), primaryClear("expenses"), primaryClear("expensePayments"), primaryClear("debtPayments"), primaryClear("cashTaken")]).catch(e=>console.warn("Firebase тозалашда хато:",e));
           renderRecords();
           renderTodayStats();
           updateDatalists();
@@ -4062,6 +4549,27 @@
     }
   }
 
+  /* ============================================================
+     ИШОНЧЛИ ҚУРИЛМА
+     Парол киритилгач, белгиланган муддат давомида қайта сўралмайди.
+     Телефонда илова фонга ўтиб қайта юкланганда ҳам парол сўрамайди.
+     "Чиқиш" тугмаси эса дарҳол қулфлайди.
+     ============================================================ */
+  function trustHours(){
+    const v = localStorage.getItem(LS_TRUSTH);
+    return v === null ? 12 : Number(v);   // стандарт: 12 соат
+  }
+  function setTrustHours(h){ localStorage.setItem(LS_TRUSTH, String(h)); }
+  function markTrusted(){
+    const h = trustHours();
+    if(h > 0) localStorage.setItem(LS_TRUST, String(Date.now() + h*3600*1000));
+  }
+  function isTrusted(){
+    const t = Number(localStorage.getItem(LS_TRUST) || 0);
+    return t > Date.now();
+  }
+  function clearTrust(){ localStorage.removeItem(LS_TRUST); }
+
   function tryUnlock(){
     const input = document.getElementById("lockInput").value;
     const hash = getPwHash();
@@ -4070,6 +4578,10 @@
       document.getElementById("lockErr").textContent = "";
       toast("Бисмиллаҳир роҳманир роҳим — хуш келибсиз!");
       document.getElementById("lockScreen").classList.add("hidden");
+      markTrusted();
+      // Булутдаги конфликтни ФАҚАТ киргандан кейин текширамиз —
+      // шунда у логин экранини бузиб, "яна кир" деган таассурот қолдирмайди.
+      setTimeout(()=> CLOUD.runCheck(), 1200);
     } else {
       document.getElementById("lockErr").textContent = "Парол нотўғри, қайта уриниб кўринг";
       document.getElementById("lockInput").value = "";
@@ -4165,12 +4677,12 @@
   function loadExpenses(){
     try{ return JSON.parse(localStorage.getItem(LS_EXPENSES)) || []; }catch(e){ return []; }
   }
-  function saveExpenses(list){ safeSave(LS_EXPENSES, JSON.stringify(list)); queuePrimarySync && queuePrimarySync("expenses", list); }
+  function saveExpenses(list){ safeSave(LS_EXPENSES, JSON.stringify(list)); }
   let expenses = loadExpenses();
   function loadExpensePayments(){
     try{ return JSON.parse(localStorage.getItem(LS_EXPENSE_PAYMENTS)) || []; }catch(e){ return []; }
   }
-  function saveExpensePayments(list){ safeSave(LS_EXPENSE_PAYMENTS, JSON.stringify(list)); queuePrimarySync && queuePrimarySync("expensePayments", list); }
+  function saveExpensePayments(list){ safeSave(LS_EXPENSE_PAYMENTS, JSON.stringify(list)); }
   let expensePayments = loadExpensePayments();
   let editingExpenseId = null;
 
@@ -4327,7 +4839,6 @@
           expensePayments = expensePayments.filter(v=>v.id!==p.id);
           saveExpenses(expenses);
           saveExpensePayments(expensePayments);
-          primaryDelete("expensePayments", p.id).catch(e=>console.warn("Firebase delete:",e));
           logAudit("Харажат қоплаш ўчирилди", `${fmtDate(p.sana)} · ${x ? x.turi : "ўчирилган харажат"} · ${fmt(p.summa)}`);
           refreshExpensePaymentSection();
           renderExpenseTodayStats();
@@ -4563,7 +5074,6 @@
             const x = expenses.find(i=>i.id===b.dataset.edel);
             expenses = expenses.filter(x=>x.id!==b.dataset.edel);
             saveExpenses(expenses);
-            primaryDelete("expenses", b.dataset.edel).catch(e=>console.warn("Firebase delete:",e));
             logAudit("Харажат ўчирилди", x ? `${fmtDate(x.sana)} · ${x.turi} · ${fmt(x.summa)}` : "");
             updateExpenseCatList();
             refreshExpensePaymentSection();
@@ -4772,6 +5282,25 @@
   function saveAgents(list){ safeSave(LS_AGENTS, JSON.stringify(list)); }
   let agents = loadAgents();
 
+  // Эски форматдаги агентларни (очиқ PIN) хавфсиз форматга ўтказамиз — бир марта
+  (function migrateAgentPins(){
+    let changed = false;
+    agents = agents.map(a=>{
+      if(a && a.pin && !a.pinHash){
+        changed = true;
+        return { name:a.name, pinHash: simpleHash(a.pin), pinLen: String(a.pin).length,
+                 active: a.active !== false };
+      }
+      // pinLen йўқ бўлса — тиклаймиз (валидация тўғри ишлаши учун)
+      if(a && a.pinHash && !a.pinLen){ changed = true; return { ...a, pinLen: 4 }; }
+      return a;
+    });
+    if(changed){
+      saveAgents(agents);
+      console.log("Агент PIN'лари хавфсиз форматга ўтказилди");
+    }
+  })();
+
   function renderAgentsList(){
     const el = document.getElementById("agentsList");
     if(!el) return;
@@ -4782,7 +5311,7 @@
     el.innerHTML = agents.map((a,i)=>`
       <div class="settings-row" style="flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:4px;">
         <input type="text" data-aidx="${i}" data-afield="name" value="${esc(a.name||"")}" placeholder="Агент исми" style="min-width:170px;">
-        <input type="text" data-aidx="${i}" data-afield="pin" value="${esc(a.pin||"")}" placeholder="PIN (4 хона)" maxlength="4" inputmode="numeric" style="min-width:110px;">
+        <input type="text" data-aidx="${i}" data-afield="pin" value="${a.pinHash ? "••••" : ""}" placeholder="PIN (4 хона)" maxlength="4" inputmode="numeric" title="Ўзгартириш учун янги PIN ёзинг" style="min-width:110px;">
         <span class="pill" style="background:${a.active===false?'#b3402a':'#1f7a4d'};color:#fff;">${a.active===false?'Тўхтатилган':'Фаол'}</span>
         <button class="btn outline" data-atoggle="${i}">${a.active===false?'Фаоллаштириш':'Тўхтатиш'}</button>
         <button class="btn danger" data-arm="${i}">Ўчириш</button>
@@ -4805,10 +5334,21 @@
     const rows = document.querySelectorAll("#agentsList .settings-row");
     const list = Array.from(rows).map((row,i)=>{
       const g = f => row.querySelector(`[data-afield="${f}"]`).value.trim();
-      return { name: g("name"), pin: g("pin"), active: agents[i] ? agents[i].active !== false : true };
+      const rawPin = g("pin");
+      const prev = agents[i];
+      // PIN ўзгартирилмаган бўлса — эски hash сақланади
+      const keepOld = !!(prev && prev.pinHash && rawPin === "••••");
+      const pinHash = keepOld ? prev.pinHash : simpleHash(rawPin);
+      const pinLen  = keepOld ? (prev.pinLen || 4) : rawPin.length;
+      return { name: g("name"), pinHash, pinLen,
+               active: prev ? prev.active !== false : true };
     }).filter(a=> a.name);
-    const bad = list.find(a=> !/^\d{4}$/.test(a.pin));
-    if(bad){ alert(`"${bad.name}" учун PIN 4 хонали рақам бўлиши керак.`); return; }
+    const bad = list.find(a=> a.pinLen !== 4);
+    if(bad){
+      alert(`"${bad.name}" учун PIN 4 хонали рақам бўлиши керак.\n\n` +
+            `Эслатма: мавжуд агентда PIN «••••» кўринади — уни ўзгартирмасангиз, шундай қолдиринг.`);
+      return;
+    }
     const names = list.map(a=> a.name.toLowerCase());
     if(new Set(names).size !== names.length){ alert("Агент исмлари такрорланмаслиги керак."); return; }
     agents = list;
@@ -4819,9 +5359,142 @@
   });
   renderAgentsList();
 
+  /* ---- Мавжуд такрорий ёзувларни топиш ---- */
+  function scanDuplicates(){
+    const groups = {};
+    records.forEach(r=>{
+      if(!r.sana || !r.mashina) return;
+      const key = r.sana + "||" + r.mashina;
+      (groups[key] = groups[key] || []).push(r);
+    });
+    return Object.values(groups)
+      .filter(g => g.length > 1)
+      .sort((a,b)=> String(b[0].sana).localeCompare(String(a[0].sana)));
+  }
+
+  function renderDupCheck(){
+    const el = document.getElementById("dupCheckResult");
+    if(!el) return;
+    const groups = scanDuplicates();
+    if(!groups.length){
+      el.innerHTML = `<div class="notice" style="background:#eaf7ef;border-color:#9fd8b5;color:#1f7a4d;margin-top:12px;">
+        ✅ Такрорий ёзув топилмади — маълумот тоза.
+      </div>`;
+      return;
+    }
+    const ortiqcha = groups.reduce((sum,g)=>{
+      const vals = g.map(r=> Number(r.tushum||0)).sort((a,b)=> b-a);
+      return sum + vals.slice(1).reduce((a,b)=> a+b, 0);   // энг каттасидан бошқалари
+    }, 0);
+
+    const rows = groups.map(g=>{
+      const inner = g.map(r=>`
+        <tr>
+          <td>${fmtDate(r.sana)}</td>
+          <td>${carPill(r.mashina)}</td>
+          <td>${esc(r.shofyor)||"—"}</td>
+          <td>${fmt(r.tushum)}</td>
+          <td>${r.topshirilgan==null?"—":fmt(r.topshirilgan)}</td>
+          <td>${r.manba ? `<span class="pill" style="background:#3b7dd8;color:#fff;">${esc(r.manba)}</span>` : "раҳбар"}</td>
+          <td><button class="btn danger small" data-dupdel="${r.id}">Ўчириш</button></td>
+        </tr>`).join("");
+      return `<tr style="background:#fdeced;"><td colspan="7" style="font-weight:700;">
+                ${fmtDate(g[0].sana)} · ${esc(g[0].mashina)} — ${g.length} та ёзув
+              </td></tr>` + inner;
+    }).join("");
+
+    el.innerHTML = `
+      <div class="notice" style="margin-top:12px;">
+        <b>${groups.length} та такрорланиш топилди.</b><br>
+        Эҳтимолий ортиқча тушум: <b>${fmt(ortiqcha)}</b>
+        (ҳар гуруҳдан энг каттасини қолдириб ҳисобланди).<br>
+        Ҳар бир гуруҳни кўриб чиқинг: агар улар ҳақиқатан ўша куннинг турли рейслари бўлса — тегманг.
+        Агар адашиб икки марта киритилган бўлса — ортиқчасини ўчиринг.
+      </div>
+      <div class="table-wrap" style="margin-top:10px;">
+        <table>
+          <thead><tr><th>Сана</th><th>Мошина</th><th>Шофёр</th><th>Тушум</th><th>Топширилган</th><th>Манба</th><th>Амал</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+
+    el.querySelectorAll("[data-dupdel]").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const rec = records.find(r=> r.id === b.dataset.dupdel);
+        if(!rec) return;
+        if(!confirm(`Ушбу ёзувни ўчирасизми?\n\n${fmtDate(rec.sana)} · ${rec.mashina} · ${fmt(rec.tushum)}`)) return;
+        requirePasswordThen(()=>{
+          records = records.filter(r=> r.id !== rec.id);
+          saveRecords(records);
+          if(rec.manba && String(rec.manba).indexOf("агент") === 0){
+            CLOUD.deleteInboxRecord(rec.id);
+          }
+          logAudit("Такрорий ёзув ўчирилди", `${fmtDate(rec.sana)} · ${rec.mashina} · ${fmt(rec.tushum)}`);
+          renderDupCheck();
+          renderRecords();
+          renderTodayStats();
+          toast("Такрорий ёзув ўчирилди ✓");
+        });
+      });
+    });
+  }
+  document.getElementById("runDupCheckBtn")?.addEventListener("click", renderDupCheck);
+
+  /* ---- Агент формасидаги майдонларни бошқариш ---- */
+  const LS_AGENT_FIELDS = "kh_agent_fields_v1";
+  const AGENT_FIELD_DEFS = [
+    {key:"shofyor",      label:"Шофёр"},
+    {key:"yonalish",     label:"Йўналиш"},
+    {key:"yoqilgi",      label:"Ёқилғи харажати"},
+    {key:"topshirilgan", label:"Топширилган сумма"},
+    {key:"yol",          label:"Йўл харажати"},
+    {key:"boshqa",       label:"Бошқа харажат"},
+    {key:"km",           label:"Босилган масофа (км)"},
+    {key:"izoh",         label:"Изоҳ"}
+  ];
+  function defaultAgentFields(){
+    const o = {};
+    AGENT_FIELD_DEFS.forEach(f=> o[f.key] = true);
+    return o;
+  }
+  function loadAgentFields(){
+    try{
+      const v = JSON.parse(localStorage.getItem(LS_AGENT_FIELDS));
+      return v && typeof v === "object" ? Object.assign(defaultAgentFields(), v) : defaultAgentFields();
+    }catch(e){ return defaultAgentFields(); }
+  }
+  let agentFields = loadAgentFields();
+
+  function renderAgentFieldsList(){
+    const el = document.getElementById("agentFieldsList");
+    if(!el) return;
+    el.innerHTML = AGENT_FIELD_DEFS.map(f=>`
+      <label style="display:flex;align-items:center;gap:8px;background:#faf8f2;border:1px solid var(--line);
+                    border-radius:9px;padding:9px 11px;cursor:pointer;font-size:13.5px;text-transform:none;
+                    letter-spacing:0;color:var(--ink);font-weight:600;margin:0;">
+        <input type="checkbox" data-afkey="${f.key}" ${agentFields[f.key] ? "checked" : ""}
+               style="width:18px;height:18px;margin:0;cursor:pointer;">
+        <span>${f.label}</span>
+      </label>`).join("");
+  }
+  renderAgentFieldsList();
+
+  document.getElementById("saveAgentFieldsBtn")?.addEventListener("click", ()=>{
+    const o = {};
+    document.querySelectorAll("[data-afkey]").forEach(cb=>{ o[cb.dataset.afkey] = cb.checked; });
+    agentFields = Object.assign(defaultAgentFields(), o);
+    safeSave(LS_AGENT_FIELDS, JSON.stringify(agentFields));
+    toast("Майдонлар сақланди ✓ — агент дастурни янгилагач кўринади");
+  });
+
   /* ---- Раҳбар: агентлар киритган ёзувларни қабул қилиш ---- */
   function startAgentInboxListener(){
     CLOUD.listenAgentInbox(async incoming=>{
+      // ҲИМОЯ: агар шу қурилма (аввал раҳбар сифатида очилиб, кейин)
+      // агент режимига ўтган бўлса — бу ерда ҳеч нарса қилмаймиз.
+      // Акс ҳолда агент ўз ёзувини ўзи "қабул қилиб", inbox'дан ўчириб,
+      // лекин ЎЗ БЎШ базасига сақлаб қўяр эди — ёзув бутунлай йўқолар эди.
+      if(currentAgent) return;
       const existing = new Set(records.map(r=> r.id));
       const fresh = incoming.filter(r=> !existing.has(r.id));
       if(fresh.length){
@@ -4832,9 +5505,7 @@
             yol: Number(r.yol||0), boshqa: Number(r.boshqa||0),
             topshirilgan: (r.topshirilgan===null||r.topshirilgan===undefined)?null:Number(r.topshirilgan),
             km: r.km||null, izoh: r.izoh||"",
-            manba: "агент: " + (r.agentName||""),
-            agentName: r.agentName||"",
-            claimed: true
+            manba: "агент: " + (r.agentName||"")
           });
         });
         saveRecords(records);
@@ -4844,8 +5515,10 @@
       }
       const el = document.getElementById("cloudAgentCount");
       if(el) el.textContent = incoming.length + " та";
-      // Қабул қилинганларни белгилаймиз
-      CLOUD.markClaimed(incoming.map(r=> r.id)).catch(()=>{});
+      // Қабул қилинганлар inbox'дан ўчирилади — у ерда тўпланиб қолмайди.
+      // Ёзувлар энди раҳбар базасида ва булутдаги захирада сақланади,
+      // агент уларни умумий базадан кўради.
+      CLOUD.removeFromInbox(incoming.map(r=> r.id)).catch(()=>{});
     });
   }
 
@@ -4902,10 +5575,18 @@
     if(!name){ err.textContent = "Исмингизни танланг."; return; }
     const list = sel._list || agents;
     const a = list.find(x=> x.name === name);
-    if(!a || a.pin !== pin){ err.textContent = "PIN нотўғри."; return; }
+    // Эски форматдаги (очиқ PIN) агентлар билан ҳам мослик сақланади
+    const okPin = a && ((a.pinHash && simpleHash(pin) === a.pinHash) || (a.pin && a.pin === pin));
+    if(!okPin){ err.textContent = "PIN нотўғри."; return; }
     if(a.active === false){ err.textContent = "Кириш ҳуқуқингиз тўхтатилган."; return; }
     err.textContent = "";
     currentAgent = a;
+    // МУҲИМ: биринчи марта кирганда CLOUD.start() аллақачон "раҳбар режими"да
+    // ишга тушган бўлади (сайт очилганда currentAgent ҳали null эди).
+    // Шу лаҳзадан бошлаб ёзишни бутунлай тақиқлаймиз — акс ҳолда бу қурилма
+    // раҳбарнинг тўлиқ тарихини (масалан Август-Сентябр) ўзининг бўш
+    // нусхаси билан алмаштириб қўйиши мумкин эди.
+    CLOUD.setAgentMode(true);
     sessionStorage.setItem("kh_agent", name);
     document.getElementById("agentLogin").style.display = "none";
     document.getElementById("mainApp").style.display = "none";   // раҳбар ойнасини яширамиз
@@ -4919,19 +5600,15 @@
     location.reload();
   });
 
-  async function loadAgentMonthHistory(){
-    const sel=document.getElementById("agPivotHistory");
-    if(!sel || !currentAgent) return;
-    try{
-      const months=await CLOUD.fetchAgentMonths(currentAgent.name);
-      const names=["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН","ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
-      sel.innerHTML='<option value="">Булутдаги ойни танланг</option>'+months.map(m=>{const [y,mm]=m.split("-").map(Number);return `<option value="${m}">${y} йил ${names[mm-1]} ойи</option>`;}).join("");
-    }catch(e){ sel.innerHTML='<option value="">Ойлар рўйхатини олиб бўлмади</option>'; }
-  }
-
   async function initAgentPanel(){
     document.getElementById("ag_sana").valueAsDate = new Date();
+    startAgentLiveWatch();   // ана — жонли кузатувни ёқамиз
     // Мошиналар рўйхати — булутдан ёки локалдан
+    // Мошиналар рўйхати — булутдан (раҳбар базасидан), бўлмаса локалдан
+    try{
+      const cloudCars = await CLOUD.fetchSharedCars();
+      if(cloudCars && cloudCars.length) cars = cloudCars;
+    }catch(e){}
     const sel = document.getElementById("ag_mashina");
     sel.innerHTML = `<option value="">Мошинани танланг</option>` +
       cars.map(c=> `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
@@ -4943,23 +5620,30 @@
         drv.value = c.driver;
       }else if(c){
         // Созламада шофёр белгиланмаган бўлса — тарихдан энг сўнггисини оламиз
-        const last = records.filter(r=> r.mashina === c.name && r.shofyor)
-                            .sort((a,b)=> String(b.sana).localeCompare(String(a.sana)))[0];
+        const src = (agentDataCache && agentDataCache.all.length) ? agentDataCache.all : records;
+        const last = src.filter(r=> r.mashina === c.name && r.shofyor)
+                        .sort((a,b)=> String(b.sana).localeCompare(String(a.sana)))[0];
         drv.value = last ? last.shofyor : "";
       }
       agComputePreview();
+      renderAgentDupHint();
     };
     // Шофёр ва йўналиш таклифлари
-    const drivers = [...new Set(records.map(r=> r.shofyor).filter(Boolean))];
-    const routes  = [...new Set(records.map(r=> r.yonalish).filter(Boolean))];
+    let baseRecs = records;
+    try{
+      const D = await loadAgentData(false);
+      if(D && D.all.length) baseRecs = D.all;
+    }catch(e){}
+    const drivers = [...new Set(baseRecs.map(r=> r.shofyor).filter(Boolean))];
+    const routes  = [...new Set(baseRecs.map(r=> r.yonalish).filter(Boolean))];
     document.getElementById("agDriverList").innerHTML = drivers.map(d=>`<option value="${esc(d)}">`).join("");
     document.getElementById("agRouteList").innerHTML  = routes.map(r=>`<option value="${esc(r)}">`).join("");
+    applyAgentFields();
     renderAgentToday();
     document.getElementById("agPivotMonth").value = localDateStr().slice(0,7);
     updateAgentClock();
     setInterval(updateAgentClock, 1000);
     renderAgentPivot();
-    loadAgentMonthHistory();
   }
 
   document.getElementById("agMoreToggle")?.addEventListener("click", ()=>{
@@ -5009,15 +5693,26 @@
     if(!rec.sana || !rec.mashina || rec.tushum <= 0){
       alert("Сана, мошина ва тушумни тўғри киритинг."); return;
     }
+    // --- Такрорий ёзув текшируви (умумий базага нисбатан) ---
+    try{
+      const D = await loadAgentData(false);   // кэшдан — трафик тежалади
+      const dups = findDuplicates(rec.sana, rec.mashina, null, D.all);
+      if(dups.length){
+        if(!confirm(duplicateWarningText(dups, rec.sana, rec.mashina))) return;
+      }
+    }catch(e){ /* интернет йўқ бўлса — текширувсиз давом этамиз */ }
     btn.disabled = true; btn.textContent = "Юборилмоқда...";
     try{
       await CLOUD.pushAgentRecord(rec, currentAgent.name);
       document.getElementById("agentForm").reset();
       document.getElementById("ag_sana").valueAsDate = new Date();
       document.getElementById("agPreview").innerHTML = "";
+      document.getElementById("agDupHint").innerHTML = "";
       document.getElementById("agMoreWrap").classList.add("hidden");
       toast("Ёзув юборилди ✓");
+      agentDataCache = null;          // кэшни тозалаймиз — янги ёзув кўринсин
       renderAgentToday();
+      renderAgentPivot();
     }catch(err){
       console.error(err);
       alert(err && err.message === "OFFLINE"
@@ -5028,25 +5723,140 @@
     }
   });
 
+  /* Агент кўрадиган ёзувлар = раҳбар базасидаги ЖОРИЙ ёзувлар
+     + агентнинг ҳали қабул қилинмаган (йўлдаги) ёзувлари.
+     Шунинг учун раҳбар ўчирган ёзув агентда ҳам дарҳол йўқолади,
+     ва агент раҳбар киритган ёзувларни ҳам кўради. */
+  let agentDataCache = null;
+
+  /* ---- Агент: жонли янгиланиш (реал вақт) ----
+     Раҳбар ёзув сақлаган заҳоти ёки ўзининг юборган ёзуви қабул қилинганда,
+     агент экрани ЎЗИ, тугма босилмасдан янгиланади — худди сайтлардагидек. */
+  let liveWatchTimer = null;
+  function scheduleLiveRefresh(){
+    // Бир нечта ўзгариш кетма-кет келса — фақат бир марта янгилаймиз (1 сония)
+    clearTimeout(liveWatchTimer);
+    liveWatchTimer = setTimeout(async ()=>{
+      agentDataCache = null;
+      await renderAgentToday();
+      await renderAgentPivot();
+      toast("Янгиланди");
+    }, 1000);
+  }
+  function startAgentLiveWatch(){
+    if(!currentAgent) return;
+    CLOUD.watchBackupMeta(()=> scheduleLiveRefresh());
+    CLOUD.watchOwnInbox(currentAgent.name, ()=> scheduleLiveRefresh());
+  }
+
+  async function loadAgentData(force){
+    if(agentDataCache && !force) return agentDataCache;
+    const D = await CLOUD.fetchSharedAll(!!force);
+    const shared = (D && D.records) ? D.records : [];
+    const mine   = await CLOUD.fetchAgentTodayRecordsAll(currentAgent.name);
+    const sharedIds = new Set(shared.map(r=> r.id));
+    const pending = mine.filter(r=> !sharedIds.has(r.id));
+    agentDataCache = {
+      shared, pending,
+      all: shared.concat(pending),
+      cars: (D && D.cars) ? D.cars : null,
+      fields: (D && D.fields) ? D.fields : null,
+      updatedAt: D ? D.updatedAt : 0,
+      hasBase: !!(D && D.records)
+    };
+    return agentDataCache;
+  }
+
+  // Раҳбар базаси ҳолати ҳақида агентга аниқ хабар
+  function agentBaseNote(D){
+    if(!D.hasBase || !D.shared.length){
+      return `<div class="notice" style="margin-bottom:10px;">
+        <b>Раҳбар базаси ҳали булутга юкланмаган.</b><br>
+        Шунинг учун бу ерда фақат сиз юборган ёзувлар кўринади.
+        Раҳбар дастурни очиб, Созламалар → «Ҳозир булутга сақлаш» тугмасини боссин.
+      </div>`;
+    }
+    const d = new Date(D.updatedAt || Date.now());
+    const pp = n => String(n).padStart(2,"0");
+    return `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+      Раҳбар базаси: <b>${D.shared.length}</b> та ёзув ·
+      янгиланган: ${fmtDate(localDateStr(d))} ${pp(d.getHours())}:${pp(d.getMinutes())}
+    </div>`;
+  }
+
   async function renderAgentToday(){
     const body = document.getElementById("agentTodayBody");
     if(!body || !currentAgent) return;
     const date = document.getElementById("ag_sana").value || localDateStr();
+    body.innerHTML = `<tr><td colspan="7" class="empty">Юкланмоқда...</td></tr>`;
     try{
-      const list = await CLOUD.fetchAgentTodayRecords(currentAgent.name, date);
+      const D = await loadAgentData(true);
+      const pendingIds = new Set(D.pending.map(r=> r.id));
+      const list = D.all
+        .filter(r=> r.sana === date)
+        .sort((a,b)=> String(b.id).localeCompare(String(a.id)));
+      const note = document.getElementById("agentBaseNote");
+      if(note) note.innerHTML = agentBaseNote(D);
       body.innerHTML = list.length
-        ? list.map((r,i)=>`<tr>
-            <td>${i+1}</td><td>${fmtDate(r.sana)}</td><td>${esc(r.mashina)}</td>
-            <td>${esc(r.shofyor||"—")}</td><td>${fmt(r.tushum)}</td>
-            <td>${r.topshirilgan==null?"—":fmt(r.topshirilgan)}</td>
-            <td><span class="pill" style="background:${r.claimed?'#1f7a4d':'#c9a227'};color:#fff;">${r.claimed?'Қабул қилинди':'Юборилди'}</span></td>
-          </tr>`).join("")
+        ? list.map((r,i)=>{
+            const isPending = pendingIds.has(r.id);
+            const byAgent = isPending || (r.manba && String(r.manba).indexOf("агент")===0);
+            const badge = isPending
+              ? `<span class="pill" style="background:#c9a227;color:#fff;">Юборилди</span>`
+              : byAgent
+                ? `<span class="pill" style="background:#1f7a4d;color:#fff;">Қабул қилинди</span>`
+                : `<span class="pill" style="background:#3b7dd8;color:#fff;">Раҳбар киритган</span>`;
+            return `<tr>
+              <td>${i+1}</td><td>${fmtDate(r.sana)}</td><td>${esc(r.mashina)}</td>
+              <td>${esc(r.shofyor||"—")}</td><td>${fmt(r.tushum)}</td>
+              <td>${r.topshirilgan==null?"—":fmt(r.topshirilgan)}</td>
+              <td>${badge}</td>
+            </tr>`;
+          }).join("")
         : `<tr><td colspan="7" class="empty">Бу санада ёзув йўқ.</td></tr>`;
     }catch(e){
+      console.error(e);
       body.innerHTML = `<tr><td colspan="7" class="empty">Рўйхатни юклаб бўлмади (интернет?).</td></tr>`;
     }
   }
-  document.getElementById("ag_sana")?.addEventListener("change", renderAgentToday);
+  document.getElementById("ag_sana")?.addEventListener("change", ()=>{ renderAgentToday(); renderAgentDupHint(); });
+  document.getElementById("ag_mashina")?.addEventListener("change", renderAgentDupHint);
+  document.getElementById("agTodayRefreshBtn")?.addEventListener("click", ()=>{
+    agentDataCache = null;
+    renderAgentToday();
+    renderAgentPivot();
+  });
+
+  /* ---- Раҳбар белгилаган майдонларни қўллаш ---- */
+  function applyAgentFields(){
+    const cfg = (agentDataCache && agentDataCache.fields) ? agentDataCache.fields : null;
+    const on = k => !cfg || cfg[k] !== false;      // созлама йўқ бўлса — ҳаммаси кўринади
+    document.querySelectorAll("[data-agf]").forEach(el=>{
+      el.style.display = on(el.dataset.agf) ? "" : "none";
+    });
+    // "Қўшимча" бўлимида кўринадиган майдон қолмаса — тугмани ҳам яширамиз
+    const more = ["yol","boshqa","km"].some(on);
+    const mt = document.getElementById("agMoreToggle");
+    const mw = document.getElementById("agMoreWrap");
+    if(mt) mt.style.display = more ? "" : "none";
+    if(mw && !more) mw.classList.add("hidden");
+  }
+
+  /* ---- Агент: такрорий ёзув огоҳлантириши ---- */
+  function renderAgentDupHint(){
+    const el = document.getElementById("agDupHint");
+    if(!el) return;
+    const sana = document.getElementById("ag_sana").value;
+    const mashina = document.getElementById("ag_mashina").value;
+    if(!sana || !mashina || !agentDataCache){ el.innerHTML = ""; return; }
+    const dups = findDuplicates(sana, mashina, null, agentDataCache.all);
+    if(!dups.length){ el.innerHTML = ""; return; }
+    const jami = dups.reduce((a,d)=> a + Number(d.tushum||0), 0);
+    el.innerHTML = `<div class="notice" style="margin:0;">
+      ⚠️ <b>Бу кун ва мошина учун ${dups.length} та ёзув бор</b> (жами: ${fmt(jami)}).
+      Иккинчи рейс бўлса давом этинг, акс ҳолда аввал рўйхатни текширинг.
+    </div>`;
+  }
 
   /* ---- Агент: жонли соат ---- */
   function updateAgentClock(){
@@ -5068,11 +5878,9 @@
     const [y,m]  = month.split("-").map(Number);
     const daysInMonth = new Date(y, m, 0).getDate();
 
-    const list = await CLOUD.fetchAgentMonthRecords(currentAgent.name, month);
-    // Фақат маълумоти мавжуд кунларни кўрсатамиз; ҳали келмаган кунлар устуни чиқмайди.
-    const dayNumbers = [...new Set(list
-      .map(r => Number(String(r.sana).slice(8,10)))
-      .filter(d => d >= 1 && d <= daysInMonth))].sort((a,b)=>a-b);
+    // Умумий базадан — раҳбар киритганлари ҳам, агентнинг йўлдагилари ҳам
+    const D = await loadAgentData(false);   // кэшдан
+    const list = D.all.filter(r=> r.sana && String(r.sana).slice(0,7) === month);
     const byCar = {};
     list.forEach(r=>{
       const car = r.mashina || "(Номаълум)";
@@ -5084,7 +5892,13 @@
     cars.forEach(c=>{ if(byCar[c.name]) carNames.push(c.name); });
     Object.keys(byCar).forEach(n=>{ if(!carNames.includes(n)) carNames.push(n); });
 
-    agPivotCache = { month, metric, unit, y, m, daysInMonth, dayNumbers, byCar, carNames, count:list.length };
+    const activeDays = [];
+    for(let d=1; d<=daysInMonth; d++){
+      let has = false;
+      for(const car of Object.keys(byCar)){ if(byCar[car][d]){ has = true; break; } }
+      if(has) activeDays.push(d);
+    }
+    agPivotCache = { month, metric, unit, y, m, daysInMonth, activeDays, byCar, carNames, count:list.length };
     return agPivotCache;
   }
 
@@ -5101,15 +5915,18 @@
                         "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
     const show = v => v ? Math.round(v/P.unit).toLocaleString("ru-RU") : "";
 
+    const days = P.activeDays;
+    if(!days.length){ el.innerHTML = `<p class="empty">Бу ойда ёзув йўқ.</p>`; return; }
+
     let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
-    P.dayNumbers.forEach(d => head += `<th class="pv-num">${d}</th>`);
+    days.forEach(d=> head += `<th class="pv-num">${d}</th>`);
     head += `<th class="pv-total">Жами</th></tr>`;
 
     const dayTotals = {}; let grand = 0; let body = "";
     P.carNames.forEach(name=>{
       const c = cars.find(x=> x.name === name);
       let rowSum = 0, tds = "";
-      P.dayNumbers.forEach(d => {
+      days.forEach(d=>{
         const v = P.byCar[name][d] || 0;
         rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
         tds += `<td class="pv-num">${show(v)}</td>`;
@@ -5118,7 +5935,7 @@
       body += `<tr><td><b>${esc(name)}</b></td><td>${esc(c && c.rusumi ? c.rusumi : "")}</td>${tds}<td class="pv-total">${show(rowSum)}</td></tr>`;
     });
     let foot = `<tr class="pv-foot"><td colspan="2">жами</td>`;
-    P.dayNumbers.forEach(d => foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`);
+    days.forEach(d=> foot += `<td class="pv-num">${show(dayTotals[d]||0)}</td>`);
     foot += `<td class="pv-total">${show(grand)}</td></tr>`;
 
     const metricLabel = P.metric==="tushum" ? "Тушум" : P.metric==="topshirilgan" ? "Топширилган" : "Соф тушум";
@@ -5137,7 +5954,7 @@
   async function exportAgentPivotExcel(){
     if(!agPivotCache){ await renderAgentPivot(); }
     const P = agPivotCache;
-    if(!P || !P.carNames.length){ alert("Бу ойда ёзув йўқ."); return; }
+    if(!P || !P.carNames.length || !P.activeDays.length){ alert("Бу ойда ёзув йўқ."); return; }
     const monthNames = ["ЯНВАР","ФЕВРАЛ","МАРТ","АПРЕЛ","МАЙ","ИЮН",
                         "ИЮЛ","АВГУСТ","СЕНТЯБР","ОКТЯБР","НОЯБР","ДЕКАБР"];
     const now = new Date();
@@ -5148,15 +5965,16 @@
     const bCell   = v => `<Cell ss:StyleID="bold"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
     const bnCell  = v => `<Cell ss:StyleID="boldnum"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
 
+    const days = P.activeDays;
     let head = hdrCell("Давлат рақами") + hdrCell("Русуми");
-    P.dayNumbers.forEach(d => head += hdrCell(String(d)));
+    days.forEach(d=> head += hdrCell(String(d)));
     head += hdrCell("Жами");
 
     const dayTotals = {}; let grand = 0; let rows = "";
     P.carNames.forEach(name=>{
       const c = cars.find(x=> x.name === name);
       let rowSum = 0, tds = "";
-      P.dayNumbers.forEach(d => {
+      days.forEach(d=>{
         const v = Math.round((P.byCar[name][d]||0)/P.unit);
         rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
         tds += nCell(v);
@@ -5165,12 +5983,12 @@
       rows += "<Row>" + sCell(name) + sCell(c && c.rusumi ? c.rusumi : "") + tds + bnCell(rowSum) + "</Row>";
     });
     let foot = bCell("жами") + bCell("");
-    P.dayNumbers.forEach(d => foot += bnCell(dayTotals[d]||0));
+    days.forEach(d=> foot += bnCell(dayTotals[d]||0));
     foot += bnCell(grand);
 
-    const cols = `<Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="70"/>` +
-      P.dayNumbers.map(()=> `<Column ss:AutoFitWidth="0" ss:Width="46"/>`).join("") +
-      `<Column ss:AutoFitWidth="0" ss:Width="80"/>`;
+    const cols = `<Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="70"/>` +
+      days.map(()=> `<Column ss:AutoFitWidth="0" ss:Width="52"/>`).join("") +
+      `<Column ss:AutoFitWidth="0" ss:Width="85"/>`;
 
     const title = `${P.y} йил ${monthNames[P.m-1]}ойи — агент: ${currentAgent.name}`;
     const meta = `Шакллантирилди: ${fmtDate(localDateStr(now))} ${pp(now.getHours())}:${pp(now.getMinutes())} · ` +
@@ -5219,11 +6037,7 @@
   </WorksheetOptions>
  </Worksheet>
 </Workbook>`;
-    const blob = new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `agent_hisobot_${currentAgent.name}_${P.month}.xls`;
-    a.click();
+    downloadFile(new Blob(["\ufeff"+xml], {type:"application/vnd.ms-excel"}), `agent_hisobot_${currentAgent.name}_${P.month}.xls`, "application/vnd.ms-excel");
     toast("Excel файл юкланди ✓");
   }
 
@@ -5234,389 +6048,35 @@
     }
     const html = document.getElementById("agPivotWrap").innerHTML;
     if(!html.trim()){ alert("Аввал жадвал шаклланиши керак."); return; }
-    const w = window.open("", "_blank");
-    w.document.write(`<html><head><meta charset="utf-8"><title>Ойлик ҳисобот</title>
-      <style>
-        body{font-family:Arial,sans-serif;padding:14px;color:#152036;}
-        table{border-collapse:collapse;width:100%;font-size:11px;}
-        th,td{border:1px solid #999;padding:3px 5px;text-align:right;white-space:nowrap;}
-        th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left;}
-        thead th{background:#0f2440;color:#fff;}
-        tfoot td,.pv-total{background:#fff6cf;font-weight:bold;}
-        @page{size:landscape;margin:10mm;}
-      </style></head><body>${html}
-      <script>window.print()<\/script></body></html>`);
-    w.document.close();
+    printHtmlBlock(html, "");
   }
 
-  document.getElementById("agPivotRefreshBtn")?.addEventListener("click", ()=>{ renderAgentPivot(); loadAgentMonthHistory(); });
+  document.getElementById("agPivotRefreshBtn")?.addEventListener("click", renderAgentPivot);
   document.getElementById("agPivotExcelBtn")?.addEventListener("click", exportAgentPivotExcel);
   document.getElementById("agPivotPdfBtn")?.addEventListener("click", exportAgentPivotPdf);
   ["agPivotMonth","agPivotMetric","agPivotUnit"].forEach(id=>{
     document.getElementById(id)?.addEventListener("change", renderAgentPivot);
   });
-  document.getElementById("agPivotHistory")?.addEventListener("change", e=>{
-    if(!e.target.value) return;
-    document.getElementById("agPivotMonth").value=e.target.value;
-    renderAgentPivot();
-  });
-
-  /* ============================================================
-     FIREBASE PRIMARY DATABASE — V2
-     ------------------------------------------------------------
-     Firebase Firestore = асосий база (Source of Truth).
-     localStorage = фақат локал cache/offline fallback.
-
-     Коллекциялар:
-       kunlik_v2_records
-       kunlik_v2_expenses
-       kunlik_v2_expense_payments
-       kunlik_v2_debt_payments
-       kunlik_v2_cash_taken
-       kunlik_v2_cars
-
-     Эски kunlik_backup ва kunlik_agent_inbox ҳозирча ўчирилмайди.
-     Биринчи ишга тушишда локал маълумот ёки эски backup V2 базасига
-     хавфсиз миграция қилинади.
-     ============================================================ */
-  const PRIMARY_MIGRATION_VERSION = 2;
-  const PRIMARY_COLL = {
-    records: "kunlik_v2_records",
-    expenses: "kunlik_v2_expenses",
-    expensePayments: "kunlik_v2_expense_payments",
-    debtPayments: "kunlik_v2_debt_payments",
-    cashTaken: "kunlik_v2_cash_taken",
-    cars: "kunlik_v2_cars"
-  };
-  const PRIMARY_META_DOC = "kunlik_v2_meta/main";
-  const primaryTimers = {};
-  const primaryUnsubs = [];
-  let primaryHydrating = false;
-  let primaryBooted = false;
-  let primaryLegacyCache = undefined;
-
-  function primaryDb(){
-    try { return CLOUD.getDb ? CLOUD.getDb() : null; } catch(e){ return null; }
-  }
-
-  function primaryLocalList(kind){
-    switch(kind){
-      case "records": return records || [];
-      case "expenses": return expenses || [];
-      case "expensePayments": return expensePayments || [];
-      case "debtPayments": return debtPayments || [];
-      case "cashTaken": return cashTaken || [];
-      case "cars": return cars || [];
-      default: return [];
-    }
-  }
-
-  function primaryApplyLocal(kind, list){
-    const safe = Array.isArray(list) ? list : [];
-    switch(kind){
-      case "records":
-        records = safe; safeSave(LS_KEY, JSON.stringify(records)); break;
-      case "expenses":
-        expenses = safe; safeSave(LS_EXPENSES, JSON.stringify(expenses)); break;
-      case "expensePayments":
-        expensePayments = safe; safeSave(LS_EXPENSE_PAYMENTS, JSON.stringify(expensePayments)); break;
-      case "debtPayments":
-        debtPayments = safe; safeSave(LS_DEBTPAY, JSON.stringify(debtPayments)); break;
-      case "cashTaken":
-        cashTaken = safe; safeSave(LS_CASHTAKEN, JSON.stringify(cashTaken)); break;
-      case "cars":
-        cars = safe; safeSave(LS_CARS, JSON.stringify(cars)); break;
-    }
-  }
-
-  async function primaryCommitOps(ops){
-    const db = primaryDb();
-    if(!db || !ops.length) return;
-    // Firestore batch limit is 500 operations. 450 leaves safety margin.
-    for(let i=0;i<ops.length;i+=450){
-      const batch = db.batch();
-      ops.slice(i,i+450).forEach(op=>{
-        const ref = db.collection(op.collection).doc(op.id);
-        if(op.type === "delete") batch.delete(ref);
-        else batch.set(ref, op.data, {merge:true});
-      });
-      await batch.commit();
-    }
-  }
-
-  async function primaryWriteCollection(kind, list, force=false){
-    const db = primaryDb();
-    if(!db || !PRIMARY_COLL[kind] || (primaryHydrating && !force)) return false;
-    const collection = PRIMARY_COLL[kind];
-    const safe = Array.isArray(list) ? list : [];
-    // Қасддан йўқ қилишни бу функция қилмайди. Акс ҳолда икки қурилма
-    // бир вақтда ишлаганда бир қурилма иккинчисининг янги ёзувларини
-    // тасодифан ўчириб қўйиши мумкин. Ўчириш алоҳида delete операцияси билан.
-    const ops = [];
-    safe.forEach(item=>{
-      if(!item || !item.id) return;
-      ops.push({type:"set",collection,id:String(item.id),data:{...item, _v:2, updatedAt:Date.now()}});
-    });
-    await primaryCommitOps(ops);
-    return true;
-  }
-
-  async function primaryDelete(kind, id){
-    const db = primaryDb();
-    if(!db || !PRIMARY_COLL[kind] || !id) return false;
-    await primaryCommitOps([{type:"delete",collection:PRIMARY_COLL[kind],id:String(id)}]);
-    return true;
-  }
-
-  async function primaryClear(kind){
-    const db=primaryDb();
-    if(!db || !PRIMARY_COLL[kind]) return;
-    const snap=await db.collection(PRIMARY_COLL[kind]).get();
-    const ops=[]; snap.forEach(d=>ops.push({type:"delete",collection:PRIMARY_COLL[kind],id:d.id}));
-    await primaryCommitOps(ops);
-  }
-
-  function queuePrimarySync(kind, list){
-    if(!primaryBooted && !primaryDb()) return;
-    clearTimeout(primaryTimers[kind]);
-    primaryTimers[kind] = setTimeout(()=>{
-      primaryWriteCollection(kind, list).catch(e=>{
-        console.warn("Firebase V2 сақлашда хато:", kind, e);
-        try{ CLOUD.setStatus("Firebase сақлашда хато", "var(--bad)"); }catch(_){}
-      });
-    }, 250);
-  }
-
-  async function readLegacyBackup(){
-    if(primaryLegacyCache !== undefined) return primaryLegacyCache;
-    const db = primaryDb();
-    if(!db){ primaryLegacyCache = null; return null; }
-    try{
-      const main = await db.collection("kunlik_backup").doc("main").get();
-      if(!main.exists){ primaryLegacyCache = null; return null; }
-      const meta = main.data() || {};
-      let payload = "";
-      for(let i=0;i<Number(meta.chunkCount||0);i++){
-        const c = await db.collection("kunlik_backup").doc("chunk_"+i).get();
-        if(!c.exists) throw new Error("Эски backup тўлиқ эмас");
-        payload += c.data().data || "";
-      }
-      primaryLegacyCache = JSON.parse(payload || "{}");
-      return primaryLegacyCache;
-    }catch(e){
-      console.warn("Эски backup ўқилмади:", e);
-      primaryLegacyCache = null;
-      return null;
-    }
-  }
-
-  async function legacyArray(key){
-    const data = await readLegacyBackup();
-    if(!data || !data[key]) return [];
-    try{ return JSON.parse(data[key]) || []; }catch(e){ return []; }
-  }
-
-  async function primaryGetOrMigrate(kind, localList, legacyKey){
-    const db = primaryDb();
-    const collection = PRIMARY_COLL[kind];
-    if(!db) return Array.isArray(localList) ? localList.slice() : [];
-
-    // Safe migration: merge LocalStorage + legacy backup + existing V2 data.
-    // This prevents existing V2 data from hiding newer local/legacy records.
-    const byId = new Map();
-    const stamp = x => {
-      const v = x?.updatedAt ?? x?.createdAt ?? x?.timestamp ?? x?.date;
-      if(typeof v === "number") return v;
-      if(v && typeof v.toDate === "function") return v.toDate().getTime();
-      const n = Date.parse(v);
-      return Number.isFinite(n) ? n : 0;
-    };
-    const put = (item, source) => {
-      if(!item || typeof item !== "object") return;
-      const id=String(item.id ?? item._id ?? "").trim();
-      if(!id) return;
-      const incoming={...item,id,__source:source};
-      const prev=byId.get(id);
-      if(!prev){ byId.set(id,incoming); return; }
-      const ti=stamp(incoming), tp=stamp(prev);
-      if(ti>tp || (ti===tp && source!=="v2" && prev.__source==="v2")) byId.set(id,incoming);
-    };
-
-    if(Array.isArray(localList)) localList.forEach(x=>put(x,"local"));
-    if(legacyKey){
-      try{
-        const legacy=await legacyArray(legacyKey);
-        if(Array.isArray(legacy)) legacy.forEach(x=>put(x,"legacy"));
-      }catch(e){ console.warn("Legacy backup read failed:",kind,e); }
-    }
-    try{
-      const snap=await db.collection(collection).get();
-      snap.forEach(d=>put({id:d.id,...d.data()},"v2"));
-    }catch(e){
-      console.error("V2 read failed:",kind,e);
-      return Array.from(byId.values()).map(({__source,...x})=>x);
-    }
-    const merged=Array.from(byId.values()).map(({__source,...x})=>x);
-    if(merged.length) await primaryWriteCollection(kind,merged,true);
-    return merged;
-  }
-
-  function primaryRenderAll(){
-    try{ populateCarSelects(); }catch(e){}
-    try{ updateDatalists(); }catch(e){}
-    try{ renderTodayStats(); }catch(e){}
-    try{ renderRecords(); }catch(e){}
-    try{ renderSummary(); }catch(e){}
-    try{ renderCarsList(); }catch(e){}
-    try{ renderExpenses(); }catch(e){}
-    try{ renderExpenseTodayStats(); }catch(e){}
-    try{ renderDebts(); }catch(e){}
-    try{ renderCashTaken(); }catch(e){}
-    try{ updateExpenseCatList(); }catch(e){}
-    try{ renderEntryBanners(); }catch(e){}
-  }
-
-  function startPrimaryListener(kind){
-    const db = primaryDb();
-    if(!db || !PRIMARY_COLL[kind]) return;
-    const unsub = db.collection(PRIMARY_COLL[kind]).onSnapshot(snap=>{
-      if(primaryHydrating) return;
-      const arr=[];
-      snap.forEach(d=>arr.push({id:d.id,...d.data()}));
-      arr.sort((a,b)=> String(b.sana||b.updatedAt||b.id).localeCompare(String(a.sana||a.updatedAt||a.id)));
-      primaryApplyLocal(kind, arr);
-      primaryRenderAll();
-    }, e=>console.warn("Firebase real-time listener:",kind,e));
-    primaryUnsubs.push(unsub);
-  }
-
-  window.KUNLIK_V2_DIAGNOSTIC = async function(){
-    const out={primary:true,collections:{}};
-    const db=primaryDb();
-    for(const [kind,col] of Object.entries(PRIMARY_COLL)){
-      try{ const snap=await db.collection(col).get(); out.collections[kind]={collection:col,count:snap.size}; }
-      catch(e){ out.collections[kind]={collection:col,error:String(e?.message||e)}; }
-    }
-    console.table(out.collections); return out;
-  };
-
-  async function primaryBootstrap(){
-    const db = primaryDb();
-    if(!db) return false;
-    primaryHydrating = true;
-    try{
-      const [r,e,p,d,c,carsList] = await Promise.all([
-        primaryGetOrMigrate("records", records, LS_KEY),
-        primaryGetOrMigrate("expenses", expenses, LS_EXPENSES),
-        primaryGetOrMigrate("expensePayments", expensePayments, LS_EXPENSE_PAYMENTS),
-        primaryGetOrMigrate("debtPayments", debtPayments, LS_DEBTPAY, ),
-        primaryGetOrMigrate("cashTaken", cashTaken, LS_CASHTAKEN),
-        primaryGetOrMigrate("cars", cars, LS_CARS)
-      ]);
-      primaryApplyLocal("records", r);
-      primaryApplyLocal("expenses", e);
-      primaryApplyLocal("expensePayments", p);
-      primaryApplyLocal("debtPayments", d);
-      primaryApplyLocal("cashTaken", c);
-      primaryApplyLocal("cars", carsList);
-      primaryBooted = true;
-      try{ CLOUD.setStatus("Firebase асосий база ✓", "var(--good)"); }catch(_){}
-    }catch(e){
-      console.error("Firebase V2 ишга тушмади:",e);
-      try{ CLOUD.setStatus("Firebase офлайн — локал cache", "var(--bad)"); }catch(_){}
-    }finally{
-      primaryHydrating = false;
-    }
-    ["records","expenses","expensePayments","debtPayments","cashTaken","cars"].forEach(startPrimaryListener);
-    primaryRenderAll();
-    return true;
-  }
-
-  // Агент энди inbox'га эмас, тўғридан-тўғри асосий records коллекциясига ёзади.
-  // Шу билан раҳбар ўчирган ёзув агентнинг алоҳида inbox'ида қолиб кетмайди.
-  CLOUD.pushAgentRecord = async function(rec, agentName){
-    const db = primaryDb();
-    if(!db) throw new Error("OFFLINE");
-    const data = {
-      ...rec,
-      agentName,
-      manba: "агент: " + agentName,
-      claimed: true,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      _v: 2
-    };
-    await db.collection(PRIMARY_COLL.records).doc(String(rec.id)).set(data, {merge:true});
-  };
-  CLOUD.fetchAgentTodayRecords = async function(agentName, date){
-    const db = primaryDb();
-    if(!db) return [];
-    const snap = await db.collection(PRIMARY_COLL.records).where("agentName","==",agentName).get();
-    const out=[];
-    snap.forEach(d=>{
-      const r={id:d.id,...d.data()};
-      if(r.sana===date) out.push(r);
-    });
-    return out.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  };
-  CLOUD.fetchAgentMonthRecords = async function(agentName, month){
-    const db = primaryDb();
-    if(!db) return [];
-    const snap = await db.collection(PRIMARY_COLL.records).where("agentName","==",agentName).get();
-    const out=[];
-    snap.forEach(d=>{
-      const r={id:d.id,...d.data()};
-      if(r.sana && String(r.sana).slice(0,7)===month) out.push(r);
-    });
-    return out.sort((a,b)=>String(a.sana).localeCompare(String(b.sana))||(a.createdAt||0)-(b.createdAt||0));
-  };
-  CLOUD.fetchAgentMonths = async function(agentName){
-    const db=primaryDb();
-    if(!db) return [];
-    const snap=await db.collection(PRIMARY_COLL.records).where("agentName","==",agentName).get();
-    const months=new Set();
-    snap.forEach(d=>{const r=d.data()||{}; if(r.sana) months.add(String(r.sana).slice(0,7));});
-    return Array.from(months).sort().reverse();
-  };
-  CLOUD.deleteAgentRecord = async function(id){
-    const db=primaryDb();
-    if(!db || !id) return false;
-    try{ await db.collection(PRIMARY_COLL.records).doc(String(id)).delete(); return true; }
-    catch(e){ console.warn("Асосий базадан агент ёзувини ўчиришда хато:",e); return false; }
-  };
-  // Inbox endi asosiy manba emas. Legacy inbox'да қолган ёзувлар автоматик
-  // равишда янги базага қайта қўшилмаслиги учун listener'ни ўчириб қўямиз.
-  CLOUD.listenAgentInbox = function(){};
-  CLOUD.markClaimed = async function(){};
 
   // ---- Булут тугмалари ва ишга тушириш ----
-  document.getElementById("cloudSyncNowBtn")?.addEventListener("click", async ()=>{
-    try{
-      await Promise.all([
-        primaryWriteCollection("records", records),
-        primaryWriteCollection("expenses", expenses),
-        primaryWriteCollection("expensePayments", expensePayments),
-        primaryWriteCollection("debtPayments", debtPayments),
-        primaryWriteCollection("cashTaken", cashTaken),
-        primaryWriteCollection("cars", cars)
-      ]);
-      CLOUD.setStatus("Firebase асосий базага сақланди ✓", "var(--good)");
-      toast("Firebase асосий базага сақланди ✓");
-    }catch(e){
-      console.error(e);
-      CLOUD.setStatus("Firebase сақлашда хато", "var(--bad)");
-      toast("Firebase'га сақлаб бўлмади");
+  document.getElementById("cloudSyncNowBtn")?.addEventListener("click", ()=> CLOUD.uploadNow());
+  document.getElementById("cloudRestoreBtn")?.addEventListener("click", ()=> CLOUD.restoreNow());
+  if(currentAgent){
+    // Агент қурилмаси — фақат ЎҚИЙДИ. Умумий захирага ёзмайди,
+    // конфликт текширмайди, бошқа агентлар почтасини "қабул қилмайди".
+    CLOUD.startReadOnly();
+  }else{
+    if(CLOUD.start()){
+      startAgentInboxListener();
+      // Конфликтни текшириш: парол ўрнатилмаган ёки аллақачон ишончли
+      // (кейинги очишларда) бўлса — дарҳол; акс ҳолда логиндан кейин
+      // (tryUnlock ичида) чақирилади — логин экранини бузмаслик учун.
+      // "currentAgent"ни ижро пайтида ҳам текширамиз — агар шу 1.2 сония ичида
+      // фойдаланувчи "Мен агентман"га ўтиб улгурган бўлса, текширувни қиламиз.
+      if(!getPwHash() || isTrusted()){
+        setTimeout(()=>{ if(!currentAgent) CLOUD.runCheck(); }, 1200);
+      }
     }
-  });
-  document.getElementById("cloudRestoreBtn")?.addEventListener("click", async ()=>{
-    if(!confirm("Firebase'даги асосий база жорий қурилмага қайта юкланади.\n\nДавом этасизми?")) return;
-    await primaryBootstrap();
-    primaryRenderAll();
-    toast("Firebase маълумотлари тикланди ✓");
-  });
-  if(CLOUD.start()){
-    // V2'да агент ёзувлари алоҳида inbox орқали қабул қилинмайди.
-    // Асосий records listener барча қурилмаларни автоматик янгилайди.
   }
 
   // ---- Pull-to-refresh (телефонда рўйхатни пастга тортиб янгилаш) ----
@@ -5674,15 +6134,13 @@
     resetIdleTimer();
   }
 
-  if(getPwHash()){
+  if(getPwHash() && !isTrusted()){
     document.getElementById("lockScreen").classList.remove("hidden");
     setTimeout(()=>document.getElementById("lockInput").focus(), 100);
   } else {
     document.getElementById("lockScreen").classList.add("hidden");
   }
-  // Firebase V2 — аввал асосий базани юклаймиз/миграция қиламиз,
-  // кейин интерфейсни бир марта тўлиқ чизамиз. Интернет бўлмаса local cache ишлайверади.
-  primaryBootstrap().finally(()=> initApp());
+  initApp();
 
   // ---- register service worker (offline support / installability) ----
   if ("serviceWorker" in navigator) {
