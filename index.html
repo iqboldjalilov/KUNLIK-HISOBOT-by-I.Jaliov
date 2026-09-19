@@ -1371,7 +1371,7 @@
           if(cur.exists){
             const meta = cur.data();
             const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
-            if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 2000){
+            if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 1000){
               setStatus("Булутдан янгиланмоқда...", "var(--gold)");
               await restore();
               syncing = false;
@@ -1415,19 +1415,22 @@
     function scheduleUpload(){
       if(agentMode || !ready) return;
       clearTimeout(syncTimer);
-      syncTimer = setTimeout(()=> upload(true), 1500);
+      syncTimer = setTimeout(()=> upload(true), 900);
     }
 
     async function fetchCloud(){
       const main = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
       if(!main.exists) return null;
       const meta = main.data();
+      // Чанклар кетма-кет эмас, ПАРАЛЛЕЛ юкланади — бир нечта чанк
+      // бўлганда тиклаш анча тезроқ бўлади.
+      const idxs = Array.from({length: meta.chunkCount||0}, (_,i)=>i);
+      const docs = await Promise.all(idxs.map(i=> db.collection(COLL_BACKUP).doc("chunk_"+i).get()));
       let payload = "";
-      for(let i=0;i<(meta.chunkCount||0);i++){
-        const c = await db.collection(COLL_BACKUP).doc("chunk_"+i).get();
+      docs.forEach((c,i)=>{
         if(!c.exists) throw new Error("Булутдаги нусха тўлиқ эмас");
         payload += c.data().data;
-      }
+      });
       return { meta, data: JSON.parse(payload) };
     }
 
@@ -1577,7 +1580,7 @@
           return;
         }
         const meta = main.data();
-        if((meta.updatedAt||0) > localSync + 2000 && meta.device !== deviceId()){
+        if((meta.updatedAt||0) > localSync + 1000 && meta.device !== deviceId()){
           setStatus("Булутдан янгиланмоқда...", "var(--gold)");
           if(await restore()){ softRefreshAfterRestore(); }
         }else{
