@@ -1617,14 +1617,10 @@
           await upload(true);      // илк марта — дарҳол юклаймиз, агент кўриши учун
           return;
         }
-        const meta = main.data();
+                const meta = main.data();
         if((meta.updatedAt||0) > localSync + 2000 && meta.device !== deviceId()){
-          setStatus("Булутда янгироқ нусха бор", "var(--bad)");
-          const d = new Date(meta.updatedAt);
-          if(confirm("Булутда бу қурилмадагидан янгироқ нусха бор.\n\nСанаси: " +
-                     d.toLocaleString("uz-UZ") + "\n\nБулутдагини юклаб олайликми?")){
-            if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
-          }
+          setStatus("Булутдан янгиланмоқда...", "var(--gold)");
+          if(await restore()){ location.reload(); }
         }else{
           setStatus("Уланган ✓", "var(--good)");
           // Захира 6 соатдан эски бўлса — янгилаб қўямиз (агент янги маълумот кўрсин)
