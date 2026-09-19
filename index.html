@@ -1648,7 +1648,16 @@
         const origRemove = localStorage.removeItem.bind(localStorage);
         localStorage.setItem = function(k,v){ origSet(k,v); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
         localStorage.removeItem = function(k){ origRemove(k); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
+        
+              start(){
+        if(!init()){ setStatus("Уланмади (интернет йўқ)", "var(--bad)"); return false; }
+        const origSet = localStorage.setItem.bind(localStorage);
+        const origRemove = localStorage.removeItem.bind(localStorage);
+        localStorage.setItem = function(k,v){ origSet(k,v); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
+        localStorage.removeItem = function(k){ origRemove(k); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
         setLastSyncLabel(Number(localStorage.getItem(LS_LASTSYNC)||0) || null);
+        return true;
+      },
         return true;
       },
       // Булутдаги конфликтни текшириш — энди БУЛ ФУНКЦИЯ АЛОҲИДА чақирилади
