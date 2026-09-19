@@ -1375,7 +1375,7 @@
               setStatus("Булутдан янгиланмоқда...", "var(--gold)");
               await restore();
               syncing = false;
-              location.reload();
+              softRefreshAfterRestore();
               return false;
             }
           }
@@ -1579,7 +1579,7 @@
         const meta = main.data();
         if((meta.updatedAt||0) > localSync + 2000 && meta.device !== deviceId()){
           setStatus("Булутдан янгиланмоқда...", "var(--gold)");
-          if(await restore()){ location.reload(); }
+          if(await restore()){ softRefreshAfterRestore(); }
         }else{
           setStatus("Уланган ✓", "var(--good)");
           if(Date.now() - (meta.updatedAt||0) > 6*3600*1000) upload(true);
@@ -1610,7 +1610,7 @@
           const meta = doc.data();
           const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
           if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 1000 && !agentMode){
-            restore().then(ok=>{ if(ok) location.reload(); });
+            restore().then(ok=>{ if(ok) softRefreshAfterRestore(); });
           }
         }, e=> console.warn("Жонли кузатувда хато:", e && e.message));
 
@@ -5643,6 +5643,52 @@ ${XL_PAGE}
     renderExpenses();
     renderEntryBanners();
     resetIdleTimer();
+  }
+
+  // Булутдан тикланганда САҲИФАНИ ҚАЙТА ЮКЛАМАСДАН (reload'сиз) экранни
+  // янгилаш — телефонда бу бир неча сония тезроқ бўлади. Хотирадаги
+  // барча массивларни localStorage'дан қайта ўқиб, жорий очиқ бўлимни
+  // қайта чизамиз.
+  function softRefreshAfterRestore(){
+    try{
+      records = loadRecords();
+      cars = loadCars();
+      expenses = loadExpenses();
+      expensePayments = loadExpensePayments();
+      cashTaken = loadCashTaken();
+      debtPayments = loadDebtPayments();
+      agents = loadAgents();
+      agentFields = loadAgentFields();
+
+      applyTheme(loadTheme());
+      applyLogo();
+      applyBrandName();
+
+      populateCarSelects();
+      updateDatalists();
+      updateExpenseCatList();
+      refreshPwStatus();
+
+      renderTodayStats();
+      renderEntryBanners();
+      renderExpenseTodayStats();
+      refreshExpensePaymentSection();
+      renderAgentsList();
+
+      const activeEl = document.querySelector(".view.active");
+      const viewName = activeEl ? activeEl.id.replace("view-","") : "entry";
+      if(viewName === "records"){ renderRecords(); renderPivot(); }
+      else if(viewName === "summary") renderSummary();
+      else if(viewName === "settings"){ renderCarsList(); renderAuditLog(); }
+      else if(viewName === "expenses") renderExpenses();
+      else if(viewName === "yearly") renderYearly();
+      else if(viewName === "debts") renderDebts();
+
+      toast("Маълумот янгиланди ✓");
+    }catch(e){
+      console.error("Юмшоқ янгилашда хато, саҳифа қайта юкланади:", e);
+      location.reload();
+    }
   }
 
   if(getPwHash() && !isTrusted()){
