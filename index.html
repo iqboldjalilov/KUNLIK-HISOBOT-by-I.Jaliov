@@ -146,7 +146,6 @@
   .pill{display:inline-block;padding:2px 9px;border-radius:12px;background:var(--gold-soft);color:var(--navy);font-size:11.5px;font-weight:600;}
   .empty{padding:30px;text-align:center;color:var(--muted);font-size:14px;}
 
-  /* Тушунарлилик учун ёрдам белгиси (?) */
   .help-ic{
     display:inline-flex;align-items:center;justify-content:center;
     width:16px;height:16px;border-radius:50%;
@@ -166,7 +165,6 @@
     border-bottom:6px solid var(--navy);
   }
 
-  /* Изчил рангли статус тизими: яшил=яхши, сариқ=эътибор, қизил=муаммо */
   .status-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;}
   .status-dot.good{background:var(--good);}
   .status-dot.warn{background:#c98a1f;}
@@ -177,7 +175,6 @@
     background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:16px;
   }
 
-  /* Формани соддалаштириш учун "Қўшимча" йиғма бўлими */
   .more-toggle{
     grid-column:1/-1;background:none;border:none;color:var(--navy);
     font-size:13px;font-weight:600;cursor:pointer;text-align:left;
@@ -205,7 +202,6 @@
 
   footer{text-align:center;padding:20px;color:var(--muted);font-size:12px;}
 
-  /* Dark mode toggle */
   #themeToggle{
     background:transparent;border:1px solid rgba(255,255,255,.25);color:#e7ecf5;
     padding:8px 12px;border-radius:20px;font-size:14px;cursor:pointer;transition:.15s;
@@ -213,7 +209,6 @@
   #themeToggle:hover{border-color:var(--gold-soft);}
   #themeToggle:active{transform:scale(.92);}
 
-  /* Мобил учун: пастки tab-bar кўринишидаги навигация */
   @media(max-width:760px){
     header nav{display:none;}
     body{padding-bottom:64px;}
@@ -237,7 +232,6 @@
   }
   @media(min-width:761px){ #bottomTabBar{display:none;} }
 
-  /* Pull-to-refresh индикатори */
   #pullRefreshIndicator{
     position:fixed;top:0;left:0;right:0;text-align:center;
     background:var(--gold);color:var(--navy);font-size:12.5px;font-weight:600;
@@ -245,7 +239,6 @@
   }
   #pullRefreshIndicator.show{transform:translateY(0);}
 
-  /* Lock screen */
   #lockScreen{
     position:fixed;inset:0;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);
     z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;
@@ -278,7 +271,6 @@
   .btn.small{padding:5px 10px;font-size:12px;}
   .form-actions-note{font-size:12px;color:var(--gold);font-weight:600;}
 
-  /* ---- Ойлик жадвал (кунма-кун) ---- */
   .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
   .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
   .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
@@ -286,7 +278,6 @@
   .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
   .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
   .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
-  /* Топширилган сумма нақд пул билан қопланган кунлар — яшил белги */
   .pivot-table .pv-taken{background:#bfe8c9;}
   .pivot-table thead th.pv-taken{background:#8fd4a3;color:#0f2440;}
   .pivot-table tfoot td.pv-taken{background:#a7dfb6;}
@@ -299,9 +290,6 @@
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
 
-  /* ============================================================
-     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
-     ============================================================ */
   #agentPanel header{flex-wrap:wrap;gap:10px;}
   #agentPanel main{padding-bottom:30px;}
   #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -316,11 +304,9 @@
     #agentPanel main{padding:12px 10px;}
     #agentPanel .card{padding:14px 12px;border-radius:12px;}
     #agentPanel .card h2{font-size:16px;}
-
-    /* Форма — телефонда битта устун, катта майдонлар */
     #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
     #agentPanel input, #agentPanel select{
-      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
+      font-size:16px;
       padding:12px 12px;
       min-height:46px;
     }
@@ -328,20 +314,14 @@
     #agentPanel .btn{min-height:48px;font-size:15px;}
     #agentPanel .actions-row{flex-direction:column;}
     #agentPanel .actions-row .btn{width:100%;}
-
-    /* Фильтр тугмалари — иккитадан */
     #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
     #agentPanel .filters .fld{min-width:0;}
     #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
-
-    /* Жадваллар — ёнга сурилади, устунлар тор */
     #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
     #agentPanel table{font-size:12.5px;}
     #agentPanel th, #agentPanel td{padding:7px 6px;}
     #agentPanel .pivot-table{font-size:11px;}
     #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
-
-    /* Агент кириш экрани */
     #agentLogin .lockbox{padding:22px 18px;}
     #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
   }
@@ -351,9 +331,6 @@
     #agentPanel header h1{font-size:16px;}
   }
 
-  /* ============================================================
-     ЧОП ЭТИШ / PDF — саҳифа ичида (телефонда ҳам ишлайди)
-     ============================================================ */
   #printArea{display:none;}
   #printArea .print-title{font-size:18px;font-weight:800;color:#0f2440;margin-bottom:8px;}
 
@@ -1113,8 +1090,9 @@
     <div class="card" id="cloudCard" style="border-left:4px solid var(--gold);">
       <h2>☁️ Булутли захира ва онлайн режим</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
-        Дастур аввалгидек тез ва интернетсиз ишлайверади. Ҳар бир ўзгариш булутга ҳам нусхаланади —
-        телефон синса ёки браузер тозаланса маълумот йўқолмайди. Агентлар киритган ёзувлар ҳам шу орқали келади.
+        Маълумот энди БУЛУТ орқали сақланади ва ўқилади — қурилма хотираси фақат интернетсиз ишлаш учун
+        офлайн кэш вазифасини бажаради. Бошқа қурилма ёзган заҳоти, шу сайт очиқ турган барча қурилмаларда
+        реал вақтда ўзи янгиланади (агентлар киритган ёзувлар ҳам шу орқали келади).
       </p>
       <div class="grid-cards" style="margin-bottom:12px;">
         <div class="stat"><div class="label">Ҳолат</div><div class="value" id="cloudStatus" style="font-size:15px;">Текширилмоқда...</div></div>
@@ -1127,7 +1105,8 @@
         <button class="btn outline" id="cloudRestoreBtn">Булутдан тиклаш</button>
       </div>
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
-        «Булутдан тиклаш» шу қурилмадаги жорий маълумотни булутдаги нусха билан алмаштиради.
+        «Булутдан тиклаш» шу қурилмадаги жорий маълумотни булутдаги нусха билан алмаштиради. Одатда бунга ҳожат
+        йўқ — тизим буни ўзи, автоматик, реал вақтда бажаради.
       </p>
     </div>
 
@@ -1256,7 +1235,7 @@
 
     <div class="card">
       <h2>Маълумотлар</h2>
-      <p style="font-size:13px;color:var(--muted);">Маълумот ушбу қурилма хотирасида сақланади (интернетсиз ишлайди) ва булутга ҳам автомат захираланади. Булут орқали бошқа қурилмада тиклаш мумкин. Қўшимча хавфсизлик учун вақти-вақти билан "Захира нусха олиш" тугмасидан ҳам фойдаланинг.</p>
+      <p style="font-size:13px;color:var(--muted);">Асосий маълумот булутда сақланади ва ундан ўқилади; қурилма хотираси интернетсиз ишлаш учун кэш сифатида хизмат қилади. Қўшимча хавфсизлик учун вақти-вақти билан "Захира нусха олиш" тугмасидан ҳам фойдаланинг.</p>
       <div class="actions-row">
         <button class="btn outline" id="backupBtn">Захира нусха олиш (.json)</button>
         <button class="btn outline" id="restoreBtn">Захирадан тиклаш</button>
@@ -1279,7 +1258,7 @@
 
 </main>
 
-<footer>Кунлик Хисобот дастури (by Iqbol Jalilov) · Интернетсиз ишлайди · Маълумот булутга ҳам захираланади</footer>
+<footer>Кунлик Хисобот дастури (by Iqbol Jalilov) · Булутдан ишлайди, интернетсиз ҳам ишлайверади · Реал вақтда синхронланади</footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -1301,11 +1280,11 @@
   const LS_AGENTS = "kh_agents_v1";
 
   /* =========================================================
-     БУЛУТ (Firestore): захира нусха + агентлар билан алмашиш
-     Дастур аввалгидек localStorage'да ишлайди — тез ва офлайн.
-     Булут иккита вазифани бажаради:
-       1) Барча маълумотнинг захира нусхаси
-       2) Агентлар киритган ёзувларни қабул қилиш
+     БУЛУТ (Firestore): АСОСИЙ маълумот манбаи + реал вақт синхронизация.
+     localStorage энди фақат ОФЛАЙН КЭШ — интернет бўлмаганда ишлаш учун.
+     Ҳар қандай ёзиш ҳаракати булутга юборилади; бошқа қурилма/агент
+     ёзган заҳоти — жонли кузатув (onSnapshot) орқали БАРЧА очиқ
+     қурилмалар автоматик янгиланади (тасдиқлаш сўралмасдан).
      ========================================================= */
   const CLOUD = (function(){
     const firebaseConfig = {
@@ -1316,7 +1295,7 @@
       messagingSenderId: "851157960361",
       appId: "1:851157960361:web:a27db45a3bc40348998bb8"
     };
-    const COLL_BACKUP = "kunlik_backup";      // захира нусха (чанкларга бўлинган)
+    const COLL_BACKUP = "kunlik_backup";      // асосий маълумот (чанкларга бўлинган)
     const COLL_INBOX  = "kunlik_agent_inbox"; // агентлар киритган ёзувлар
     const COLL_META   = "kunlik_meta";        // агентлар рўйхати, умумий маълумот
     const DOC_MAIN = "main";
@@ -1376,56 +1355,28 @@
     }
 
     async function upload(silent){
-      // Агент қурилмаси ҳеч қачон умумий захирага ёзмайди — фақат ўз ёзувини
-      // "inbox" орқали юборади. Бусиз агент телефони раҳбарнинг тўлиқ
-      // (Август-Сентябр каби) тарихини ўзининг бўш нусхаси билан БОСИБ КЕТИШИ мумкин эди.
+      // Агент қурилмаси ҳеч қачон умумий базага ёзмайди — фақат ўз ёзувини
+      // "inbox" орқали юборади.
       if(agentMode) return false;
       if(!ready || syncing) return false;
       syncing = true;
       try{
         setStatus("Сақланмоқда...");
 
-        // ⚠️ ҲИМОЯ: юклашдан олдин булутда бошқа қурилма ёзиб кетмаганини текширамиз.
-        // Акс ҳолда иккита қурилма бир-бирининг маълумотини ўчириб юбориши мумкин.
+        // ⚠️ БУЛУТ АСОСИЙ МАНБА: юклашдан олдин булутда бошқа қурилма ёзиб
+        // кетмаганини текширамиз. Агар булут бизникидан янгироқ бўлса —
+        // ўзимизникини УСТИГА ЁЗМАЙМИЗ, аввал ўзимиз булутдагини тортиб оламиз.
         try{
           const cur = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
           if(cur.exists){
             const meta = cur.data();
             const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
             if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 2000){
-              const d = new Date(meta.updatedAt);
-              if(silent){
-                // Фон синхронизацияси — фойдаланувчини тўхтатмаймиз.
-                // Сақламаймиз, фақат огоҳлантириш кўрсатамиз.
-                setStatus("⚠️ Булутда янгироқ нусха бор — сақланмади", "var(--bad)");
-                const warn = document.getElementById("cloudConflictWarn");
-                if(warn){
-                  warn.style.display = "";
-                  warn.innerHTML = `<div class="notice" style="margin:10px 0 0;">
-                    <b>⚠️ Булутдаги нусха бошқа қурилмада янгиланган</b>
-                    (${d.toLocaleString("uz-UZ")}).<br>
-                    Шунинг учун ўзгаришларингиз булутга сақланмаяпти.<br>
-                    Қуйидагилардан бирини танланг:
-                    <ul style="margin:6px 0 0 18px;padding:0;">
-                      <li><b>«Булутдан тиклаш»</b> — булутдагини олиб, ўз ишингизни устига қайта киритасиз</li>
-                      <li><b>«Ҳозир булутга сақлаш»</b> — сизники булутдагини алмаштиради</li>
-                    </ul>
-                  </div>`;
-                }
-                syncing = false;
-                return false;
-              }
-              const ok = confirm(
-                "ДИҚҚАТ! Булутдаги нусха бошқа қурилмада янгиланган.\n\n" +
-                "Булут: " + d.toLocaleString("uz-UZ") + "\n\n" +
-                "«OK» — сизнинг маълумотингиз булутдагини АЛМАШТИРАДИ\n" +
-                "«Бекор» — сақланмайди, аввал «Булутдан тиклаш» қилинг"
-              );
-              if(!ok){
-                setStatus("Сақланмади — булутда янгироқ нусха бор", "var(--bad)");
-                syncing = false;
-                return false;
-              }
+              setStatus("Булутдан янгиланмоқда...", "var(--gold)");
+              await restore();
+              syncing = false;
+              location.reload();
+              return false;
             }
           }
         }catch(e){ /* текширув имкони бўлмаса — давом этамиз */ }
@@ -1464,7 +1415,7 @@
     function scheduleUpload(){
       if(agentMode || !ready) return;
       clearTimeout(syncTimer);
-      syncTimer = setTimeout(()=> upload(true), 3000);
+      syncTimer = setTimeout(()=> upload(true), 1500);
     }
 
     async function fetchCloud(){
@@ -1498,16 +1449,12 @@
     }
 
     // ---- Агент ёзувларини қабул қилиш ----
-    // Агент ёзувни inbox'га ёзади; раҳбар дастури уни ўқиб, ўз базасига қўшади.
     async function pushAgentRecord(rec, agentName){
       if(!ready) throw new Error("OFFLINE");
       await db.collection(COLL_INBOX).doc(rec.id).set({
         ...rec, agentName, createdAt: Date.now(), claimed: false
       });
     }
-    // Раҳбарнинг умумий базасидаги ЖОРИЙ ёзувлар (захира нусхадан ўқилади).
-    // Агент шу орқали барча ёзувларни кўради — ўчирилганлар ҳам йўқолади.
-    // Булут нусхасини бир марта ўқиб, кэшда сақлаймиз (қайта-қайта тортмаслик учун)
     let sharedCache = null, sharedCacheAt = 0;
     async function getShared(force){
       if(!ready) return null;
@@ -1532,7 +1479,6 @@
     async function fetchSharedRecords(force){ const d = await getShared(force); return d ? d.records : null; }
     async function fetchSharedCars(force){ const d = await getShared(force); return d ? d.cars : null; }
 
-    // Агентнинг бир ойлик ёзувлари (ой филтри JS томонда — индекс керак бўлмайди)
     async function fetchAgentMonthRecords(agentName, month){
       if(!ready) return [];
       const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
@@ -1544,7 +1490,6 @@
       return out;
     }
 
-    // Агентнинг БАРЧА юборган ёзувлари (сана филтрисиз)
     async function fetchAgentTodayRecordsAll(agentName){
       if(!ready) return [];
       const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
@@ -1562,11 +1507,8 @@
       return out.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
     }
 
-    // Раҳбар дастури: янги агент ёзувларини ўз базасига қўшади
     function listenAgentInbox(onNew){
       if(!ready || inboxUnsub) return;
-      // Inbox'даги БАРЧА ёзувлар — қабул қилингач улар ўчирилади,
-      // шунинг учун бу ерда фақат "йўлдагилар" қолади
       inboxUnsub = db.collection(COLL_INBOX)
         .onSnapshot(snap=>{
           const incoming = [];
@@ -1575,11 +1517,6 @@
         }, e=> console.warn("Inbox кузатувида хато:", e && e.message));
     }
 
-    /* ============================================================
-       ЖОНЛИ КУЗАТУВ (реал вақт) — АГЕНТ учун.
-       Раҳбар маълумот сақлаган заҳоти (yoki bошqa agent yozganda),
-       agent экрани ЎЗИ, тугма босилмасдан янгиланади.
-       ============================================================ */
     let backupMetaUnsub = null;
     function watchBackupMeta(onChange){
       if(!ready || backupMetaUnsub) return;
@@ -1598,7 +1535,6 @@
       if(backupMetaUnsub){ backupMetaUnsub(); backupMetaUnsub = null; }
       if(ownInboxUnsub){ ownInboxUnsub(); ownInboxUnsub = null; }
     }
-    // Раҳбар ёзувни ўчирса — булутдаги нусхаси ҳам ўчирилади (агентда ҳам йўқолади)
     async function deleteInboxRecord(id){
       if(!ready) return;
       try{ await db.collection(COLL_INBOX).doc(id).delete(); }
@@ -1612,8 +1548,6 @@
       await batch.commit();
     }
 
-    // Қабул қилинган ёзувларни inbox'дан бутунлай ўчириш.
-    // Улар энди раҳбар базасида — агент уларни умумий базадан кўради.
     async function removeFromInbox(ids){
       if(!ready || !ids.length) return;
       const batch = db.batch();
@@ -1621,7 +1555,6 @@
       await batch.commit();
     }
 
-    // Агентлар рўйхатини булутда сақлаш (агент қурилмаси уни ўқийди)
     async function saveAgentsToCloud(list){
       if(!ready) return;
       await db.collection(COLL_META).doc("agents").set({ list, updatedAt: Date.now() });
@@ -1640,20 +1573,15 @@
         setLastSyncLabel(localSync || null);
         if(!main.exists){
           setStatus("Уланган (илк захира юкланмоқда...)");
-          await upload(true);      // илк марта — дарҳол юклаймиз, агент кўриши учун
+          await upload(true);
           return;
         }
         const meta = main.data();
         if((meta.updatedAt||0) > localSync + 2000 && meta.device !== deviceId()){
-          setStatus("Булутда янгироқ нусха бор", "var(--bad)");
-          const d = new Date(meta.updatedAt);
-          if(confirm("Булутда бу қурилмадагидан янгироқ нусха бор.\n\nСанаси: " +
-                     d.toLocaleString("uz-UZ") + "\n\nБулутдагини юклаб олайликми?")){
-            if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
-          }
+          setStatus("Булутдан янгиланмоқда...", "var(--gold)");
+          if(await restore()){ location.reload(); }
         }else{
           setStatus("Уланган ✓", "var(--good)");
-          // Захира 6 соатдан эски бўлса — янгилаб қўямиз (агент янги маълумот кўрсин)
           if(Date.now() - (meta.updatedAt||0) > 6*3600*1000) upload(true);
         }
       }catch(e){ setStatus("Уланмади (офлайн?)", "var(--bad)"); }
@@ -1661,12 +1589,7 @@
 
     return {
       isReady, getDb,
-      // Агентни ёзувга умуман рухсат бермасдан белгилайди.
-      // Ҳатто аввал start() (раҳбар режими) чақирилган бўлса ҳам,
-      // шу лаҳзадан кейин upload/scheduleUpload ҳеч нарса қилмайди.
       setAgentMode(v){ agentMode = !!v; },
-      // Агент қурилмаси учун — фақат ЎҚИШ. localStorage'ни ушламайди,
-      // булутдаги конфликтни текширмайди, ҳеч нарса юкламайди.
       startReadOnly(){
         agentMode = true;
         if(!init()){ return false; }
@@ -1679,10 +1602,20 @@
         localStorage.setItem = function(k,v){ origSet(k,v); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
         localStorage.removeItem = function(k){ origRemove(k); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
         setLastSyncLabel(Number(localStorage.getItem(LS_LASTSYNC)||0) || null);
+
+        // ЖОНЛИ КУЗАТУВ (реал вақт): бошқа қурилма/агент ёзган заҳоти —
+        // тасдиқлашсиз, автоматик тортиб олинади ва саҳифа янгиланади.
+        db.collection(COLL_BACKUP).doc(DOC_MAIN).onSnapshot(doc=>{
+          if(!doc.exists) return;
+          const meta = doc.data();
+          const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
+          if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 1000 && !agentMode){
+            restore().then(ok=>{ if(ok) location.reload(); });
+          }
+        }, e=> console.warn("Жонли кузатувда хато:", e && e.message));
+
         return true;
       },
-      // Булутдаги конфликтни текшириш — энди БУЛ ФУНКЦИЯ АЛОҲИДА чақирилади
-      // (парол кирилгандан КЕЙИН), шунинг учун у логин жараёнини бузмайди.
       runCheck(){ if(!agentMode) checkOnStart(); },
       uploadNow(){ return upload(false); },
       async restoreNow(){
@@ -1718,13 +1651,11 @@
     const arrow = val>=0 ? `<span class="arrow-up">▲</span>` : `<span class="arrow-down">▼</span>`;
     return `${arrow} ${fmt(val)}`;
   }
-  // ---- Хавфсизлик: эркин матн майдонларини HTML-дан ҳимоялаш (XSS олдини олиш) ----
   function esc(v){
     return String(v ?? "").replace(/[&<>"']/g, m => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
   }
-  // ---- Шофёр исмини гуруҳлаш учун меъёрлаштириш (бўшлиқ/катта-кичик ҳарф фарқидан ҳимоя) ----
   function normDriver(name){
     return String(name || "").trim().replace(/\s+/g, " ");
   }
@@ -1735,10 +1666,6 @@
     return h.toString(36);
   }
 
-  // Password check helper — used to gate editing actions
-  /* Таҳрирлаш/ўчириш учун парол.
-     Бир марта киритилгач, қисқа муддат (стандарт 15 дақиқа) қайта сўралмайди —
-     кетма-кет бир нечта ёзувни тузатаётганда ҳар сафар терилмаслиги учун. */
   let editGrantedUntil = 0;
   function editGraceMs(){
     const v = localStorage.getItem("kh_edit_grace_min_v1");
@@ -1759,7 +1686,6 @@
     else { alert("Парол нотўғри."); }
   }
 
-  // ---- Audit log (ким/қачон нима қилгани) ----
   function loadAudit(){
     try{ return JSON.parse(localStorage.getItem(LS_AUDIT)) || []; }catch(e){ return []; }
   }
@@ -1778,7 +1704,6 @@
     try{
       const c = JSON.parse(localStorage.getItem(LS_CARS));
       if(!c || !c.length) return DEFAULT_CARS.slice();
-      // Migrate old format (array of strings) to {name, driver, ...}
       return c.map(item => {
         const obj = typeof item === "string" ? {name:item, driver:"", maqsad:0, normaSomKm:0, toSana:""} : {maqsad:0, normaSomKm:0, toSana:"", ...item};
         if(!obj.color) obj.color = autoColorFor(obj.name || "");
@@ -1792,12 +1717,6 @@
   let cars = loadCars();
   let editingId = null;
 
-  /* ============================================================
-     ТАКРОРИЙ ЁЗУВ ҲИМОЯСИ
-     Бир кун + бир мошина учун иккинчи ёзув киритилса, огоҳлантиради.
-     Бу айниқса раҳбар ва агент бирга ишлаганда муҳим —
-     иккови бир хил кунни киритиб қўйса, тушум икки марта ҳисобланади.
-     ============================================================ */
   function findDuplicates(sana, mashina, excludeId, list){
     const src = list || records;
     if(!sana || !mashina) return [];
@@ -1808,7 +1727,6 @@
     );
   }
 
-  // Такрорий ёзувлар ҳақида тушунарли огоҳлантириш матни
   function duplicateWarningText(dups, sana, mashina){
     const lines = dups.map((d,i)=>{
       const manba = d.manba ? ` (${d.manba})` : "";
@@ -1824,7 +1742,6 @@
            `Агар адашиб қайта киритаётган бўлсангиз — «Бекор» босинг.`;
   }
 
-  // Форма тўлдирилаётганда — жонли огоҳлантириш (сақлашдан олдин кўринади)
   function renderDupHint(){
     const el = document.getElementById("dupHint");
     if(!el) return;
@@ -1840,10 +1757,6 @@
     </div>`;
   }
 
-  // Маҳаллий сана (UTC эмас!). toISOString() UTC беради — Ўзбекистонда (UTC+5)
-  // соат 00:00–05:00 оралиғида кечаги санани кўрсатиб қўяр эди.
-  // localStorage тўлиб қолса — маълумот ЖИМГИНА йўқолиб кетмаслиги учун ҳимоя.
-  // Браузерда одатда 5-10 МБ жой бор; логотип ва кўп ёзувлар уни тўлдириши мумкин.
   function safeSave(key, value){
     try{
       localStorage.setItem(key, value);
@@ -1863,13 +1776,9 @@
     }
   }
 
-  // Файлни юклаб олиш — телефонда ҳам ишлайдиган усул.
-  // Айрим мобил браузерлар (iOS Safari) download атрибутини қўллаб-қувватламайди,
-  // шунда файл янги ойнада очилади ва фойдаланувчи уни сақлаб олади.
   function downloadFile(content, filename, mime){
     try{
       const blob = (content instanceof Blob) ? content : new Blob([content], {type: mime || "application/octet-stream"});
-      // 1-йўл: стандарт юклаб олиш
       if(window.navigator && window.navigator.msSaveOrOpenBlob){
         window.navigator.msSaveOrOpenBlob(blob, filename);
         return true;
@@ -1885,8 +1794,6 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(()=> URL.revokeObjectURL(url), 20000);
-
-      // Телефонда юклаш ишламаса — фойдаланувчига йўл кўрсатамиз
       if(!supportsDownload){
         toast("Файл янги ойнада очилди — уни «Сақлаш» орқали юклаб олинг");
       }
@@ -1898,8 +1805,6 @@
     }
   }
 
-  // Ҳисоботни чоп этиш / PDF — телефонда ҳам ишлайди.
-  // Янги ойна очиш ўрнига саҳифа ичида чоп этамиз (мобил браузерлар popup'ни блоклайди).
   function printHtmlBlock(innerHtml, title){
     const old = document.getElementById("printArea");
     if(old) old.remove();
@@ -1917,12 +1822,10 @@
     window.addEventListener("afterprint", cleanup);
     setTimeout(()=>{
       window.print();
-      setTimeout(cleanup, 1500);   // afterprint ишламаса ҳам тозаласин
+      setTimeout(cleanup, 1500);
     }, 120);
   }
 
-  // Тўлиқ HTML ҳужжатни чоп этиш (ичида ўз стили бор).
-  // Телефонда popup блокланса — iframe орқали чоп этамиз.
   function printFullHtmlDoc(html){
     try{
       const w = window.open("", "_blank");
@@ -1933,9 +1836,8 @@
         setTimeout(()=> w.print(), 400);
         return;
       }
-    }catch(e){ /* popup блокланган — iframe'га ўтамиз */ }
+    }catch(e){}
 
-    // Захира усул: яширин iframe (мобил браузерларда ишончли)
     const old = document.getElementById("printFrame");
     if(old) old.remove();
     const f = document.createElement("iframe");
@@ -1958,7 +1860,6 @@
            String(d.getDate()).padStart(2,"0");
   }
 
-  // Санани кўрсатиш формати: 2026-09-07 -> 07.09.2026
   function fmtDate(iso){
     if(!iso) return "";
     const p = String(iso).slice(0,10).split("-");
@@ -1975,7 +1876,6 @@
     setTimeout(()=>t.classList.remove("show"), 2200);
   }
 
-  // ---- Тушунарлилик: (?) белгисини босганда қисқа тушунтириш кўрсатиш ----
   function initHelpTooltips(){
     document.body.addEventListener("click", e=>{
       const existing = document.querySelectorAll(".help-tip");
@@ -2002,7 +1902,6 @@
     return `<span class="help-ic" data-tip="${text.replace(/"/g,'&quot;')}">?</span>`;
   }
 
-  // ---- Navigation (юқори nav ва пастки tab-bar иккиси ҳам) ----
   function switchView(viewName){
     document.querySelectorAll("[data-view]").forEach(b=>b.classList.remove("active"));
     document.querySelectorAll(`[data-view="${viewName}"]`).forEach(b=>b.classList.add("active"));
@@ -2020,7 +1919,6 @@
     btn.addEventListener("click", ()=> switchView(btn.dataset.view));
   });
 
-  // ---- Populate car dropdowns ----
   function populateCarSelects(){
     const sel = document.getElementById("f_mashina");
     const filt = document.getElementById("filterCar");
@@ -2052,7 +1950,6 @@
     });
   }
 
-  // ---- Мошина <-> Хайдовчи авто-боғланиши ----
   let bindingInProgress = false;
   document.getElementById("f_mashina").addEventListener("change", function(){
     const car = cars.find(c=>c.name === this.value);
@@ -2074,7 +1971,6 @@
     }
   });
 
-  // ---- Autocomplete suggestions from previous entries ----
   function updateDatalists(){
     const shofyors = [...new Set(records.map(r=>r.shofyor).filter(Boolean))].sort();
     const yonalishlar = [...new Set(records.map(r=>r.yonalish).filter(Boolean))].sort();
@@ -2082,7 +1978,6 @@
     document.getElementById("yonalishList").innerHTML = yonalishlar.map(s=>`<option value="${s.replace(/"/g,'&quot;')}">`).join("");
   }
 
-  // ---- Entry form ----
   const form = document.getElementById("entryForm");
   document.getElementById("f_sana").valueAsDate = new Date();
 
@@ -2113,7 +2008,6 @@
       }
     }
 
-    // Ёқилғи назорати: км × норма (сўм/км) билан ҳақиқий ёқилғи харажатини солиштириш
     const km = Number(document.getElementById("f_km").value||0);
     const carName = document.getElementById("f_mashina").value;
     const car = cars.find(c=>c.name===carName);
@@ -2170,7 +2064,6 @@
     window.scrollTo({top:0, behavior:"smooth"});
   }
 
-  // ---- "Қўшимча майдонлар" — камроқ ишлатиладиган майдонларни яшириш ----
   function openMoreFields(){
     document.getElementById("moreFieldsWrap").classList.remove("hidden");
     document.getElementById("moreFieldsToggle").classList.add("open");
@@ -2214,7 +2107,6 @@
       km: Number(document.getElementById("f_km").value||0),
       izoh: document.getElementById("f_izoh").value.trim(),
     };
-    // --- Такрорий ёзув текшируви ---
     const dups = findDuplicates(data.sana, data.mashina, editingId);
     if(dups.length){
       if(!confirm(duplicateWarningText(dups, data.sana, data.mashina))) return;
@@ -2247,13 +2139,11 @@
     renderEntryBanners();
   });
 
-  // ---- Entry page banners: missing today, maintenance due, daily target ----
   function renderEntryBanners(){
     const el = document.getElementById("entryBanners");
     const today = localDateStr();
     let html = "";
 
-    // Missing today's entry
     const carsWithEntryToday = new Set(records.filter(r=>r.sana===today).map(r=>r.mashina));
     const missing = cars.filter(c=>!carsWithEntryToday.has(c.name));
     if(missing.length && cars.length){
@@ -2262,7 +2152,6 @@
       </div>`;
     }
 
-    // Maintenance due
     const soon = [];
     cars.forEach(c=>{
       if(!c.toSana) return;
@@ -2276,7 +2165,6 @@
         `</div>`;
     }
 
-    // Daily target progress
     const targets = cars.filter(c=>c.maqsad > 0);
     if(targets.length){
       const rows = targets.map(c=>{
@@ -2299,7 +2187,6 @@
     el.innerHTML = html;
   }
 
-  // ---- Today stats on entry page ----
   function renderTodayStats(){
     const today = localDateStr();
     const todays = records.filter(r=>r.sana===today);
@@ -2318,7 +2205,6 @@
     });
   }
 
-  // ---- Records table ----
   function renderRecords(){
     const carFilter = document.getElementById("filterCar").value;
     const from = document.getElementById("filterFrom").value;
@@ -2340,7 +2226,6 @@
       body.innerHTML = `<tr><td colspan="10" class="empty">Ҳали ёзув йўқ. "Ёзув киритиш" бўлимидан қўшинг.</td></tr>`;
       return;
     }
-    // Такрорланувчи (сана+мошина) ёзувларни белгилаш учун
     const dupKeys = new Set();
     const seen = {};
     records.forEach(r=>{
@@ -2378,7 +2263,6 @@
             const rec = records.find(r=>r.id===b.dataset.del);
             records = records.filter(r=>r.id!==b.dataset.del);
             saveRecords(records);
-            // Агент киритган ёзув бўлса — булутдан ҳам ўчирамиз, шунда агентда ҳам йўқолади
             if(rec && rec.manba && rec.manba.indexOf("агент") === 0){
               CLOUD.deleteInboxRecord(rec.id);
             }
@@ -2408,8 +2292,6 @@
     document.getElementById("searchRecords").value="";
     renderRecords();
   });
-
-  // ---- Чоп этиш / PDF (браузернинг "Saqlash PDF" орқали) ----
   function printTable(title, tableSelector){
     const table = document.querySelector(tableSelector);
     if(!table){ toast("Жадвал топилмади"); return; }
@@ -2427,14 +2309,12 @@
     <p>Чоп этилган сана: ${new Date().toLocaleDateString("uz-UZ")} ${new Date().toLocaleTimeString("uz-UZ")}</p>
     ${table.outerHTML}
     </body></html>`;
-    // Попап блокланган бўлса ҳам ишлайдиган усул (телефонда муҳим)
     printFullHtmlDoc(html);
   }
   document.getElementById("printRecords").addEventListener("click", ()=>{
     printTable("Кунлик Хисобот — Барча ёзувлар (by Iqbol Jalilov)", "#view-records table");
   });
 
-  // ---- Харажатлар ҳисоботи: мошина/ой филтри ва мошиналар хулосаси билан PDF ----
   function buildExpensesPrintHTML(){
     const month = document.getElementById("expenseMonth").value;
     const carF = document.getElementById("expenseFilterCar").value;
@@ -2458,7 +2338,6 @@
     }).join("");
     const totalQoldiq = totalSumma-totalQoplangan;
 
-    // Мошиналар бўйича хулоса (ой филтрига мос, мошина филтридан мустақил — таққослаш учун)
     let sumList = expenses.slice();
     if(month) sumList = sumList.filter(x=>x.sana && x.sana.slice(0,7)===month);
     const perCar = {};
@@ -2503,72 +2382,6 @@
       tr:nth-child(even){background:#f6f4ee;}
       footer{margin-top:26px;font-size:11px;color:#999;text-align:center;}
       @media print{ body{padding:10mm;} }
-    
-  /* ---- Ойлик жадвал (кунма-кун) ---- */
-  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
-  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
-  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
-  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
-  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
-  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
-  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
-  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
-  .pivot-table tbody tr:hover td{background:#faf8f2;}
-  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
-  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
-  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
-
-  /* ============================================================
-     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
-     ============================================================ */
-  #agentPanel header{flex-wrap:wrap;gap:10px;}
-  #agentPanel main{padding-bottom:30px;}
-  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  #agentPanel .entry .full{grid-column:1/-1;}
-  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
-
-  @media(max-width:760px){
-    #agentPanel header{padding:12px 14px;}
-    #agentPanel header h1{font-size:17px;}
-    #agentPanel header p{font-size:11.5px;}
-    #agentClock{font-size:12px !important;padding:5px 9px !important;}
-    #agentPanel main{padding:12px 10px;}
-    #agentPanel .card{padding:14px 12px;border-radius:12px;}
-    #agentPanel .card h2{font-size:16px;}
-
-    /* Форма — телефонда битта устун, катта майдонлар */
-    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
-    #agentPanel input, #agentPanel select{
-      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
-      padding:12px 12px;
-      min-height:46px;
-    }
-    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
-    #agentPanel .btn{min-height:48px;font-size:15px;}
-    #agentPanel .actions-row{flex-direction:column;}
-    #agentPanel .actions-row .btn{width:100%;}
-
-    /* Фильтр тугмалари — иккитадан */
-    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    #agentPanel .filters .fld{min-width:0;}
-    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
-
-    /* Жадваллар — ёнга сурилади, устунлар тор */
-    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
-    #agentPanel table{font-size:12.5px;}
-    #agentPanel th, #agentPanel td{padding:7px 6px;}
-    #agentPanel .pivot-table{font-size:11px;}
-    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
-
-    /* Агент кириш экрани */
-    #agentLogin .lockbox{padding:22px 18px;}
-    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
-  }
-
-  @media(max-width:420px){
-    #agentPanel .filters{grid-template-columns:1fr;}
-    #agentPanel header h1{font-size:16px;}
-  }
 </style></head><body>
     <h1>Кунлик Хисобот — Харажатлар ҳисоботи</h1>
     <p class="meta">${filterDesc} · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -2592,8 +2405,6 @@
   }
   document.getElementById("printExpenses").addEventListener("click", printExpensesReport);
 
-  // ---- Умумий кўп-sheet Excel экспорти (тушум + харажат + умумий хисобот) ----
-  /* Excel учун умумий шаблонлар — такрорланмасин деб бир жойда сақланади */
   const XL_STYLES = ` <Styles>
   <Style ss:ID="Default" ss:Name="Normal">
    <Alignment ss:Vertical="Center"/>
@@ -2686,7 +2497,6 @@
     const preparedStr = preparedDate.toLocaleDateString("uz-UZ") + " " + preparedDate.toLocaleTimeString("uz-UZ");
     const dateRowMaker = (colspan)=> `<Row><Cell ss:MergeAcross="${colspan-1}" ss:StyleID="dateNote"><Data ss:Type="String">Тайёрланган сана: ${preparedStr}</Data></Cell></Row><Row></Row>`;
 
-    // --- Sheet 1: Кунлик ёзувлар ---
     const recList = records.slice().sort((a,b)=>a.sana.localeCompare(b.sana));
     let s1Rows = dateRowMaker(12) + "<Row>" + ["№","Сана","Мошина","Шофёр","Йўналиш","Умумий тушум","Ёқилғи","Йўл","Бошқа","Жами харажат","Соф тушум","Изоҳ"].map(cellH).join("") + "</Row>";
     let recTushum=0, recXarajat=0;
@@ -2700,7 +2510,6 @@
     const recSof = recTushum - recXarajat;
     s1Rows += "<Row>" + cellB("")+cellB("ЖАМИ")+cellB("")+cellB("")+cellB("")+cellBN(recTushum)+cellB("")+cellB("")+cellB("")+cellBN(recXarajat)+cellBN(recSof)+cellB("") + "</Row>";
 
-    // --- Sheet 2: Харажатлар ---
     const expList = expenses.slice().sort((a,b)=>a.sana.localeCompare(b.sana));
     let s2Rows = dateRowMaker(9) + "<Row>" + ["№","Сана","Тоифа","Мошина","Сумма","Қопланган","Қолдиқ","Кимга","Изоҳ"].map(cellH).join("") + "</Row>";
     let expSumma=0, expQoplangan=0;
@@ -2713,7 +2522,6 @@
     const expQoldiq = expSumma - expQoplangan;
     s2Rows += "<Row>" + cellB("")+cellB("ЖАМИ")+cellB("")+cellB("")+cellBN(expSumma)+cellBN(expQoplangan)+cellBN(expQoldiq)+cellB("")+cellB("")+"</Row>";
 
-    // --- Sheet 2.5: Харажат — мошина бўйича хулоса ---
     let s2bRows = dateRowMaker(5) + "<Row>" + ["Мошина","Ёзувлар сони","Жами харажат","Қопланган","Қолдиқ"].map(cellH).join("") + "</Row>";
     const perCarExp = {};
     cars.forEach(c=> perCarExp[c.name] = {summa:0, qoplangan:0, count:0});
@@ -2735,7 +2543,6 @@
     });
     s2bRows += "<Row>" + cellB("ЖАМИ")+cellBN(expList.length)+cellBN(expSumma)+cellBN(expQoplangan)+cellBN(expQoldiq) + "</Row>";
 
-    // --- Sheet 3: Мошиналар бўйича хулоса ---
     let s3Rows = dateRowMaker(5) + "<Row>" + ["Мошина","Умумий тушум","Жами харажат","Соф тушум","Сафарлар сони"].map(cellH).join("") + "</Row>";
     const perCar = {};
     cars.forEach(c=> perCar[c.name] = {tushum:0, xarajat:0, count:0});
@@ -2751,12 +2558,6 @@
       s3Rows += "<Row>" + cellS(car)+cellN(d.tushum)+cellN(d.xarajat)+cellN(d.tushum-d.xarajat)+cellN(d.count)+"</Row>";
     });
 
-    // --- Sheet 4: Умумий якуний ҳисобот ---
-    // Эслатма: "Тўлиқ соф тушум"/"Тўлиқ рентабеллик" мантиқи бошқа барча жойларда
-    // (Ойлик хулоса, Мошиналарни таққослаш, Ойлик Excel) бизнес харажатнинг ТЎЛИҚ
-    // суммасини (expSumma) чегиради — "қопланган" бўлиш-бўлмаслигидан қатъи назар.
-    // Аввал бу ерда фақат "қопланмаган қолдиқ" (expQoldiq) чегирилар эди, бу эса
-    // бошқа отчётлар билан мос келмайдиган якуний натижа бериб турарди. Тузатилди:
     const finalBalance = recSof - expSumma;
     let s4Rows = dateRowMaker(2) + "<Row>" + [cellH("Кўрсаткич"), cellH("Сумма (сўм)")].join("") + "</Row>";
     const s4data = [
@@ -2813,8 +2614,6 @@ ${XL_PAGE}
   }
 
   document.getElementById("exportCsv").addEventListener("click", downloadFullWorkbook);
-
-  // ---- Summary ----
   function currentMonthValue(){
     const d = new Date();
     return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
@@ -2881,22 +2680,17 @@ ${XL_PAGE}
     renderCarCompareChart(perCar, bizExpByCar);
   }
 
-  // ---- Харажатлар бўлимида мошинага бириктирилган харажатларни йиғиш (шу ойда) ----
-  // Мошина бўйича ойлик бизнес харажати.
-  // МУҲИМ: қопланган (қайтарилган) сумма ҳақиқий харажат эмас — уни айирамиз,
-  // акс ҳолда фойда ноҳақ камайиб кўринади.
   function expensesByCarForMonth(month){
     const result = {};
     expenses.forEach(x=>{
       if(!x.mashina) return;
       if(!x.sana || x.sana.slice(0,7)!==month) return;
-      const sof = x.summa - (x.qoplangan||0);   // ҳақиқий (қопланмаган) харажат
+      const sof = x.summa - (x.qoplangan||0);
       result[x.mashina] = (result[x.mashina]||0) + sof;
     });
     return result;
   }
 
-  // ---- Ой-ойга таққослаш (ўтган ойга нисбатан фарқ) ----
   function prevMonthOf(month){
     const [y,m] = month.split("-").map(Number);
     const d = new Date(y, m-2, 1);
@@ -2927,7 +2721,6 @@ ${XL_PAGE}
     el.innerHTML = `Ўтган ойга (${prevMonth}) нисбатан: Тушум ${deltaBadge(pctDelta(tushum,prevTushum))} · Соф тушум ${deltaBadge(pctDelta(sof,prevSof))} · Сафарлар сони ${deltaBadge(pctDelta(count,prevList.length))}`;
   }
 
-  // ---- Шофёрлар рейтинги (танланган ойда) ----
   function renderDriverRating(list){
     const body = document.getElementById("driverRatingBody");
     if(!body) return;
@@ -2968,7 +2761,6 @@ ${XL_PAGE}
     }).join("");
   }
 
-  // ---- Мошиналарни таққослаш диаграммаси (танланган ойда) ----
   function renderCarCompareChart(perCar, bizExpByCar){
     bizExpByCar = bizExpByCar || {};
     const el = document.getElementById("carCompareChart");
@@ -3013,7 +2805,6 @@ ${XL_PAGE}
     }).join("");
   }
 
-  // ---- Ойлик отчет: PDF (чоп этиш ойнаси орқали) ----
   function buildMonthlyReportPrintHTML(month){
     const list = records.filter(r=>r.sana && r.sana.slice(0,7)===month);
     const perCar = {};
@@ -3073,72 +2864,6 @@ ${XL_PAGE}
       tr:nth-child(even){background:#f6f4ee;}
       footer{margin-top:30px;font-size:11px;color:#999;text-align:center;}
       @media print{ body{padding:10mm;} }
-    
-  /* ---- Ойлик жадвал (кунма-кун) ---- */
-  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
-  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
-  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
-  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
-  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
-  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
-  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
-  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
-  .pivot-table tbody tr:hover td{background:#faf8f2;}
-  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
-  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
-  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
-
-  /* ============================================================
-     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
-     ============================================================ */
-  #agentPanel header{flex-wrap:wrap;gap:10px;}
-  #agentPanel main{padding-bottom:30px;}
-  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  #agentPanel .entry .full{grid-column:1/-1;}
-  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
-
-  @media(max-width:760px){
-    #agentPanel header{padding:12px 14px;}
-    #agentPanel header h1{font-size:17px;}
-    #agentPanel header p{font-size:11.5px;}
-    #agentClock{font-size:12px !important;padding:5px 9px !important;}
-    #agentPanel main{padding:12px 10px;}
-    #agentPanel .card{padding:14px 12px;border-radius:12px;}
-    #agentPanel .card h2{font-size:16px;}
-
-    /* Форма — телефонда битта устун, катта майдонлар */
-    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
-    #agentPanel input, #agentPanel select{
-      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
-      padding:12px 12px;
-      min-height:46px;
-    }
-    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
-    #agentPanel .btn{min-height:48px;font-size:15px;}
-    #agentPanel .actions-row{flex-direction:column;}
-    #agentPanel .actions-row .btn{width:100%;}
-
-    /* Фильтр тугмалари — иккитадан */
-    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    #agentPanel .filters .fld{min-width:0;}
-    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
-
-    /* Жадваллар — ёнга сурилади, устунлар тор */
-    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
-    #agentPanel table{font-size:12.5px;}
-    #agentPanel th, #agentPanel td{padding:7px 6px;}
-    #agentPanel .pivot-table{font-size:11px;}
-    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
-
-    /* Агент кириш экрани */
-    #agentLogin .lockbox{padding:22px 18px;}
-    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
-  }
-
-  @media(max-width:420px){
-    #agentPanel .filters{grid-template-columns:1fr;}
-    #agentPanel header h1{font-size:16px;}
-  }
 </style></head><body>
     <h1>Кунлик Хисобот — Ойлик отчет</h1>
     <p class="meta">Ой: <b>${month}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -3162,14 +2887,11 @@ ${XL_PAGE}
     printFullHtmlDoc(buildMonthlyReportPrintHTML(month));
   }
   document.getElementById("monthlyPdfBtn").addEventListener("click", printMonthlyReport);
-
-  // ---- Ойлик отчет: Excel (3 sheet — мошиналар, шофёрлар, кунлик ёзувлар) ----
   function buildMonthlyWorkbookXML(month){
     const list = records.filter(r=>r.sana && r.sana.slice(0,7)===month);
     const preparedStr = new Date().toLocaleDateString("uz-UZ") + " " + new Date().toLocaleTimeString("uz-UZ");
     const dateRowMaker = (colspan)=> `<Row><Cell ss:MergeAcross="${colspan-1}" ss:StyleID="dateNote"><Data ss:Type="String">Ой: ${month} · Тайёрланган сана: ${preparedStr}</Data></Cell></Row><Row></Row>`;
 
-    // Sheet 1: Мошиналар хулосаси
     const perCar = {};
     cars.forEach(c=> perCar[c.name] = {tushum:0, xarajat:0, count:0});
     list.forEach(r=>{
@@ -3197,7 +2919,6 @@ ${XL_PAGE}
     const grandMargin = grandT>0 ? Math.round((grandFullSof/grandT)*100) : 0;
     s1Rows += "<Row>" + cellB("ЖАМИ")+cellBN(grandT)+cellBN(grandX)+cellBN(grandBizExp)+cellBN(grandFullSof)+cellBN(list.length)+cellBN(grandMargin) + "</Row>";
 
-    // Sheet 2: Шофёрлар рейтинги
     const perDriver = {};
     list.forEach(r=>{
       const key = (r.shofyor && r.shofyor.trim()) ? r.shofyor.trim() : "(Номаълум)";
@@ -3218,7 +2939,6 @@ ${XL_PAGE}
       s2Rows += "<Row>" + cellS(name)+cellN(d.count)+cellN(d.tushum)+cellN(d.sof)+cellN(avg)+(d.hasT?cellN(d.sof-d.topshirilgan):cellS("—")) + "</Row>";
     });
 
-    // Sheet 3: Кунлик ёзувлар (шу ой)
     let s3Rows = dateRowMaker(9) + "<Row>" + ["Сана","Мошина","Шофёр","Йўналиш","Тушум","Харажат","Соф тушум","Топширилган","Изоҳ"].map(cellH).join("") + "</Row>";
     list.slice().sort((a,b)=>a.sana.localeCompare(b.sana)).forEach(r=>{
       const xarajat = r.yoqilgi+r.yol+r.boshqa;
@@ -3256,7 +2976,6 @@ ${XL_PAGE}
   }
   document.getElementById("monthlyExcelBtn").addEventListener("click", downloadMonthlyWorkbook);
 
-  // ---- Ойлик отчетни Telegram'га юбориш (Excel файл сифатида, + қисқа матн хулосаси) ----
   async function sendMonthlyReportToTelegram(month, silent){
     const settings = loadTgSettings();
     if(!settings.token || !settings.chatId){
@@ -3300,7 +3019,6 @@ ${XL_PAGE}
     sendMonthlyReportToTelegram(month, false);
   });
 
-  // ---- Ойлик отчетни автоматик Telegram'га юбориш (дастур очилганда текширилади) ----
   function loadAutoSend(){ return localStorage.getItem(LS_AUTOSEND) === "1"; }
   function saveAutoSend(v){ localStorage.setItem(LS_AUTOSEND, v ? "1" : "0"); }
   document.getElementById("monthlyAutoSendToggle").checked = loadAutoSend();
@@ -3314,18 +3032,13 @@ ${XL_PAGE}
     d.setMonth(d.getMonth()-1);
     return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
   }
-  // Эслатма: бу иловада background/server қисм йўқ — фақат дастур browser'да очилганда
-  // ишлайди. Шунинг учун "автоматик юбориш" ойнинг қайси куни бўлишидан қатъи назар
-  // ҳар сафар дастур очилганда текширилади: агар ўтган ой учун ҳали юборилмаган бўлса,
-  // шу заҳоти юборилади (илгари фақат ойнинг 1-3 кунлари текширилиб, бошқа кунлари
-  // очилса ўша ойнинг отчети умуман юборилмай қоларди — бу тузатилди).
   async function checkAutoSendMonthly(){
     if(!loadAutoSend()) return;
     const target = prevMonthStr();
     const lastSent = localStorage.getItem(LS_LASTAUTOSENT);
-    if(lastSent === target) return; // бу ой учун аллақачон юборилган
+    if(lastSent === target) return;
     const tgSettings = loadTgSettings();
-    if(!tgSettings.token || !tgSettings.chatId) return; // Telegram созланмаган — жим ўтказиб юборамиз
+    if(!tgSettings.token || !tgSettings.chatId) return;
     const ok = await sendMonthlyReportToTelegram(target, true);
     if(ok){
       localStorage.setItem(LS_LASTAUTOSENT, target);
@@ -3334,7 +3047,6 @@ ${XL_PAGE}
   }
   setTimeout(checkAutoSendMonthly, 2500);
 
-  // ---- Donut график: тушум таркибида харажат ва соф тушум улуши ----
   function renderDonutChart(list){
     const el = document.getElementById("donutChart");
     const tushum = list.reduce((s,r)=>s+r.tushum,0);
@@ -3372,7 +3084,6 @@ ${XL_PAGE}
     `;
   }
 
-  // ---- SVG чизиқли график: кунлик соф тушум тенденцияси ----
   function renderTrendChart(month, list){
     const el = document.getElementById("trendChart");
     if(!list.length){
@@ -3418,38 +3129,23 @@ ${XL_PAGE}
       <text x="4" y="${zeroY+4}" font-size="10" fill="#6b7280">0</text>
     </svg>`;
   }
-
-  // ---- YEARLY (ойма-ой йиллик хулоса) ----
   function currentYearValue(){ return new Date().getFullYear(); }
   document.getElementById("yearlyYear").value = currentYearValue();
   document.getElementById("yearlyYear").addEventListener("change", renderYearly);
 
-  /* ============================================================
-     ОЙЛИК ЖАДВАЛ — мошиналар × ойнинг кунлари
-     Ҳар катакда: танланган кўрсаткич (тушум / соф / топширилган)
-     ============================================================ */
   function pivotValue(r, metric){
     if(metric === "tushum") return Number(r.tushum||0);
     if(metric === "topshirilgan") return Number(r.topshirilgan||0);
     return Number(r.tushum||0) - Number(r.yoqilgi||0) - Number(r.yol||0) - Number(r.boshqa||0);
   }
 
-  /* ============================================================
-     "МЕН ОЛГАН НАҚД ПУЛ" бўйича — қайси кунгача пул олинган?
-     "Топширилган" суммаси кунма-кун (жамики мошиналар бўйича) ЙИҲИНДИ
-     ҳисобланади, хронологик тартибда. Жамланма сумма "Мен олган нақд пул"
-     умумий суммасидан ошмагунча — ўша кунлар "олинган" ҳисобланади.
-     МУҲИМ: бу ҲАР ДОИМ "Топширилган" майдонига асосланади (кўрсаткич
-     танловидан қатъи назар), чунki "Мен олган нақд пул" худди шу
-     майдондан олинади.
-     ============================================================ */
   function computeTakenCutoff(){
-    const dayTotals = {};   // "YYYY-MM-DD" -> шу куннинг жами топширилган суммаси
+    const dayTotals = {};
     records.forEach(r=>{
       if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
       dayTotals[r.sana] = (dayTotals[r.sana] || 0) + Number(r.topshirilgan);
     });
-    const days = Object.keys(dayTotals).sort();   // хронологик тартиб
+    const days = Object.keys(dayTotals).sort();
     const totalTaken = cashTaken.reduce((s,c)=> s + Number(c.summa||0), 0);
 
     let running = 0, cutoffDate = null;
@@ -3470,7 +3166,6 @@ ${XL_PAGE}
 
     const list = records.filter(r => r.sana && r.sana.slice(0,7) === month);
 
-    // мошина -> кун -> қиймат
     const byCar = {};
     list.forEach(r=>{
       const car = r.mashina || "(Номаълум)";
@@ -3479,12 +3174,10 @@ ${XL_PAGE}
       byCar[car][day] = (byCar[car][day] || 0) + pivotValue(r, metric);
     });
 
-    // Мошиналар рўйхати: аввал созламадагилар, кейин ёзувларда учраганлар
     const carNames = [];
     cars.forEach(c=>{ if(byCar[c.name]) carNames.push(c.name); });
     Object.keys(byCar).forEach(n=>{ if(!carNames.includes(n)) carNames.push(n); });
 
-    // Фақат маълумоти бор кунларни оламиз — бўш ва келмаган кунлар кўрсатилмайди
     const activeDays = [];
     for(let d=1; d<=daysInMonth; d++){
       let has = false;
@@ -3510,9 +3203,8 @@ ${XL_PAGE}
     const days = P.activeDays;
     if(!days.length){ el.innerHTML = `<p class="empty">Бу ойда ёзув йўқ.</p>`; return; }
 
-    // Қайси кунлар "олинган" (топширилган суммаси нақд пул билан қопланган)
     const taken = computeTakenCutoff();
-    const monthPrefix = P.month;   // "YYYY-MM"
+    const monthPrefix = P.month;
     const isTaken = d=>{
       if(!taken.cutoffDate) return false;
       const ds = `${monthPrefix}-${String(d).padStart(2,"0")}`;
@@ -3675,14 +3367,13 @@ ${XL_PAGE}
   });
   document.getElementById("pivotExcelBtn").addEventListener("click", exportPivotExcel);
   document.getElementById("pivotPrintBtn").addEventListener("click", printPivot);
-
   function renderYearly(){
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
     const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
     const body = document.getElementById("yearlyBody");
     let rows = "";
     const monthlySof = [];
-    let yTushum=0, yXarajat=0, yExp=0, yCount=0;   // йиллик жамланма
+    let yTushum=0, yXarajat=0, yExp=0, yCount=0;
     for(let mIdx=1; mIdx<=12; mIdx++){
       const mStr = String(year)+"-"+String(mIdx).padStart(2,"0");
       const recList = records.filter(r=>r.sana && r.sana.slice(0,7)===mStr);
@@ -3690,7 +3381,6 @@ ${XL_PAGE}
       const xarajat = recList.reduce((s,r)=>s+r.yoqilgi+r.yol+r.boshqa,0);
       const sof = tushum-xarajat;
       const expList = expenses.filter(x=>x.sana && x.sana.slice(0,7)===mStr);
-      // Қопланган харажат ҳақиқий харажат эмас — уни айирамиз
       const expTotal = expList.reduce((s,x)=>s + x.summa - (x.qoplangan||0), 0);
       monthlySof.push(sof);
       yTushum += tushum; yXarajat += xarajat; yExp += expTotal; yCount += recList.length;
@@ -3703,7 +3393,6 @@ ${XL_PAGE}
         <td>${recList.length}</td>
       </tr>`;
     }
-    // --- Йиллик жами қатори ---
     const ySof = yTushum - yXarajat;
     rows += `<tr style="background:var(--gold-soft);font-weight:800;border-top:2px solid var(--gold);">
       <td>ЖАМИ (${year})</td>
@@ -3717,7 +3406,6 @@ ${XL_PAGE}
     renderYearlyTrendChart(year, monthlySof, monthNames);
   }
 
-  // ---- SVG чизиқли график: йиллик ойма-ой соф тушум тенденцияси ----
   function renderYearlyTrendChart(year, monthlySof, monthNames){
     const el = document.getElementById("yearlyTrendChart");
     if(!el) return;
@@ -3750,7 +3438,6 @@ ${XL_PAGE}
     </svg>`;
   }
 
-  // ---- Йиллик отчет: PDF ----
   function buildYearlyReportPrintHTML(year){
     const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
     let grandT=0, grandX=0, grandCount=0;
@@ -3781,72 +3468,6 @@ ${XL_PAGE}
       tr:nth-child(even){background:#f6f4ee;}
       footer{margin-top:30px;font-size:11px;color:#999;text-align:center;}
       @media print{ body{padding:10mm;} }
-    
-  /* ---- Ойлик жадвал (кунма-кун) ---- */
-  .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
-  .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
-  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
-  .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
-  .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
-  .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
-  .pivot-table .pv-total{text-align:right;font-weight:800;background:#fff6cf;font-variant-numeric:tabular-nums;}
-  .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
-  .pivot-table tbody tr:hover td{background:#faf8f2;}
-  [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
-  [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
-  [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
-
-  /* ============================================================
-     АГЕНТ ОЙНАСИ — телефон учун мослаштириш
-     ============================================================ */
-  #agentPanel header{flex-wrap:wrap;gap:10px;}
-  #agentPanel main{padding-bottom:30px;}
-  #agentPanel .entry{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  #agentPanel .entry .full{grid-column:1/-1;}
-  #agentPanel .filters{display:flex;flex-wrap:wrap;gap:10px;}
-
-  @media(max-width:760px){
-    #agentPanel header{padding:12px 14px;}
-    #agentPanel header h1{font-size:17px;}
-    #agentPanel header p{font-size:11.5px;}
-    #agentClock{font-size:12px !important;padding:5px 9px !important;}
-    #agentPanel main{padding:12px 10px;}
-    #agentPanel .card{padding:14px 12px;border-radius:12px;}
-    #agentPanel .card h2{font-size:16px;}
-
-    /* Форма — телефонда битта устун, катта майдонлар */
-    #agentPanel .entry{grid-template-columns:1fr;gap:10px;}
-    #agentPanel input, #agentPanel select{
-      font-size:16px;          /* 16px — iPhone'да автомат зумни олдини олади */
-      padding:12px 12px;
-      min-height:46px;
-    }
-    #agentPanel label{font-size:12.5px;margin-bottom:3px;}
-    #agentPanel .btn{min-height:48px;font-size:15px;}
-    #agentPanel .actions-row{flex-direction:column;}
-    #agentPanel .actions-row .btn{width:100%;}
-
-    /* Фильтр тугмалари — иккитадан */
-    #agentPanel .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    #agentPanel .filters .fld{min-width:0;}
-    #agentPanel .filters .btn{width:100%;padding:11px 8px;font-size:13.5px;}
-
-    /* Жадваллар — ёнга сурилади, устунлар тор */
-    #agentPanel .table-wrap{-webkit-overflow-scrolling:touch;}
-    #agentPanel table{font-size:12.5px;}
-    #agentPanel th, #agentPanel td{padding:7px 6px;}
-    #agentPanel .pivot-table{font-size:11px;}
-    #agentPanel .pivot-table th,#agentPanel .pivot-table td{padding:4px 5px;}
-
-    /* Агент кириш экрани */
-    #agentLogin .lockbox{padding:22px 18px;}
-    #agentLogin input, #agentLogin select{font-size:16px;min-height:46px;}
-  }
-
-  @media(max-width:420px){
-    #agentPanel .filters{grid-template-columns:1fr;}
-    #agentPanel header h1{font-size:16px;}
-  }
 </style></head><body>
     <h1>Кунлик Хисобот — Йиллик отчет</h1>
     <p class="meta">Йил: <b>${year}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
@@ -3867,7 +3488,6 @@ ${XL_PAGE}
   }
   document.getElementById("yearlyPdfBtn").addEventListener("click", printYearlyReport);
 
-  // ---- Йиллик отчет: Excel ----
   function buildYearlyWorkbookXML(year){
     const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
     const preparedStr = new Date().toLocaleDateString("uz-UZ") + " " + new Date().toLocaleTimeString("uz-UZ");
@@ -3906,8 +3526,6 @@ ${XL_PAGE}
   }
   document.getElementById("yearlyExcelBtn").addEventListener("click", downloadYearlyWorkbook);
 
-  // ---- DEBTS (шофёрлар бўйича қарз ҳисоби) ----
-  // ---- Қарз тўловлари (шофёр томонидан алоҳида ёпилган қарз) ----
   function loadDebtPayments(){
     try{ return JSON.parse(localStorage.getItem(LS_DEBTPAY)) || []; }catch(e){ return []; }
   }
@@ -3930,7 +3548,6 @@ ${XL_PAGE}
       const key = normDriver(p.shofyor) || "(Номаълум)";
       perPaid[key] = (perPaid[key]||0) + p.summa;
     });
-    // Тўлов қайд этилган, лекин ёзувларда "топширилган" маълумоти йўқ шофёрларни ҳам кўрсатиш
     Object.keys(perPaid).forEach(k=>{ if(!perDriver[k]) perDriver[k] = {sof:0, topshirilgan:0}; });
     const keys = Object.keys(perDriver);
     if(!keys.length){
@@ -4002,8 +3619,6 @@ ${XL_PAGE}
     renderDebts();
     toast("Тўлов қайд этилди ✓");
   });
-
-  // ---- Мен томонимдан олинган нақд пул (топширилган суммадан) ----
   const LS_CASHTAKEN = "kh_cashtaken_v1";
   function loadCashTaken(){
     try{ return JSON.parse(localStorage.getItem(LS_CASHTAKEN)) || []; }catch(e){ return []; }
@@ -4023,13 +3638,6 @@ ${XL_PAGE}
     exitCashTakenEditMode();
   });
 
-  /* ============================================================
-     "МЕН ОЛГАН НАҚД ПУЛ" — ОЙЛАР КЕСИМИДА
-     Ҳар ой учун: ўша ойда топширилган, ўша ойда олинган, ой қолдиғи.
-     "Ортиб келган (жамланма)" — энг биринчи ойдан то шу ойгача бўлган
-     ЙИҒИНДИ қолдиқ (пул бир ойда топширилиб, кейинги ойда олиниши мумкин,
-     шунинг учун ҳақиқий "қўлимда қолиши керак бўлган пул" — жамланма орқали кўринади).
-     ============================================================ */
   function renderCashTakenByMonth(){
     const body = document.getElementById("cashTakenByMonthBody");
     if(!body) return;
@@ -4071,7 +3679,6 @@ ${XL_PAGE}
       </tr>`;
     }).join("");
 
-    // Якуний қатор — юқоридаги умумий кўрсаткичлар билан айнан мос келади
     const grandTop = Object.values(topByMonth).reduce((s,v)=>s+v,0);
     const grandTaken = Object.values(takenByMonth).reduce((s,v)=>s+v,0);
     const grandNet = grandTop - grandTaken;
@@ -4099,7 +3706,6 @@ ${XL_PAGE}
     qEl.textContent = fmt(qoldiq);
     qEl.className = "value " + (qoldiq < 0 ? "neg" : "pos");
 
-    // Мошиналар бўйича тақсимот
     const byCarBody = document.getElementById("cashTakenByCarBody");
     if(byCarBody){
       const perCar = {};
@@ -4230,7 +3836,6 @@ ${XL_PAGE}
     }
   });
 
-  // ---- Settings: cars (мошина <-> ҳайдовчи, мақсад, норма, ТО, ранг) ----
   function renderCarsList(){
     const el = document.getElementById("carsList");
     el.innerHTML = cars.map((c,i)=>`
@@ -4276,7 +3881,6 @@ ${XL_PAGE}
     toast("Мошиналар рўйхати сақланди ✓");
   });
 
-  // ---- Backup / restore / wipe ----
   document.getElementById("backupBtn").addEventListener("click", ()=>{
     const data = {records, cars, expenses, expensePayments, exportedAt: new Date().toISOString()};
     downloadFile(new Blob([JSON.stringify(data,null,2)], {type:"application/json"}), "kunlik_hisobot_zaxira_"+localDateStr()+".json", "application/json");
@@ -4322,7 +3926,6 @@ ${XL_PAGE}
     };
     reader.readAsText(file);
   });
-  // ---- Audit log render ----
   function renderAuditLog(){
     const body = document.getElementById("auditBody");
     const log = loadAudit();
@@ -4336,8 +3939,6 @@ ${XL_PAGE}
       return `<tr><td>${timeStr}</td><td>${esc(e.action)}</td><td>${esc(e.details)}</td></tr>`;
     }).join("");
   }
-
-  // ---- Telegram орқали автомат захира ----
   function loadTgSettings(){
     try{ return JSON.parse(localStorage.getItem(LS_TG)) || {token:"", chatId:""}; }catch(e){ return {token:"", chatId:""}; }
   }
@@ -4346,7 +3947,6 @@ ${XL_PAGE}
   document.getElementById("tgToken").value = tg.token || "";
   document.getElementById("tgChatId").value = tg.chatId || "";
 
-  // Bot Token / Chat ID'ни кўрсатиш-яшириш (кўз тугмаси)
   function attachToggle(inputId, btnId){
     document.getElementById(btnId).addEventListener("click", ()=>{
       const inp = document.getElementById(inputId);
@@ -4364,7 +3964,6 @@ ${XL_PAGE}
     toast("Telegram созламалари сақланди ✓");
   });
 
-  // Қайта фойдаланиладиган захира юбориш функцияси (Созламалардаги тугма ва Чиқиш оқими иккиси ҳам шундан фойдаланади)
   async function sendTelegramBackup(){
     const settings = loadTgSettings();
     if(!settings.token || !settings.chatId){
@@ -4401,7 +4000,6 @@ ${XL_PAGE}
 
   document.getElementById("sendTgBackupBtn").addEventListener("click", sendTelegramBackup);
 
-  // Оддий матнли хабар юбориш (паролни тиклаш коди каби) — захира файли эмас, faqat text
   async function sendTelegramMessage(text){
     const settings = loadTgSettings();
     if(!settings.token || !settings.chatId){
@@ -4427,7 +4025,6 @@ ${XL_PAGE}
     }
   }
 
-  // ---- Сана ва вақт (жонли соат, сониягача) ----
   function updateLiveClock(){
     const now = new Date();
     const weekdays = ["Якшанба","Душанба","Сешанба","Чоршанба","Пайшанба","Жума","Шанба"];
@@ -4443,9 +4040,8 @@ ${XL_PAGE}
   updateLiveClock();
   setInterval(updateLiveClock, 1000);
 
-  // ---- Чиқиш тугмаси: Telegram'га захира юборишни сўраш, сўнг қулфлаш/чиқиш ----
   function doExit(){
-    clearTrust();                       // "Чиқиш" — ишончни бекор қилади
+    clearTrust();
     editGrantedUntil = 0;
     if(getPwHash()){
       document.getElementById("lockScreen").classList.remove("hidden");
@@ -4465,7 +4061,6 @@ ${XL_PAGE}
     document.getElementById("exitScreen").style.display = "none";
   });
 
-  // ---- Автомат қулфлаш (фаолиятсизликдан кейин) ----
   function loadLockMin(){
     const v = localStorage.getItem(LS_LOCKMIN);
     return v === null ? 0 : Number(v);
@@ -4478,7 +4073,6 @@ ${XL_PAGE}
     toast("Сақланди ✓");
   });
 
-  // Ишонч муддати ва таҳрирлаш муҳлати созламалари
   document.getElementById("trustHoursInp").value = trustHours();
   document.getElementById("trustHoursInp").addEventListener("change", function(){
     const h = Math.max(0, Number(this.value||0));
@@ -4533,7 +4127,6 @@ ${XL_PAGE}
     }
   });
 
-  // ---- Password protection ----
   function getPwHash(){
     try{ return localStorage.getItem(LS_PW); }catch(e){ return null; }
   }
@@ -4549,15 +4142,9 @@ ${XL_PAGE}
     }
   }
 
-  /* ============================================================
-     ИШОНЧЛИ ҚУРИЛМА
-     Парол киритилгач, белгиланган муддат давомида қайта сўралмайди.
-     Телефонда илова фонга ўтиб қайта юкланганда ҳам парол сўрамайди.
-     "Чиқиш" тугмаси эса дарҳол қулфлайди.
-     ============================================================ */
   function trustHours(){
     const v = localStorage.getItem(LS_TRUSTH);
-    return v === null ? 12 : Number(v);   // стандарт: 12 соат
+    return v === null ? 12 : Number(v);
   }
   function setTrustHours(h){ localStorage.setItem(LS_TRUSTH, String(h)); }
   function markTrusted(){
@@ -4579,8 +4166,6 @@ ${XL_PAGE}
       toast("Бисмиллаҳир роҳманир роҳим — хуш келибсиз!");
       document.getElementById("lockScreen").classList.add("hidden");
       markTrusted();
-      // Булутдаги конфликтни ФАҚАТ киргандан кейин текширамиз —
-      // шунда у логин экранини бузиб, "яна кир" деган таассурот қолдирмайди.
       setTimeout(()=> CLOUD.runCheck(), 1200);
     } else {
       document.getElementById("lockErr").textContent = "Парол нотўғри, қайта уриниб кўринг";
@@ -4597,7 +4182,7 @@ ${XL_PAGE}
     document.getElementById("bismillahText").style.opacity = this.value.length > 0 ? "1" : "0";
   });
   function generatePwResetCode(){
-    return String(Math.floor(100000 + Math.random()*900000)); // 6 хонали код
+    return String(Math.floor(100000 + Math.random()*900000));
   }
 
   document.getElementById("lockForgot").addEventListener("click", async ()=>{
@@ -4609,7 +4194,7 @@ ${XL_PAGE}
     if(!confirm("Паролни тиклаш учун бир марталик тасдиқлаш коди боғланган Telegram ботга юборилсинми?")) return;
 
     const code = generatePwResetCode();
-    const expiresAt = Date.now() + 10*60*1000; // 10 дақиқа амал қилади
+    const expiresAt = Date.now() + 10*60*1000;
     localStorage.setItem(LS_PWRESET, JSON.stringify({hash: simpleHash(code), expiresAt}));
 
     const text = "🔑 Кунлик Хисобот — паролни тиклаш коди: " + code +
@@ -4670,8 +4255,6 @@ ${XL_PAGE}
     refreshPwStatus();
     toast("Парол ўчирилди ✓");
   });
-
-  // ---- EXPENSES (мустақил модуль, кунлик тушум ёзувларига алоқаси йўқ) ----
   const LS_EXPENSES = "kh_expenses_v1";
   const LS_EXPENSE_PAYMENTS = "kh_expense_payments_v1";
   function loadExpenses(){
@@ -4853,14 +4436,12 @@ ${XL_PAGE}
   document.getElementById("ep_summa")?.addEventListener("input", updateExpensePaymentPreview);
   document.getElementById("ep_sana")?.addEventListener("change", updateExpensePaymentPreview);
 
-  // ---- Танланган мошинанинг қопланмаган харажатлари (кичикдан катта сари) ----
   function openExpensesFor(mashina){
     return expenses
       .filter(x => x.mashina === mashina && expenseRemaining(x) > 0)
-      .sort((a,b) => expenseRemaining(a) - expenseRemaining(b));   // аввал энг кичиги
+      .sort((a,b) => expenseRemaining(a) - expenseRemaining(b));
   }
 
-  // Киритилган суммани харажатларга тақсимлаш режасини тузади (ҳали сақламайди)
   function planAutoCover(mashina, amount){
     const plan = [];
     let left = amount;
@@ -4871,10 +4452,9 @@ ${XL_PAGE}
       plan.push({ x, take, rem, full: take >= rem });
       left -= take;
     }
-    return { plan, left };   // left — харажатлар тугаб, ортиб қолган сумма
+    return { plan, left };
   }
 
-  // Тақсимлаш режасини экранда кўрсатиш (тасдиқлашдан олдин)
   function renderAutoPreview(){
     const box = document.getElementById("ep_autoPreview");
     const mode = document.getElementById("ep_mode").value;
@@ -4943,7 +4523,7 @@ ${XL_PAGE}
     if(!mashina){ alert("Автомобильни танланг."); return; }
     if(amount <= 0){ alert("Қопланадиган сумма 0 дан катта бўлиши керак."); return; }
 
-    let applied = [];   // [{expenseId, turi, take}]
+    let applied = [];
 
     if(mode === "manual"){
       const expenseId = document.getElementById("ep_expense").value;
@@ -4957,7 +4537,6 @@ ${XL_PAGE}
       x.qoplangan = Number(x.qoplangan||0) + amount;
       applied.push({ expenseId: x.id, turi: x.turi, take: amount });
     }else{
-      // --- Автомат тақсимлаш: кичик харажатлардан бошлаб ёпамиз ---
       const { plan, left } = planAutoCover(mashina, amount);
       if(!plan.length){
         alert("Бу автомобилда қопланмаган харажат йўқ.");
@@ -4976,7 +4555,6 @@ ${XL_PAGE}
       });
     }
 
-    // Ҳар бир харажат учун алоҳида тўлов ёзуви — тарих аниқ бўлиши учун
     applied.forEach(a=>{
       expensePayments.push({
         id: uid(),
@@ -5110,7 +4688,6 @@ ${XL_PAGE}
 
   refreshExpensePaymentSection();
 
-  // ---- Мошиналар бўйича харажат хулосаси (шу ойда, барча мошиналар бўйича) ----
   function renderExpenseCarSummary(month){
     const body = document.getElementById("expenseCarSummaryBody");
     if(!body) return;
@@ -5146,7 +4723,6 @@ ${XL_PAGE}
     }).join("");
   }
 
-  // ---- Харажат туркумлари бўйича таҳлил (танланган ойда) ----
   const EXP_CAT_COLORS = ["#0f2440","#c9a227","#1f7a4d","#b3402a","#7a4fb3","#3b7dd8","#c2669a","#2aa198","#d17a22"];
   function renderExpenseCategoryChart(month){
     const el = document.getElementById("expenseCategoryChart");
@@ -5181,8 +4757,6 @@ ${XL_PAGE}
   }
 
   document.getElementById("exportExpenses").addEventListener("click", downloadFullWorkbook);
-
-  // ---- Қоронғи режим (dark mode) ----
   const LS_THEME = "kh_theme_v1";
   function applyTheme(theme){
     if(theme === "dark"){
@@ -5201,7 +4775,6 @@ ${XL_PAGE}
     applyTheme(next);
   });
 
-  // ---- Логотип (шахсийлаштириш) ----
   const LS_LOGO = "kh_logo_v1";
   function loadLogo(){ return localStorage.getItem(LS_LOGO) || ""; }
   function applyLogo(){
@@ -5230,8 +4803,6 @@ ${XL_PAGE}
     reader.onload = ev=>{
       const img = new Image();
       img.onload = ()=>{
-        // Логотипни кичрайтириб (макс. 200x200), сиқилган JPEG сифатида сақлаймиз —
-        // бу localStorage ҳажмини тежайди (аввал юкланган расм ўзгаришсиз сақланарди).
         const maxSize = 200;
         let w = img.width, h = img.height;
         if(w > h){ if(w > maxSize){ h = Math.round(h*maxSize/w); w = maxSize; } }
@@ -5255,7 +4826,6 @@ ${XL_PAGE}
     toast("Логотип олиб ташланди");
   });
 
-  // ---- Бренд номи ----
   const LS_BRAND = "kh_brand_v1";
   function loadBrandName(){ return localStorage.getItem(LS_BRAND) || "Кунлик Хисобот"; }
   function applyBrandName(){
@@ -5273,16 +4843,12 @@ ${XL_PAGE}
     toast("Дастур номи сақланди ✓");
   });
 
-  /* ============================================================
-     АГЕНТЛАР — раҳбар томонида бошқарув
-     ============================================================ */
   function loadAgents(){
     try{ return JSON.parse(localStorage.getItem(LS_AGENTS)) || []; }catch(e){ return []; }
   }
   function saveAgents(list){ safeSave(LS_AGENTS, JSON.stringify(list)); }
   let agents = loadAgents();
 
-  // Эски форматдаги агентларни (очиқ PIN) хавфсиз форматга ўтказамиз — бир марта
   (function migrateAgentPins(){
     let changed = false;
     agents = agents.map(a=>{
@@ -5291,7 +4857,6 @@ ${XL_PAGE}
         return { name:a.name, pinHash: simpleHash(a.pin), pinLen: String(a.pin).length,
                  active: a.active !== false };
       }
-      // pinLen йўқ бўлса — тиклаймиз (валидация тўғри ишлаши учун)
       if(a && a.pinHash && !a.pinLen){ changed = true; return { ...a, pinLen: 4 }; }
       return a;
     });
@@ -5336,7 +4901,6 @@ ${XL_PAGE}
       const g = f => row.querySelector(`[data-afield="${f}"]`).value.trim();
       const rawPin = g("pin");
       const prev = agents[i];
-      // PIN ўзгартирилмаган бўлса — эски hash сақланади
       const keepOld = !!(prev && prev.pinHash && rawPin === "••••");
       const pinHash = keepOld ? prev.pinHash : simpleHash(rawPin);
       const pinLen  = keepOld ? (prev.pinLen || 4) : rawPin.length;
@@ -5359,7 +4923,6 @@ ${XL_PAGE}
   });
   renderAgentsList();
 
-  /* ---- Мавжуд такрорий ёзувларни топиш ---- */
   function scanDuplicates(){
     const groups = {};
     records.forEach(r=>{
@@ -5384,7 +4947,7 @@ ${XL_PAGE}
     }
     const ortiqcha = groups.reduce((sum,g)=>{
       const vals = g.map(r=> Number(r.tushum||0)).sort((a,b)=> b-a);
-      return sum + vals.slice(1).reduce((a,b)=> a+b, 0);   // энг каттасидан бошқалари
+      return sum + vals.slice(1).reduce((a,b)=> a+b, 0);
     }, 0);
 
     const rows = groups.map(g=>{
@@ -5440,7 +5003,6 @@ ${XL_PAGE}
   }
   document.getElementById("runDupCheckBtn")?.addEventListener("click", renderDupCheck);
 
-  /* ---- Агент формасидаги майдонларни бошқариш ---- */
   const LS_AGENT_FIELDS = "kh_agent_fields_v1";
   const AGENT_FIELD_DEFS = [
     {key:"shofyor",      label:"Шофёр"},
@@ -5487,13 +5049,8 @@ ${XL_PAGE}
     toast("Майдонлар сақланди ✓ — агент дастурни янгилагач кўринади");
   });
 
-  /* ---- Раҳбар: агентлар киритган ёзувларни қабул қилиш ---- */
   function startAgentInboxListener(){
     CLOUD.listenAgentInbox(async incoming=>{
-      // ҲИМОЯ: агар шу қурилма (аввал раҳбар сифатида очилиб, кейин)
-      // агент режимига ўтган бўлса — бу ерда ҳеч нарса қилмаймиз.
-      // Акс ҳолда агент ўз ёзувини ўзи "қабул қилиб", inbox'дан ўчириб,
-      // лекин ЎЗ БЎШ базасига сақлаб қўяр эди — ёзув бутунлай йўқолар эди.
       if(currentAgent) return;
       const existing = new Set(records.map(r=> r.id));
       const fresh = incoming.filter(r=> !existing.has(r.id));
@@ -5515,16 +5072,9 @@ ${XL_PAGE}
       }
       const el = document.getElementById("cloudAgentCount");
       if(el) el.textContent = incoming.length + " та";
-      // Қабул қилинганлар inbox'дан ўчирилади — у ерда тўпланиб қолмайди.
-      // Ёзувлар энди раҳбар базасида ва булутдаги захирада сақланади,
-      // агент уларни умумий базадан кўради.
       CLOUD.removeFromInbox(incoming.map(r=> r.id)).catch(()=>{});
     });
   }
-
-  /* ============================================================
-     АГЕНТ РЕЖИМИ — соддалаштирилган ойна
-     ============================================================ */
   let currentAgent = null;
 
   async function openAgentLogin(){
@@ -5547,7 +5097,6 @@ ${XL_PAGE}
 
   document.getElementById("agentModeBtn")?.addEventListener("click", openAgentLogin);
 
-  // Агент сессияси сақланган бўлса — қулф экранисиз дарҳол агент ойнаси
   (function restoreAgentSession(){
     const name = sessionStorage.getItem("kh_agent");
     if(!name) return;
@@ -5575,21 +5124,15 @@ ${XL_PAGE}
     if(!name){ err.textContent = "Исмингизни танланг."; return; }
     const list = sel._list || agents;
     const a = list.find(x=> x.name === name);
-    // Эски форматдаги (очиқ PIN) агентлар билан ҳам мослик сақланади
     const okPin = a && ((a.pinHash && simpleHash(pin) === a.pinHash) || (a.pin && a.pin === pin));
     if(!okPin){ err.textContent = "PIN нотўғри."; return; }
     if(a.active === false){ err.textContent = "Кириш ҳуқуқингиз тўхтатилган."; return; }
     err.textContent = "";
     currentAgent = a;
-    // МУҲИМ: биринчи марта кирганда CLOUD.start() аллақачон "раҳбар режими"да
-    // ишга тушган бўлади (сайт очилганда currentAgent ҳали null эди).
-    // Шу лаҳзадан бошлаб ёзишни бутунлай тақиқлаймиз — акс ҳолда бу қурилма
-    // раҳбарнинг тўлиқ тарихини (масалан Август-Сентябр) ўзининг бўш
-    // нусхаси билан алмаштириб қўйиши мумкин эди.
     CLOUD.setAgentMode(true);
     sessionStorage.setItem("kh_agent", name);
     document.getElementById("agentLogin").style.display = "none";
-    document.getElementById("mainApp").style.display = "none";   // раҳбар ойнасини яширамиз
+    document.getElementById("mainApp").style.display = "none";
     document.getElementById("agentPanel").style.display = "block";
     document.getElementById("agentGreeting").textContent = "Салом, " + name + "!";
     initAgentPanel();
@@ -5602,9 +5145,7 @@ ${XL_PAGE}
 
   async function initAgentPanel(){
     document.getElementById("ag_sana").valueAsDate = new Date();
-    startAgentLiveWatch();   // ана — жонли кузатувни ёқамиз
-    // Мошиналар рўйхати — булутдан ёки локалдан
-    // Мошиналар рўйхати — булутдан (раҳбар базасидан), бўлмаса локалдан
+    startAgentLiveWatch();
     try{
       const cloudCars = await CLOUD.fetchSharedCars();
       if(cloudCars && cloudCars.length) cars = cloudCars;
@@ -5612,14 +5153,12 @@ ${XL_PAGE}
     const sel = document.getElementById("ag_mashina");
     sel.innerHTML = `<option value="">Мошинани танланг</option>` +
       cars.map(c=> `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
-    // Мошина танланганда унга бириктирилган шофёр автомат тўлдирилади
     sel.onchange = ()=>{
       const c = cars.find(x=> x.name === sel.value);
       const drv = document.getElementById("ag_shofyor");
       if(c && c.driver){
         drv.value = c.driver;
       }else if(c){
-        // Созламада шофёр белгиланмаган бўлса — тарихдан энг сўнггисини оламиз
         const src = (agentDataCache && agentDataCache.all.length) ? agentDataCache.all : records;
         const last = src.filter(r=> r.mashina === c.name && r.shofyor)
                         .sort((a,b)=> String(b.sana).localeCompare(String(a.sana)))[0];
@@ -5628,7 +5167,6 @@ ${XL_PAGE}
       agComputePreview();
       renderAgentDupHint();
     };
-    // Шофёр ва йўналиш таклифлари
     let baseRecs = records;
     try{
       const D = await loadAgentData(false);
@@ -5693,14 +5231,13 @@ ${XL_PAGE}
     if(!rec.sana || !rec.mashina || rec.tushum <= 0){
       alert("Сана, мошина ва тушумни тўғри киритинг."); return;
     }
-    // --- Такрорий ёзув текшируви (умумий базага нисбатан) ---
     try{
-      const D = await loadAgentData(false);   // кэшдан — трафик тежалади
+      const D = await loadAgentData(false);
       const dups = findDuplicates(rec.sana, rec.mashina, null, D.all);
       if(dups.length){
         if(!confirm(duplicateWarningText(dups, rec.sana, rec.mashina))) return;
       }
-    }catch(e){ /* интернет йўқ бўлса — текширувсиз давом этамиз */ }
+    }catch(e){}
     btn.disabled = true; btn.textContent = "Юборилмоқда...";
     try{
       await CLOUD.pushAgentRecord(rec, currentAgent.name);
@@ -5710,7 +5247,7 @@ ${XL_PAGE}
       document.getElementById("agDupHint").innerHTML = "";
       document.getElementById("agMoreWrap").classList.add("hidden");
       toast("Ёзув юборилди ✓");
-      agentDataCache = null;          // кэшни тозалаймиз — янги ёзув кўринсин
+      agentDataCache = null;
       renderAgentToday();
       renderAgentPivot();
     }catch(err){
@@ -5723,18 +5260,10 @@ ${XL_PAGE}
     }
   });
 
-  /* Агент кўрадиган ёзувлар = раҳбар базасидаги ЖОРИЙ ёзувлар
-     + агентнинг ҳали қабул қилинмаган (йўлдаги) ёзувлари.
-     Шунинг учун раҳбар ўчирган ёзув агентда ҳам дарҳол йўқолади,
-     ва агент раҳбар киритган ёзувларни ҳам кўради. */
   let agentDataCache = null;
 
-  /* ---- Агент: жонли янгиланиш (реал вақт) ----
-     Раҳбар ёзув сақлаган заҳоти ёки ўзининг юборган ёзуви қабул қилинганда,
-     агент экрани ЎЗИ, тугма босилмасдан янгиланади — худди сайтлардагидек. */
   let liveWatchTimer = null;
   function scheduleLiveRefresh(){
-    // Бир нечта ўзгариш кетма-кет келса — фақат бир марта янгилаймиз (1 сония)
     clearTimeout(liveWatchTimer);
     liveWatchTimer = setTimeout(async ()=>{
       agentDataCache = null;
@@ -5767,7 +5296,6 @@ ${XL_PAGE}
     return agentDataCache;
   }
 
-  // Раҳбар базаси ҳолати ҳақида агентга аниқ хабар
   function agentBaseNote(D){
     if(!D.hasBase || !D.shared.length){
       return `<div class="notice" style="margin-bottom:10px;">
@@ -5827,14 +5355,12 @@ ${XL_PAGE}
     renderAgentPivot();
   });
 
-  /* ---- Раҳбар белгилаган майдонларни қўллаш ---- */
   function applyAgentFields(){
     const cfg = (agentDataCache && agentDataCache.fields) ? agentDataCache.fields : null;
-    const on = k => !cfg || cfg[k] !== false;      // созлама йўқ бўлса — ҳаммаси кўринади
+    const on = k => !cfg || cfg[k] !== false;
     document.querySelectorAll("[data-agf]").forEach(el=>{
       el.style.display = on(el.dataset.agf) ? "" : "none";
     });
-    // "Қўшимча" бўлимида кўринадиган майдон қолмаса — тугмани ҳам яширамиз
     const more = ["yol","boshqa","km"].some(on);
     const mt = document.getElementById("agMoreToggle");
     const mw = document.getElementById("agMoreWrap");
@@ -5842,7 +5368,6 @@ ${XL_PAGE}
     if(mw && !more) mw.classList.add("hidden");
   }
 
-  /* ---- Агент: такрорий ёзув огоҳлантириши ---- */
   function renderAgentDupHint(){
     const el = document.getElementById("agDupHint");
     if(!el) return;
@@ -5858,7 +5383,6 @@ ${XL_PAGE}
     </div>`;
   }
 
-  /* ---- Агент: жонли соат ---- */
   function updateAgentClock(){
     const el = document.getElementById("agentClock");
     if(!el) return;
@@ -5868,7 +5392,6 @@ ${XL_PAGE}
     el.textContent = `${wd}, ${fmtDate(localDateStr(d))} · ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
   }
 
-  /* ---- Агент: ойлик жадвал ---- */
   let agPivotCache = null;
 
   async function buildAgentPivot(){
@@ -5878,8 +5401,7 @@ ${XL_PAGE}
     const [y,m]  = month.split("-").map(Number);
     const daysInMonth = new Date(y, m, 0).getDate();
 
-    // Умумий базадан — раҳбар киритганлари ҳам, агентнинг йўлдагилари ҳам
-    const D = await loadAgentData(false);   // кэшдан
+    const D = await loadAgentData(false);
     const list = D.all.filter(r=> r.sana && String(r.sana).slice(0,7) === month);
     const byCar = {};
     list.forEach(r=>{
@@ -6058,28 +5580,19 @@ ${XL_PAGE}
     document.getElementById(id)?.addEventListener("change", renderAgentPivot);
   });
 
-  // ---- Булут тугмалари ва ишга тушириш ----
   document.getElementById("cloudSyncNowBtn")?.addEventListener("click", ()=> CLOUD.uploadNow());
   document.getElementById("cloudRestoreBtn")?.addEventListener("click", ()=> CLOUD.restoreNow());
   if(currentAgent){
-    // Агент қурилмаси — фақат ЎҚИЙДИ. Умумий захирага ёзмайди,
-    // конфликт текширмайди, бошқа агентлар почтасини "қабул қилмайди".
     CLOUD.startReadOnly();
   }else{
     if(CLOUD.start()){
       startAgentInboxListener();
-      // Конфликтни текшириш: парол ўрнатилмаган ёки аллақачон ишончли
-      // (кейинги очишларда) бўлса — дарҳол; акс ҳолда логиндан кейин
-      // (tryUnlock ичида) чақирилади — логин экранини бузмаслик учун.
-      // "currentAgent"ни ижро пайтида ҳам текширамиз — агар шу 1.2 сония ичида
-      // фойдаланувчи "Мен агентман"га ўтиб улгурган бўлса, текширувни қиламиз.
       if(!getPwHash() || isTrusted()){
         setTimeout(()=>{ if(!currentAgent) CLOUD.runCheck(); }, 1200);
       }
     }
   }
 
-  // ---- Pull-to-refresh (телефонда рўйхатни пастга тортиб янгилаш) ----
   (function(){
     let startY = 0, pulling = false;
     const indicator = document.getElementById("pullRefreshIndicator");
@@ -6102,7 +5615,6 @@ ${XL_PAGE}
     }, {passive:true});
   })();
 
-  // ---- Рақамни ҳисоблаб кўрсатувчи анимация (counting-up) ----
   function animateNumberInto(el, endValue){
     const duration = 500;
     const startTime = performance.now();
@@ -6118,7 +5630,6 @@ ${XL_PAGE}
     requestAnimationFrame(step);
   }
 
-  // ---- init ----
   function initApp(){
     populateCarSelects();
     renderTodayStats();
@@ -6142,14 +5653,12 @@ ${XL_PAGE}
   }
   initApp();
 
-  // ---- register service worker (offline support / installability) ----
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("service-worker.js").catch(()=>{});
     });
   }
 
-  // ---- Дастур ёпилишидан олдин захира нусха ҳақида эслатма ----
   window.addEventListener("beforeunload", function(e){
     if(records.length > 0 || expenses.length > 0){
       e.preventDefault();
