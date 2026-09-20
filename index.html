@@ -1110,19 +1110,6 @@
       </p>
     </div>
 
-    <div class="card" id="systemCheckCard" style="border-left:4px solid var(--navy-2);">
-      <h2>🧪 Тизимни текшириш</h2>
-      <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
-        Дастурга ўзгартириш киритилгандан кейин, асосий функциялар (сақлаш, ҳисоб-китоблар, булут, маълумот
-        бутунлиги) тўғри ишлаётганини бир тугма билан текшириб кўринг. Бу текшириш ҳақиқий маълумотингизни
-        ЎЗГАРТИРМАЙДИ — фақат ўқийди ва синов рақамлари билан солиштиради.
-      </p>
-      <div class="actions-row" style="margin-top:4px;">
-        <button class="btn gold" id="runSystemCheckBtn">Текширишни бошлаш</button>
-      </div>
-      <div id="systemCheckResult"></div>
-    </div>
-
     <div class="card" id="dupCheckCard" style="border-left:4px solid #b3402a;">
       <h2>🔍 Такрорий ёзувларни текшириш</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
@@ -1156,20 +1143,6 @@
       <div id="agentFieldsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;"></div>
       <div class="actions-row">
         <button class="btn gold" id="saveAgentFieldsBtn">Майдонларни сақлаш</button>
-      </div>
-
-      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0;">
-      <h3 style="margin:0 0 4px;">🔊 Овозли эълон</h3>
-      <p style="font-size:13px;color:var(--muted);margin-top:0;">
-        Агент янги ёзув юборганда, шу қурилма (телефон/компьютер) овоз чиқариб хабар беради.
-        Бу созлама фақат ШУ қурилмага тегишли — булутга сақланмайди.
-      </p>
-      <div class="settings-row">
-        <input type="checkbox" id="voiceAnnounceToggle" style="width:auto;">
-        <label for="voiceAnnounceToggle" style="margin:0;font-weight:500;">Агентдан ёзув келганда овоз билан айтиб берсин</label>
-      </div>
-      <div class="actions-row">
-        <button class="btn outline" id="testVoiceBtn">🔊 Синаб кўриш</button>
       </div>
     </div>
 
@@ -5033,211 +5006,6 @@ ${XL_PAGE}
   }
   document.getElementById("runDupCheckBtn")?.addEventListener("click", renderDupCheck);
 
-  /* =========================================================
-     ТИЗИМНИ ТЕКШИРИШ: ҳақиқий маълумотга ТЕГМАСДАН, синов
-     рақамлари ва мавжуд функцияларни текшириб, "нима бузилган"ини
-     топишга ёрдам беради. Дастурга ўзгартириш киритилгандан кейин
-     ишлатиш учун мўлжалланган.
-     ========================================================= */
-  function sysCheckResult(name, pass, detail){
-    return { name, pass: !!pass, detail: detail || "" };
-  }
-
-  function runSystemCheck(){
-    const results = [];
-
-    // 1) localStorage ўқиш/ёзиш
-    try{
-      const testKey = "kh_selftest_v1";
-      const testVal = "test_" + Date.now();
-      localStorage.setItem(testKey, testVal);
-      const back = localStorage.getItem(testKey);
-      localStorage.removeItem(testKey);
-      results.push(sysCheckResult("Хотирага сақлаш/ўқиш (localStorage)", back === testVal));
-    }catch(e){
-      results.push(sysCheckResult("Хотирага сақлаш/ўқиш (localStorage)", false, e.message));
-    }
-
-    // 2) Асосий ҳисоб-китоб формуласи (соф тушум)
-    try{
-      const sample = {tushum:100000, yoqilgi:20000, yol:5000, boshqa:3000};
-      const sof = sample.tushum - sample.yoqilgi - sample.yol - sample.boshqa;
-      results.push(sysCheckResult("Соф тушум формуласи (100000−20000−5000−3000=72000)", sof === 72000, "Натижа: " + sof));
-    }catch(e){
-      results.push(sysCheckResult("Соф тушум формуласи", false, e.message));
-    }
-
-    // 3) Қарз ҳисоблаш формуласи
-    try{
-      const sof = 72000, topshirilgan = 50000, paid = 10000;
-      const qarz = sof - topshirilgan - paid;
-      results.push(sysCheckResult("Қарз формуласи (72000−50000−10000=12000)", qarz === 12000, "Натижа: " + qarz));
-    }catch(e){
-      results.push(sysCheckResult("Қарз формуласи", false, e.message));
-    }
-
-    // 4) Такрорий ёзувни аниқлаш (синов маълумоти билан, реал ёзувга тегмасдан)
-    try{
-      const testList = [
-        {id:"t1", sana:"2026-01-01", mashina:"Синов-мошина"},
-        {id:"t2", sana:"2026-01-01", mashina:"Синов-мошина"},
-        {id:"t3", sana:"2026-01-02", mashina:"Синов-мошина"}
-      ];
-      const dups = findDuplicates("2026-01-01", "Синов-мошина", "t1", testList);
-      results.push(sysCheckResult("Такрорий ёзувни аниқлаш", dups.length === 1 && dups[0].id === "t2", "Топилди: " + dups.length));
-    }catch(e){
-      results.push(sysCheckResult("Такрорий ёзувни аниқлаш", false, e.message));
-    }
-
-    // 5) Рақам форматлаш (fmt, fmtDate)
-    try{
-      const okFmt = fmt(1234567) === "1 234 567" || fmt(1234567).replace(/\s|\u00a0/g,"") === "1234567";
-      const okDate = fmtDate("2026-03-05") === "05.03.2026";
-      results.push(sysCheckResult("Рақам форматлаш (fmt)", okFmt, fmt(1234567)));
-      results.push(sysCheckResult("Сана форматлаш (fmtDate)", okDate, fmtDate("2026-03-05")));
-    }catch(e){
-      results.push(sysCheckResult("Форматлаш функциялари", false, e.message));
-    }
-
-    // 6) esc() — HTML'дан ҳимоя (XSS'га қарши)
-    try{
-      const dangerous = '<script>alert(1)</script>"';
-      const safe = esc(dangerous);
-      results.push(sysCheckResult("Матнни ҳимоялаш (esc)", !safe.includes("<script>"), ""));
-    }catch(e){
-      results.push(sysCheckResult("Матнни ҳимоялаш (esc)", false, e.message));
-    }
-
-    // 7) uid() — такрорланмас ID яратиш
-    try{
-      const a = uid(), b = uid();
-      results.push(sysCheckResult("Такрорланмас ID яратиш (uid)", !!a && !!b && a !== b));
-    }catch(e){
-      results.push(sysCheckResult("Такрорланмас ID яратиш (uid)", false, e.message));
-    }
-
-    // 8) Асосий маълумот тузилиши бутунлиги
-    try{
-      const okRecords = Array.isArray(records);
-      const okCars = Array.isArray(cars) && cars.length > 0 && cars.every(c=> c && typeof c.name === "string" && c.name.trim() !== "");
-      results.push(sysCheckResult("Ёзувлар рўйхати тўғри форматда", okRecords, records.length + " та ёзув"));
-      results.push(sysCheckResult("Мошиналар рўйхати тўғри форматда", okCars, cars.length + " та мошина"));
-    }catch(e){
-      results.push(sysCheckResult("Асосий маълумот бутунлиги", false, e.message));
-    }
-
-    // 9) Бошқа маълумот массивлари (харажат, нақд олиш, қарз тўлови, агентлар)
-    try{
-      results.push(sysCheckResult("Харажатлар рўйхати тўғри форматда", Array.isArray(expenses)));
-      results.push(sysCheckResult("Нақд олиш рўйхати тўғри форматда", Array.isArray(cashTaken)));
-      results.push(sysCheckResult("Қарз тўловлари рўйхати тўғри форматда", Array.isArray(debtPayments)));
-      results.push(sysCheckResult("Агентлар рўйхати тўғри форматда", Array.isArray(agents)));
-    }catch(e){
-      results.push(sysCheckResult("Қўшимча маълумот массивлари", false, e.message));
-    }
-
-    // 10) Ойлик жадвал (pivot) қуриш — реал маълумотни ЎҚИЙДИ, ЎЗГАРТИРМАЙДИ
-    try{
-      const P = buildPivot();
-      const ok = P && typeof P === "object" && Array.isArray(P.carNames) && Array.isArray(P.activeDays);
-      results.push(sysCheckResult("Ойлик жадвал (pivot) қуриш", ok));
-    }catch(e){
-      results.push(sysCheckResult("Ойлик жадвал (pivot) қуриш", false, e.message));
-    }
-
-    // 11) Excel файл (workbook XML) қуриш — реал маълумотни ЎҚИЙДИ, ЎЗГАРТИРМАЙДИ
-    try{
-      const xml = buildFullWorkbookXML();
-      const ok = typeof xml === "string" && xml.indexOf("<?xml") === 0 && xml.includes("Workbook");
-      results.push(sysCheckResult("Excel файл (умумий ҳисобот) қуриш", ok, Math.round(xml.length/1024) + " KB"));
-    }catch(e){
-      results.push(sysCheckResult("Excel файл (умумий ҳисобот) қуриш", false, e.message));
-    }
-
-    // 12) Асосий функцияларнинг мавжудлиги (бирортаси адашиб ўчирилмаганини текшириш)
-    const criticalFns = {
-      loadRecords, saveRecords, loadCars, saveCars, renderRecords, renderSummary,
-      renderYearly, renderDebts, renderExpenses, renderCashTaken, renderPivot,
-      buildPivot, downloadFullWorkbook, printMonthlyReport, fmt, fmtDate, esc, uid,
-      toast, requirePasswordThen, findDuplicates, saveExpenses, saveCashTaken
-    };
-    const missing = Object.keys(criticalFns).filter(k=> typeof criticalFns[k] !== "function");
-    results.push(sysCheckResult("Асосий функцияларнинг барчаси мавжуд", missing.length === 0,
-      missing.length ? "Йўқ: " + missing.join(", ") : (Object.keys(criticalFns).length + " та функция топилди")));
-
-    // 13) CLOUD модули мавжудлиги ва булага уланиш ҳолати
-    try{
-      const okModule = typeof CLOUD === "object" && typeof CLOUD.isReady === "function";
-      results.push(sysCheckResult("Булут (CLOUD) модули юкланган", okModule));
-      if(okModule){
-        results.push(sysCheckResult("Булутга уланиш ҳолати", CLOUD.isReady(), CLOUD.isReady() ? "Уланган" : "Уланмаган (интернет йўқми?)"));
-      }
-    }catch(e){
-      results.push(sysCheckResult("Булут (CLOUD) модули", false, e.message));
-    }
-
-    // 14) Асосий тугмалар/элементлар DOM'да мавжудлиги (HTML адашиб ўчирилмаганини текшириш)
-    try{
-      const ids = ["entryForm","recordsBody","summaryBody","yearlyBody","debtsBody",
-                   "expensesBody","carsList","auditBody","cloudStatus"];
-      const missingIds = ids.filter(id=> !document.getElementById(id));
-      results.push(sysCheckResult("Асосий экран элементлари мавжуд", missingIds.length === 0,
-        missingIds.length ? "Йўқ: " + missingIds.join(", ") : ids.length + " та элемент топилди"));
-    }catch(e){
-      results.push(sysCheckResult("Экран элементлари", false, e.message));
-    }
-
-    // 15) Харажат қолдиғи (expenseRemaining) формуласи
-    try{
-      const rem = expenseRemaining({summa:100000, qoplangan:30000});
-      results.push(sysCheckResult("Харажат қолдиғи формуласи (100000−30000=70000)", rem === 70000, "Натижа: " + rem));
-    }catch(e){
-      results.push(sysCheckResult("Харажат қолдиғи формуласи", false, e.message));
-    }
-
-    return results;
-  }
-
-  function renderSystemCheckResult(){
-    const el = document.getElementById("systemCheckResult");
-    if(!el) return;
-    el.innerHTML = `<p class="empty">Текширилмоқда...</p>`;
-    setTimeout(()=>{
-      let results;
-      try{ results = runSystemCheck(); }
-      catch(e){
-        el.innerHTML = `<div class="notice" style="background:#fdeced;border-color:#f0b8ae;color:#b3402a;margin-top:12px;">
-          ❌ Текширувнинг ўзида кутилмаган хато юз берди: ${esc(e.message)}
-        </div>`;
-        return;
-      }
-      const failed = results.filter(r=> !r.pass);
-      const passed = results.filter(r=> r.pass);
-      const summary = failed.length === 0
-        ? `<div class="notice" style="background:#eaf7ef;border-color:#9fd8b5;color:#1f7a4d;margin-top:12px;">
-             ✅ Барча ${results.length} та текширув муваффақиятли ўтди — асосий функциялар жойида.
-           </div>`
-        : `<div class="notice" style="background:#fdeced;border-color:#f0b8ae;color:#b3402a;margin-top:12px;">
-             ⚠️ ${failed.length} та муаммо топилди (${passed.length}/${results.length} та текширув ўтди).
-             Пастдаги қизил белгили қаторларга эътибор беринг.
-           </div>`;
-      const rows = results.map(r=>`
-        <tr style="${r.pass ? "" : "background:#fdeced;"}">
-          <td style="width:28px;text-align:center;">${r.pass ? "✅" : "❌"}</td>
-          <td>${esc(r.name)}</td>
-          <td style="color:var(--muted);font-size:12px;">${esc(r.detail)}</td>
-        </tr>`).join("");
-      el.innerHTML = summary + `
-        <div class="table-wrap" style="margin-top:10px;">
-          <table>
-            <thead><tr><th></th><th>Текширув</th><th>Тафсилот</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>`;
-    }, 50);
-  }
-  document.getElementById("runSystemCheckBtn")?.addEventListener("click", renderSystemCheckResult);
-
   const LS_AGENT_FIELDS = "kh_agent_fields_v1";
   const AGENT_FIELD_DEFS = [
     {key:"shofyor",      label:"Шофёр"},
@@ -5304,7 +5072,6 @@ ${XL_PAGE}
         logAudit("Агент ёзувлари қабул қилинди", `${fresh.length} та ёзув`);
         renderRecords(); renderEntryBanners(); renderSummary();
         toast(`Агентдан ${fresh.length} та янги ёзув келди ✓`);
-        announceNewAgentRecords(fresh);
       }
       const el = document.getElementById("cloudAgentCount");
       if(el) el.textContent = incoming.length + " та";
@@ -5864,80 +5631,6 @@ ${XL_PAGE}
       else el.textContent = fmt(endValue);
     }
     requestAnimationFrame(step);
-  }
-
-  /* =========================================================
-     ОВОЗЛИ ЭЪЛОН: агент янги ёзув юборганда шу қурилма (телефон/
-     компьютер) овоз чиқариб хабар беради. Фақат ШУ қурилмага
-     тегишли — SYNC_KEYS'да йўқ, булутга сақланмайди.
-     ========================================================= */
-  const LS_VOICE_ANNOUNCE = "kh_voice_announce_v1";
-  function loadVoiceAnnounce(){ return localStorage.getItem(LS_VOICE_ANNOUNCE) !== "0"; }
-  function saveVoiceAnnounceSetting(v){ localStorage.setItem(LS_VOICE_ANNOUNCE, v ? "1" : "0"); }
-
-  function playBeep(){
-    try{
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if(!Ctx) return;
-      const ctx = new Ctx();
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = "sine";
-      o.frequency.value = 880;
-      g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.03);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-      o.connect(g); g.connect(ctx.destination);
-      o.start();
-      o.stop(ctx.currentTime + 0.55);
-      setTimeout(()=>{ try{ ctx.close(); }catch(e){} }, 800);
-    }catch(e){ console.warn("Beep хатоси:", e); }
-  }
-
-  function speakText(text){
-    try{
-      if(!("speechSynthesis" in window)) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices();
-      let voice = voices.find(v=> v.lang && v.lang.toLowerCase().startsWith("uz"));
-      if(!voice) voice = voices.find(v=> v.lang && v.lang.toLowerCase().startsWith("ru"));
-      if(voice) u.voice = voice;
-      u.lang = voice ? voice.lang : "ru-RU";
-      u.rate = 0.95;
-      u.volume = 1;
-      window.speechSynthesis.speak(u);
-    }catch(e){ console.warn("Овоз чиқаришда хато:", e); }
-  }
-
-  function announceNewAgentRecords(fresh){
-    if(!loadVoiceAnnounce() || !fresh || !fresh.length) return;
-    const names = [...new Set(fresh.map(r=> r.agentName).filter(Boolean))];
-    let text;
-    if(names.length === 1){
-      text = fresh.length > 1
-        ? `Диққат. ${names[0]} дан ${fresh.length} та янги ёзув келди.`
-        : `Диққат. ${names[0]} дан янги ёзув келди.`;
-    } else if(names.length > 1){
-      text = `Диққат. Агентлардан ${fresh.length} та янги ёзув келди.`;
-    } else {
-      text = `Диққат. Агентдан янги ёзув келди.`;
-    }
-    playBeep();
-    setTimeout(()=> speakText(text), 400);
-  }
-
-  document.getElementById("voiceAnnounceToggle").checked = loadVoiceAnnounce();
-  document.getElementById("voiceAnnounceToggle").addEventListener("change", function(){
-    saveVoiceAnnounceSetting(this.checked);
-    toast(this.checked ? "Овозли эълон ёқилди ✓" : "Овозли эълон ўчирилди");
-  });
-  document.getElementById("testVoiceBtn").addEventListener("click", ()=>{
-    playBeep();
-    setTimeout(()=> speakText("Диққат. Бу синов хабари. Агентдан янги ёзув келганда шундай айтиб берилади."), 400);
-  });
-  if("speechSynthesis" in window){
-    window.speechSynthesis.onvoiceschanged = ()=>{ window.speechSynthesis.getVoices(); };
   }
 
   function initApp(){
