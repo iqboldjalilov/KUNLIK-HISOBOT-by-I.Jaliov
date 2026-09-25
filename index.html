@@ -1378,8 +1378,12 @@
     const LS_LASTSYNC = "kh_lastsync_v1";
     const LS_DEVICE   = "kh_deviceid_v1";
 
+    // Диққат: kh_pw_v1 (парол) АТАЙИН СИНХРОНЛАНМАЙДИ — у ҳар қурилмага хос,
+    // локал созлама. Акс ҲОЛДА, эски/фонда очиқ турган қурилма булутга ёзиб
+    // қолса, барча қурилмаларда парол ўзининг эскисига қайтиб кетиши мумкин
+    // (худди шу хато олдин юз берган эди).
     const SYNC_KEYS = [
-      "kh_records_v1","kh_cars_v1","kh_pw_v1","kh_audit_v1","kh_telegram_v1",
+      "kh_records_v1","kh_cars_v1","kh_audit_v1","kh_telegram_v1",
       "kh_lockmin_v1","kh_debtpay_v1","kh_autosend_v1","kh_lastautosent_v1",
       "kh_cashtaken_v1","kh_expenses_v1","kh_expense_payments_v1",
       "kh_theme_v1","kh_logo_v1","kh_brand_v1","kh_agents_v1","kh_agent_fields_v1"
@@ -5997,6 +6001,23 @@ ${XL_PAGE}
       }
     }
   }
+
+  // ЭСКИ/ФОНДАГИ ТАБ ХАВФСИЗЛИГИ: браузер узоқ вақт фонда турган табни
+  // "музлатиб" қўйиши мумкин — шунда жонли кузатув (onSnapshot) ишламай,
+  // маълумот эскириб қолади. Агар шундай таб қайта фаол бўлса, у ердаги
+  // эски маълумот агент ёзувини қабул қилиб, БУЛУТГА ЭСКИСИНИ ЁЗИБ ҚЎЙИШИ
+  // мумкин эди (шундан кейин БАРЧА қурилмаларда эски маълумот, жумладан
+  // эски ёзувлар қайтиб келарди). Шуни олдини олиш учун — таб қайта
+  // фаоллашганда, ҲАР САФАР мажбурий равишда булутдан текшириб оламиз.
+  let lastVisibilityCheck = 0;
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState !== "visible") return;
+    if(currentAgent || getPwHash() && !isTrusted()) return; // қулфланган/агент ҳолатда тегмаймиз
+    const now = Date.now();
+    if(now - lastVisibilityCheck < 5000) return; // ортиқча сўровдан сақланиш
+    lastVisibilityCheck = now;
+    CLOUD.runCheck();
+  });
 
   (function(){
     let startY = 0, pulling = false;
