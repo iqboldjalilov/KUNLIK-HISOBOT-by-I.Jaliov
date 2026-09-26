@@ -14,6 +14,7 @@
 <!-- Firebase — булутли захира ва агент режими учун -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --navy:#0f2440;
@@ -556,6 +557,9 @@
 
     <div class="card">
       <h2>Янги кунлик ёзув</h2>
+      <div class="actions-row" style="margin-top:-6px;margin-bottom:14px;">
+        <button type="button" class="btn outline small" id="duplicateLastBtn">↺ Кечагидек киритиш (охирги ёзувдан)</button>
+      </div>
       <form class="entry" id="entryForm">
         <div>
           <label>Сана</label>
@@ -654,12 +658,21 @@
         <div class="fld">
           <button class="btn outline" id="pivotPrintBtn">🖨 Чоп этиш</button>
         </div>
+        <div class="fld">
+          <button class="btn gold" id="pivotTgBtn">📤 Telegram'га расм юбориш</button>
+        </div>
       </div>
       <div class="table-wrap" id="pivotWrap" style="overflow-x:auto;"></div>
     </div>
 
     <div class="card">
       <h2>Барча ёзувлар</h2>
+      <div class="actions-row" style="margin-top:0;margin-bottom:12px;">
+        <button class="btn outline small" id="quickFilterToday">Бугун</button>
+        <button class="btn outline small" id="quickFilterYesterday">Кеча</button>
+        <button class="btn outline small" id="quickFilterWeek">Шу ҳафта</button>
+        <button class="btn outline small" id="quickFilterMonth">Шу ой</button>
+      </div>
       <div class="filters">
         <div class="fld">
           <label>Қидирув</label>
@@ -1305,6 +1318,21 @@
       <div class="settings-row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
         <input type="checkbox" id="monthlyAutoSendToggle" style="width:auto;">
         <label for="monthlyAutoSendToggle" style="margin:0;font-weight:500;">Ойлик отчетни автоматик Telegram'га юбориш (дастур ойнинг 1–3 кунлари очилганда, ўтган ой учун)</label>
+      </div>
+
+      <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+        <div class="settings-row">
+          <input type="checkbox" id="dailyAutoSendToggle" style="width:auto;">
+          <label for="dailyAutoSendToggle" style="margin:0;font-weight:500;">Кундалик якуний ҳисоботни ҳар куни автоматик Telegram'га юбориш</label>
+        </div>
+        <div class="settings-row" style="margin-top:8px;align-items:center;gap:10px;">
+          <label style="margin:0;">Юбориш вақти:</label>
+          <input type="time" id="dailySendTimeInput" style="width:120px;">
+          <button class="btn outline small" id="dailySendNowBtn" type="button">📤 Ҳозир юбориш</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin:6px 0 0;">
+          Дастур белгиланган вақтдан кейин очиқ турса (ёки шу вақтдан кейин очилса), ўша куннинг якуний ҳисоботини (умумий тушум, харажат, соф тушум, мошиналар бўйича) автоматик равишда матн хабар сифатида юборади — кунига биттагина марта.
+        </p>
       </div>
     </div>
 
@@ -2063,6 +2091,23 @@
   const form = document.getElementById("entryForm");
   document.getElementById("f_sana").valueAsDate = new Date();
 
+  document.getElementById("duplicateLastBtn").addEventListener("click", ()=>{
+    if(!records.length){ toast("Ҳали ёзув йўқ"); return; }
+    const last = records.slice().sort((a,b)=> String(b.sana).localeCompare(String(a.sana)))[0];
+    document.getElementById("f_mashina").value = last.mashina || "";
+    document.getElementById("f_shofyor").value = last.shofyor || "";
+    document.getElementById("f_yonalish").value = last.yonalish || "";
+    document.getElementById("f_sana").valueAsDate = new Date();
+    document.getElementById("f_tushum").value = "";
+    document.getElementById("f_yoqilgi").value = 0;
+    document.getElementById("f_topshirilgan").value = "";
+    document.getElementById("livePreview").innerHTML = "";
+    document.getElementById("qarzPreview").innerHTML = "";
+    document.getElementById("kmPreview").innerHTML = "";
+    toast("Мошина/шофёр/йўналиш тўлдирилди — суммани киритинг ✓");
+    document.getElementById("f_tushum").focus();
+  });
+
   function computePreview(){
     const tushum = Number(document.getElementById("f_tushum").value||0);
     const yoqilgi = Number(document.getElementById("f_yoqilgi").value||0);
@@ -2373,6 +2418,35 @@
     document.getElementById("filterTo").value="";
     document.getElementById("searchRecords").value="";
     renderRecords();
+  });
+
+  function setDateFilterRange(from, to){
+    document.getElementById("filterFrom").value = from;
+    document.getElementById("filterTo").value = to;
+    renderRecords();
+  }
+  document.getElementById("quickFilterToday").addEventListener("click", ()=>{
+    const t = localDateStr();
+    setDateFilterRange(t, t);
+  });
+  document.getElementById("quickFilterYesterday").addEventListener("click", ()=>{
+    const d = new Date();
+    d.setDate(d.getDate()-1);
+    const y = localDateStr(d);
+    setDateFilterRange(y, y);
+  });
+  document.getElementById("quickFilterWeek").addEventListener("click", ()=>{
+    const now = new Date();
+    const day = now.getDay(); // 0=якшанба, 1=душанба...
+    const diffToMonday = (day === 0 ? 6 : day - 1);
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - diffToMonday);
+    setDateFilterRange(localDateStr(monday), localDateStr(now));
+  });
+  document.getElementById("quickFilterMonth").addEventListener("click", ()=>{
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth(), 1);
+    setDateFilterRange(localDateStr(first), localDateStr(now));
   });
   function printTable(title, tableSelector){
     const table = document.querySelector(tableSelector);
@@ -3108,6 +3182,91 @@ ${XL_PAGE}
     saveAutoSend(this.checked);
     toast(this.checked ? "Автоматик юбориш ёқилди ✓" : "Автоматик юбориш ўчирилди");
   });
+
+  // ---- Кундалик якуний ҳисобот (Telegram) ----
+  const LS_DAILY_AUTOSEND = "kh_daily_autosend_v1";
+  const LS_DAILY_SEND_TIME = "kh_daily_send_time_v1";
+  const LS_LAST_DAILY_SENT = "kh_last_daily_sent_v1";
+  function loadDailyAutoSend(){ return localStorage.getItem(LS_DAILY_AUTOSEND) === "1"; }
+  function saveDailyAutoSend(v){ localStorage.setItem(LS_DAILY_AUTOSEND, v ? "1" : "0"); }
+  function loadDailySendTime(){ return localStorage.getItem(LS_DAILY_SEND_TIME) || "22:00"; }
+  function saveDailySendTime(v){ localStorage.setItem(LS_DAILY_SEND_TIME, v); }
+
+  document.getElementById("dailyAutoSendToggle").checked = loadDailyAutoSend();
+  document.getElementById("dailySendTimeInput").value = loadDailySendTime();
+  document.getElementById("dailyAutoSendToggle").addEventListener("change", function(){
+    saveDailyAutoSend(this.checked);
+    toast(this.checked ? "Кундалик автомат юбориш ёқилди ✓" : "Кундалик автомат юбориш ўчирилди");
+  });
+  document.getElementById("dailySendTimeInput").addEventListener("change", function(){
+    saveDailySendTime(this.value || "22:00");
+    toast("Вақт сақланди ✓");
+  });
+
+  async function sendDailyReportToTelegram(dateStr, silent){
+    const settings = loadTgSettings();
+    if(!settings.token || !settings.chatId){
+      if(!silent) alert("Аввал Созламалар → Telegram бўлимида Bot Token ва Chat ID'ни киритиб, «Сақлаш» тугмасини босинг.");
+      return false;
+    }
+    const list = records.filter(r=> r.sana === dateStr);
+    const tushum = list.reduce((s,r)=> s + r.tushum, 0);
+    const xarajat = list.reduce((s,r)=> s + r.yoqilgi + r.yol + r.boshqa, 0);
+    const sof = tushum - xarajat;
+    const perCar = {};
+    list.forEach(r=>{
+      const xr = r.yoqilgi + r.yol + r.boshqa;
+      if(!perCar[r.mashina]) perCar[r.mashina] = {sof:0};
+      perCar[r.mashina].sof += (r.tushum - xr);
+    });
+    const carLines = Object.keys(perCar).map(name=> `  • ${name}: ${fmt(perCar[name].sof)} сўм`).join("\n");
+    const text = `📅 Кунлик якуний ҳисобот — ${fmtDate(dateStr)}\n\n` +
+      `Умумий тушум: ${fmt(tushum)} сўм\n` +
+      `Жами харажат: ${fmt(xarajat)} сўм\n` +
+      `Соф тушум: ${fmt(sof)} сўм\n` +
+      `Сафарлар сони: ${list.length}` +
+      (carLines ? `\n\nМошиналар бўйича (соф тушум):\n${carLines}` : "");
+    try{
+      if(!silent) toast("Юборилмоқда...");
+      const resp = await fetch(`https://api.telegram.org/bot${settings.token}/sendMessage`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({chat_id: settings.chatId, text})
+      });
+      const result = await resp.json();
+      if(result.ok){
+        if(!silent) toast("Кундалик ҳисобот Telegram'га юборилди ✓");
+        logAudit("Кундалик ҳисобот Telegram'га юборилди", dateStr);
+        return true;
+      } else {
+        if(!silent) alert("Хатолик: " + (result.description || "Telegram'га юбориб бўлмади. Token/Chat ID'ни текширинг."));
+        return false;
+      }
+    } catch(err){
+      if(!silent) alert("Хатолик: интернет уланишини текширинг. (" + err.message + ")");
+      return false;
+    }
+  }
+  document.getElementById("dailySendNowBtn").addEventListener("click", ()=>{
+    sendDailyReportToTelegram(localDateStr(), false);
+  });
+
+  function checkAutoSendDaily(){
+    if(!loadDailyAutoSend()) return;
+    const today = localDateStr();
+    if(localStorage.getItem(LS_LAST_DAILY_SENT) === today) return;
+    const parts = loadDailySendTime().split(":");
+    const targetMinutes = (Number(parts[0])||0)*60 + (Number(parts[1])||0);
+    const now = new Date();
+    const nowMinutes = now.getHours()*60 + now.getMinutes();
+    if(nowMinutes < targetMinutes) return;
+    sendDailyReportToTelegram(today, true).then(ok=>{
+      if(ok) localStorage.setItem(LS_LAST_DAILY_SENT, today);
+    });
+  }
+  setTimeout(checkAutoSendDaily, 3000);
+  setInterval(checkAutoSendDaily, 5*60*1000);
+
   function prevMonthStr(){
     const d = new Date();
     d.setDate(1);
@@ -3293,6 +3452,17 @@ ${XL_PAGE}
       return ds <= taken.cutoffDate;
     };
 
+    // Шу ой учун "топширилган" суммадан қанчаси олинган (яшил) ва қанчаси
+    // ҳали олинмаган (қолдиқ) эканини жамлаймиз — метр (tushum/sof/topshirilgan)
+    // танловидан қатъи назар, ҳамиша ҳақиқий топширилган сумма асосида.
+    let monthOlingan = 0, monthQolmagan = 0;
+    Object.keys(taken.dayTotals).forEach(ds=>{
+      if(ds.slice(0,7) !== monthPrefix) return;
+      const v = taken.dayTotals[ds];
+      if(taken.cutoffDate && ds <= taken.cutoffDate) monthOlingan += v;
+      else monthQolmagan += v;
+    });
+
     let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
     days.forEach(d=> head += `<th class="pv-num${isTaken(d)?' pv-taken':''}">${d}</th>`);
     head += `<th class="pv-total">Жами</th></tr>`;
@@ -3335,6 +3505,11 @@ ${XL_PAGE}
           — топширилган сумма нақд пул билан қопланган кунлар
           ${taken.cutoffDate ? `(${fmtDate(taken.cutoffDate)}гача)` : ""}
         </span>
+      </div>
+      <div class="grid-cards" style="margin-bottom:14px;">
+        <div class="stat"><div class="label">Шу ой — жами топширилган<span class="help-ic" data-tip="Шу ойдаги барча кунлар учун 'Топширилган сумма' майдонларининг йиғиндиси.">?</span></div><div class="value">${fmt(monthOlingan+monthQolmagan)}</div></div>
+        <div class="stat pos"><div class="label">Шундан олинган (яшил кунлар)<span class="help-ic" data-tip="Шу ойдаги, юқорида яшил рангда белгиланган кунлар учун топширилган суммаларнинг йиғиндиси — булар нақд пул билан аллақачон қопланган.">?</span></div><div class="value">${fmt(monthOlingan)}</div></div>
+        <div class="stat"><div class="label">Шу ой — қолдиқ (олинмаган)<span class="help-ic" data-tip="Шу ойдаги, яшил белгиланмаган кунлар учун топширилган суммаларнинг йиғиндиси — булар ҳали нақд пул билан қопланмаган.">?</span></div><div class="value neg">${fmt(monthQolmagan)}</div></div>
       </div>
       <table class="pivot-table">
         <thead>${head}</thead>
@@ -3449,6 +3624,85 @@ ${XL_PAGE}
   });
   document.getElementById("pivotExcelBtn").addEventListener("click", exportPivotExcel);
   document.getElementById("pivotPrintBtn").addEventListener("click", printPivot);
+
+  async function sendPivotImageToTelegram(){
+    const settings = loadTgSettings();
+    if(!settings.token || !settings.chatId){
+      alert("Аввал Созламалар → Telegram бўлимида Bot Token ва Chat ID'ни киритиб, «Сақлаш» тугмасини босинг.");
+      return;
+    }
+    const el = document.getElementById("pivotWrap");
+    if(!el || !el.innerHTML.trim() || el.innerHTML.includes("empty")){
+      alert("Аввал жадвал шаклланиши керак — ойни танланг.");
+      return;
+    }
+    if(typeof html2canvas === "undefined"){
+      alert("Расм яратиш кутубхонаси юкланмади. Интернетни текшириб, саҳифани янгиланг.");
+      return;
+    }
+    const btn = document.getElementById("pivotTgBtn");
+    btn.disabled = true;
+    toast("Расм тайёрланмоқда...");
+    // html2canvas "overflow:auto" (сурилувчи) қутиларнинг фақат кўринадиган
+    // қисминигина олиши мумкин — шунинг учун вақтинчалик сурилишни ўчириб,
+    // жадвални ТЎЛИҚ КЕНГЛИКДА очиб, шундан кейин расмга оламиз.
+    const prevOverflow = el.style.overflow;
+    const prevOverflowX = el.style.overflowX;
+    const prevWidth = el.style.width;
+    el.style.overflow = "visible";
+    el.style.overflowX = "visible";
+    el.style.width = "max-content";
+    try{
+      const fullWidth = Math.max(el.scrollWidth, el.offsetWidth, 1300);
+      const fullHeight = Math.max(el.scrollHeight, el.offsetHeight);
+      const canvas = await html2canvas(el, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        windowWidth: fullWidth,
+        windowHeight: fullHeight,
+        width: fullWidth,
+        height: fullHeight
+      });
+      // Расм олиб бўлингач, кўринишни дарҳол асл ҳолига қайтарамиз —
+      // қолган жараён (Telegram'га юбориш) фонда давом этаверади.
+      el.style.overflow = prevOverflow;
+      el.style.overflowX = prevOverflowX;
+      el.style.width = prevWidth;
+      canvas.toBlob(async (blob)=>{
+        try{
+          if(!blob){ alert("Расм яратиб бўлмади."); return; }
+          const month = document.getElementById("pivotMonth").value || localDateStr().slice(0,7);
+          const fd = new FormData();
+          fd.append("chat_id", settings.chatId);
+          fd.append("caption", "📅 Ойлик жадвал — " + month);
+          fd.append("photo", blob, "oylik_jadval_"+month+".png");
+          toast("Юборилмоқда...");
+          const resp = await fetch(`https://api.telegram.org/bot${settings.token}/sendPhoto`, {
+            method: "POST", body: fd
+          });
+          const result = await resp.json();
+          if(result.ok){
+            toast("Расм Telegram'га юборилди ✓");
+            logAudit("Ойлик жадвал расми Telegram'га юборилди", month);
+          } else {
+            alert("Хатолик: " + (result.description || "Telegram'га юбориб бўлмади. Token/Chat ID'ни текширинг."));
+          }
+        }catch(err){
+          alert("Хатолик: интернет уланишини текширинг. (" + err.message + ")");
+        }finally{
+          btn.disabled = false;
+        }
+      }, "image/png");
+    }catch(err){
+      console.error(err);
+      alert("Расм яратишда хатолик юз берди: " + err.message);
+      el.style.overflow = prevOverflow;
+      el.style.overflowX = prevOverflowX;
+      el.style.width = prevWidth;
+      btn.disabled = false;
+    }
+  }
+  document.getElementById("pivotTgBtn").addEventListener("click", sendPivotImageToTelegram);
   function renderYearly(){
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
     const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
