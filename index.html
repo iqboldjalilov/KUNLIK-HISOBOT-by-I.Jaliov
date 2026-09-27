@@ -1792,7 +1792,7 @@
         lines.push("Ҳозирги фойдаланувчи (киришдан кейин): " + (after ? after.uid : "null"));
       }catch(e){ lines.push("currentUser (кейин) ўқишда хато: " + e.message); }
       try{
-        await db.collection(COLL_META).doc("__authtest__").get();
+        await db.collection(COLL_META).doc("diagnostic_check").get();
         lines.push("Firestore'дан ЎҚИШ: МУВАФФАҚИЯТЛИ");
       }catch(e){
         lines.push("Firestore'дан ЎҚИШ ХАТОСИ: code=" + e.code + " | message=" + e.message);
