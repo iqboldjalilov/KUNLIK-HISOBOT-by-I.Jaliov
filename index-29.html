@@ -1180,6 +1180,7 @@
       <div class="actions-row">
         <button class="btn gold" id="cloudSyncNowBtn">Ҳозир булутга сақлаш</button>
         <button class="btn outline" id="cloudRestoreBtn">Булутдан тиклаш</button>
+        <button class="btn outline" id="cloudAuthCheckBtn">🔍 Autentifikatsiya ҳолати</button>
       </div>
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
         «Булутдан тиклаш» шу қурилмадаги жорий маълумотни булутдаги нусха билан алмаштиради. Одатда бунга ҳожат
@@ -1772,8 +1773,35 @@
       }catch(e){ setStatus("Уланмади (офлайн?)", "var(--bad)"); }
     }
 
+    async function debugAuthStatus(){
+      const lines = [];
+      lines.push("firebase юкланганми: " + (typeof firebase !== "undefined"));
+      lines.push("firebase.auth мавжудми: " + (typeof firebase !== "undefined" && !!firebase.auth));
+      try{
+        const before = firebase.auth().currentUser;
+        lines.push("Ҳозирги фойдаланувчи (кириш олдидан): " + (before ? before.uid : "null"));
+      }catch(e){ lines.push("currentUser ўқишда хато: " + e.message); }
+      try{
+        const cred = await firebase.auth().signInAnonymously();
+        lines.push("signInAnonymously натижаси: МУВАФФАҚИЯТЛИ, uid=" + (cred.user ? cred.user.uid : "?"));
+      }catch(e){
+        lines.push("signInAnonymously ХАТОСИ: code=" + e.code + " | message=" + e.message);
+      }
+      try{
+        const after = firebase.auth().currentUser;
+        lines.push("Ҳозирги фойдаланувчи (киришдан кейин): " + (after ? after.uid : "null"));
+      }catch(e){ lines.push("currentUser (кейин) ўқишда хато: " + e.message); }
+      try{
+        await db.collection(COLL_META).doc("__authtest__").get();
+        lines.push("Firestore'дан ЎҚИШ: МУВАФФАҚИЯТЛИ");
+      }catch(e){
+        lines.push("Firestore'дан ЎҚИШ ХАТОСИ: code=" + e.code + " | message=" + e.message);
+      }
+      alert(lines.join("\n"));
+    }
+
     return {
-      isReady, getDb,
+      isReady, getDb, debugAuthStatus,
       setAgentMode(v){ agentMode = !!v; },
       startReadOnly(){
         agentMode = true;
@@ -6339,6 +6367,7 @@ ${XL_PAGE}
 
   document.getElementById("cloudSyncNowBtn")?.addEventListener("click", ()=> CLOUD.uploadNow());
   document.getElementById("cloudRestoreBtn")?.addEventListener("click", ()=> CLOUD.restoreNow());
+  document.getElementById("cloudAuthCheckBtn")?.addEventListener("click", ()=> CLOUD.debugAuthStatus());
   if(currentAgent){
     CLOUD.startReadOnly();
   }else{
