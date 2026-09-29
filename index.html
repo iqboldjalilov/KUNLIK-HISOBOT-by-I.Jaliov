@@ -14,7 +14,6 @@
 <!-- Firebase — булутли захира ва агент режими учун -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
@@ -103,13 +102,6 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);transition:box-shadow .2s;}
   .card h2{margin:0 0 16px;font-size:16px;color:var(--navy);border-bottom:2px solid var(--line);padding-bottom:10px;}
   [data-theme="dark"] .card h2{color:#f3d98a;}
-  .card.collapsible > h2{cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:8px;}
-  .card.collapsible > h2:hover{color:var(--gold);}
-  .card.collapsible .chev2{font-size:13px;color:var(--muted);transition:transform .15s;flex:none;}
-  .card.collapsible.open > h2 .chev2{transform:rotate(90deg);}
-  .card.collapsible > .collapse-body{display:none;}
-  .card.collapsible.open > .collapse-body{display:block;animation:fadeIn .2s ease;}
-  .section-divider{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:26px 0 12px;padding-top:10px;border-top:1px dashed var(--line);}
   [data-theme="dark"] .more-toggle{color:#f3d98a;}
 
   form.entry{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
@@ -661,15 +653,13 @@
           </select>
         </div>
         <div class="fld">
-          <label>Улашиш</label>
-          <select id="pivotShareFormat">
-            <option value="excel">📊 Excel</option>
-            <option value="print">🖨 Чоп этиш</option>
-            <option value="telegram">📤 Telegram'га расм</option>
-          </select>
+          <button class="btn outline" id="pivotExcelBtn">📊 Excelга чиқариш</button>
         </div>
         <div class="fld">
-          <button class="btn gold" id="pivotShareBtn">Бажариш</button>
+          <button class="btn outline" id="pivotPrintBtn">🖨 Чоп этиш</button>
+        </div>
+        <div class="fld">
+          <button class="btn gold" id="pivotTgBtn">📤 Telegram'га расм юбориш</button>
         </div>
       </div>
       <div class="table-wrap" id="pivotWrap" style="overflow-x:auto;"></div>
@@ -739,14 +729,10 @@
           <input type="month" id="summaryMonth">
         </div>
         <div class="fld">
-          <label>Формат</label>
-          <select id="monthlyFormatSelect">
-            <option value="pdf">🖨 PDF</option>
-            <option value="excel">📊 Excel</option>
-          </select>
+          <button class="btn outline" id="monthlyPdfBtn">🖨 Ойлик отчет — PDF</button>
         </div>
         <div class="fld">
-          <button class="btn gold" id="monthlyDownloadBtn">⬇ Юклаб олиш</button>
+          <button class="btn gold" id="monthlyExcelBtn">📊 Ойлик отчет — Excel</button>
         </div>
         <div class="fld">
           <button class="btn outline" id="monthlyTgBtn">📤 Telegram'га юбориш</button>
@@ -802,14 +788,10 @@
           <input type="number" id="yearlyYear" min="2020" max="2100" style="width:110px;">
         </div>
         <div class="fld">
-          <label>Формат</label>
-          <select id="yearlyFormatSelect">
-            <option value="pdf">🖨 PDF</option>
-            <option value="excel">📊 Excel</option>
-          </select>
+          <button class="btn outline" id="yearlyPdfBtn">🖨 Йиллик отчет — PDF</button>
         </div>
         <div class="fld">
-          <button class="btn gold" id="yearlyDownloadBtn">⬇ Юклаб олиш</button>
+          <button class="btn gold" id="yearlyExcelBtn">📊 Йиллик отчет — Excel</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -885,17 +867,13 @@
     <div class="card" style="border-left:4px solid var(--gold);">
       <h2>Мен томонимдан олинган нақд пул</h2>
       <p style="margin:0 0 12px;font-size:13px;color:var(--muted);">
-        Шофёрлар топширган умумий суммадан шахсан мен қанча нақд пул олганим, ва ундан нималарга сарфлаганим —
-        ҳаммаси шу ерда, бир занжир кўринишида: <b>Топширилган → Олдим → Сарфладим → Қўлимда қолгани</b>.
+        Шофёрлар топширган умумий суммадан шахсан мен қанча нақд пул олганимни қайд этиш учун. Ҳар бир ёзувда қайси мошинадан олинганини кўрсатиш мумкин (кўрсатилмаса — умумий ҳисобланади). Қуйида мошиналар бўйича тақсимот кўринади: Қолдиқ = Ўша мошинанинг жами топширилган суммаси − Ўша мошинадан олинган нақд пул.
       </p>
       <div class="grid-cards" style="margin-bottom:0;">
         <div class="stat"><div class="label">Жами топширилган сумма<span class="help-ic" data-tip="Барча кунлик ёзувлардаги 'Топширилган сумма' майдонларининг йиғиндиси — шофёрлар сиздан жами қанча пул топширгани.">?</span></div><div class="value" id="ct_topshirilgan">0 сўм</div></div>
         <div class="stat"><div class="label">Мен олган нақд пул<span class="help-ic" data-tip="Шу бўлимда қайд этилган барча 'нақд олиш' ёзувларининг йиғиндиси.">?</span></div><div class="value" id="ct_olingan">0 сўм</div></div>
-        <div class="stat" id="ct_qoldiq_box"><div class="label">Ҳали олинмаган<span class="help-ic" data-tip="Ҳали олинмаган = Жами топширилган сумма − Мен олган нақд пул. Бу — топширилган пулдан ҳали сиз олмаган, шофёрларда/касса да қолиши керак бўлган сумма.">?</span></div><div class="value" id="ct_qoldiq">0 сўм</div></div>
-        <div class="stat"><div class="label">Шундан сарфладим<span class="help-ic" data-tip="Олган нақд пулингиздан лизинг тўлови, ҳамкорга берилган пул ва бошқа мақсадларга сарфланган умумий сумма (қуйида қайд этилади).">?</span></div><div class="value" id="cs_sarflangan">0 сўм</div></div>
-        <div class="stat" id="cs_qoldiq_box"><div class="label">Ҳозир қўлимда<span class="help-ic" data-tip="Ҳозир қўлимда = Мен олган нақд пул − Сарфладим. Бу — олинган пулдан ҳали сарфланмаган, қўлда қолиши керак бўлган сумма.">?</span></div><div class="value" id="cs_qoldiq">0 сўм</div></div>
+        <div class="stat" id="ct_qoldiq_box"><div class="label">Қолдиқ<span class="help-ic" data-tip="Қолдиқ = Жами топширилган сумма − Мен олган нақд пул. Бу — топширилган пулдан ҳали сиз олмаган, қўлда қолиши керак бўлган сумма.">?</span></div><div class="value" id="ct_qoldiq">0 сўм</div></div>
       </div>
-      <span id="cs_olingan" style="display:none;"></span>
       <div class="table-wrap" style="margin-top:16px;">
         <table>
           <thead>
@@ -953,8 +931,14 @@
       <h3 style="margin:0 0 4px;">💸 Олинган нақд пулни сарфлаш</h3>
       <p style="margin:0 0 12px;font-size:13px;color:var(--muted);">
         Юқорида ўзингиз олган нақд пулдан нималарга сарфлаганингизни (лизинг тўлови, ҳамкорга берилган пул ва бошқа тўловлар) қайд этинг —
-        юқоридаги "Ҳозир қўлимда" сатри автоматик ҳисобланади. <b>Бу бўлим бошқа ҳеч қандай кўрсаткичга (қарз, ҳисобот ва ҳ.к.) таъсир қилмайди.</b>
+        ҳозир қўлингизда қанча қолгани автоматик ҳисобланади. <b>Бу бўлим бошқа ҳеч қандай кўрсаткичга (қарз, ҳисобот ва ҳ.к.) таъсир қилмайди</b> —
+        фақат юқоридаги "Мен олган нақд пул" суммасидан ўқийди.
       </p>
+      <div class="grid-cards" style="margin-bottom:0;">
+        <div class="stat"><div class="label">Жами олинган нақд пул<span class="help-ic" data-tip="Юқоридаги 'Мен олган нақд пул' билан бир хил сон — фақат шу ерга кўчирилган, қайта ҳисобланмайди.">?</span></div><div class="value" id="cs_olingan">0 сўм</div></div>
+        <div class="stat"><div class="label">Жами сарфланган<span class="help-ic" data-tip="Пастда қайд этилган барча сарф ёзувларининг йиғиндиси.">?</span></div><div class="value" id="cs_sarflangan">0 сўм</div></div>
+        <div class="stat" id="cs_qoldiq_box"><div class="label">Ҳозир қўлимда<span class="help-ic" data-tip="Ҳозир қўлимда = Жами олинган нақд пул − Жами сарфланган. Бу — олинган пулдан ҳали сарфланмаган, қўлда қолиши керак бўлган сумма.">?</span></div><div class="value" id="cs_qoldiq">0 сўм</div></div>
+      </div>
       <form class="entry" id="cashSpendForm" style="margin-top:16px;">
         <div>
           <label>Сарфланган сана</label>
@@ -1180,7 +1164,6 @@
       <div class="actions-row">
         <button class="btn gold" id="cloudSyncNowBtn">Ҳозир булутга сақлаш</button>
         <button class="btn outline" id="cloudRestoreBtn">Булутдан тиклаш</button>
-        <button class="btn outline" id="cloudAuthCheckBtn">🔍 Autentifikatsiya ҳолати</button>
       </div>
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
         «Булутдан тиклаш» шу қурилмадаги жорий маълумотни булутдаги нусха билан алмаштиради. Одатда бунга ҳожат
@@ -1188,11 +1171,8 @@
       </p>
     </div>
 
-    <div class="section-divider">🔧 Кенгайтирилган созламалар — камдан-кам керак бўлади, номига босиб очинг</div>
-
-    <div class="card collapsible" id="systemCheckCard" style="border-left:4px solid var(--navy-2);">
-      <h2>🧪 Тизимни текшириш <span class="chev2">▸</span></h2>
-      <div class="collapse-body">
+    <div class="card" id="systemCheckCard" style="border-left:4px solid var(--navy-2);">
+      <h2>🧪 Тизимни текшириш</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
         Дастурга ўзгартириш киритилгандан кейин, асосий функциялар (сақлаш, ҳисоб-китоблар, булут, маълумот
         бутунлиги) тўғри ишлаётганини бир тугма билан текшириб кўринг. Бу текшириш ҳақиқий маълумотингизни
@@ -1202,12 +1182,10 @@
         <button class="btn gold" id="runSystemCheckBtn">Текширишни бошлаш</button>
       </div>
       <div id="systemCheckResult"></div>
-      </div>
     </div>
 
-    <div class="card collapsible" id="dupCheckCard" style="border-left:4px solid #b3402a;">
-      <h2>🔍 Такрорий ёзувларни текшириш <span class="chev2">▸</span></h2>
-      <div class="collapse-body">
+    <div class="card" id="dupCheckCard" style="border-left:4px solid #b3402a;">
+      <h2>🔍 Такрорий ёзувларни текшириш</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
         Бир кун + бир мошина учун бир нечта ёзув борми — шуни топади.
         Бу сиз ва агент бир хил кунни киритиб қўйганда юз беради ва тушум икки марта ҳисобланиб кетади.
@@ -1216,12 +1194,10 @@
         <button class="btn gold" id="runDupCheckBtn">Текширишни бошлаш</button>
       </div>
       <div id="dupCheckResult"></div>
-      </div>
     </div>
 
-    <div class="card collapsible">
-      <h2>👤 Агентлар <span class="chev2">▸</span></h2>
-      <div class="collapse-body">
+    <div class="card">
+      <h2>👤 Агентлар</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
         Агент — сиз номингиздан кунлик тушум ёзувларини киритадиган ходим. У фақат ёзув киритиш ойнасини кўради,
         молиявий хулосалар, қарзлар ва созламаларга кира олмайди.
@@ -1256,12 +1232,10 @@
       <div class="actions-row">
         <button class="btn outline" id="testVoiceBtn">🔊 Синаб кўриш</button>
       </div>
-      </div>
     </div>
 
-    <div class="card collapsible">
-      <h2>Бренд ва кўриниш <span class="chev2">▸</span></h2>
-      <div class="collapse-body">
+    <div class="card">
+      <h2>Бренд ва кўриниш</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">Логотипни (юқорида, "К" белгиси ўрнига) ёки дастур номини ўзингизникига мослаштиринг. Логотипни ўзгартириш учун header'даги белгини босишингиз ҳам мумкин.</p>
       <div class="actions-row" style="margin-top:4px;">
         <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
@@ -1274,7 +1248,6 @@
       </div>
       <div class="actions-row">
         <button class="btn gold" id="saveBrandBtn">Сақлаш</button>
-      </div>
       </div>
     </div>
 
@@ -1363,9 +1336,8 @@
       </div>
     </div>
 
-    <div class="card collapsible">
-      <h2>Маълумотлар <span class="chev2">▸</span></h2>
-      <div class="collapse-body">
+    <div class="card">
+      <h2>Маълумотлар</h2>
       <p style="font-size:13px;color:var(--muted);">Асосий маълумот булутда сақланади ва ундан ўқилади; қурилма хотираси интернетсиз ишлаш учун кэш сифатида хизмат қилади. Қўшимча хавфсизлик учун вақти-вақти билан "Захира нусха олиш" тугмасидан ҳам фойдаланинг.</p>
       <div class="actions-row">
         <button class="btn outline" id="backupBtn">Захира нусха олиш (.json)</button>
@@ -1373,19 +1345,16 @@
         <input type="file" id="restoreFile" accept=".json" style="display:none;">
         <button class="btn danger" id="wipeBtn" style="border:1px solid var(--bad);">Барча маълумотни ўчириш</button>
       </div>
-      </div>
     </div>
 
-    <div class="card collapsible">
-      <h2>Ўзгаришлар тарихи (audit log) <span class="chev2">▸</span></h2>
-      <div class="collapse-body">
+    <div class="card">
+      <h2>Ўзгаришлар тарихи (audit log)</h2>
       <p style="font-size:13px;color:var(--muted);margin-top:-8px;">Ёзувлар қачон қўшилгани, таҳрирлангани ёки ўчирилгани — сўнгги 300 та амал.</p>
       <div class="table-wrap" style="max-height:260px;">
         <table>
           <thead><tr><th>Вақт</th><th>Амал</th><th>Тафсилот</th></tr></thead>
           <tbody id="auditBody"></tbody>
         </table>
-      </div>
       </div>
     </div>
   </section>
@@ -1449,8 +1418,8 @@
     ];
 
     let db = null, ready = false, syncTimer = null, syncing = false, inboxUnsub = null;
+    let pendingUpload = false, retryTimer = null, retryDelay = 0;
     let agentMode = false;   // ТРУЕ бўлса — бу қурилма фақат ЎҚИЙДИ, булутга ҳеч нарса ёзмайди
-    let authPromise = null;
 
     function deviceId(){
       let id = localStorage.getItem(LS_DEVICE);
@@ -1460,35 +1429,12 @@
     function isReady(){ return ready; }
     function getDb(){ return db; }
 
-    // Хавфсизлик: Firestore қоидалари энди "request.auth != null" талаб қилади
-    // (аввал ҳамма нарса очиқ эди — исталган одам базага тўғридан-тўғри кириши
-    // мумкин эди). Шунинг учун ҳар қандай ўқиш/ёзишдан олдин, кўринмас равишда
-    // "anonim" ҳисоб билан кириб оламиз — фойдаланувчидан ҳеч нарса сўралмайди.
-    function ensureAuth(){
-      if(!authPromise){
-        authPromise = new Promise((resolve)=>{
-          if(typeof firebase === "undefined" || !firebase.auth){ resolve(false); return; }
-          try{
-            firebase.auth().onAuthStateChanged(user=>{
-              if(user) resolve(true);
-            });
-            firebase.auth().signInAnonymously().catch(e=>{
-              console.warn("Autentifikatsiya xatosi:", e && e.message);
-              resolve(false);
-            });
-          }catch(e){ resolve(false); }
-        });
-      }
-      return authPromise;
-    }
-
     function init(){
       try{
         if(typeof firebase === "undefined") return false;
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
         ready = true;
-        ensureAuth();
         try{
           const pers = db.enablePersistence && db.enablePersistence({synchronizeTabs:true});
           if(pers && pers.catch) pers.catch(()=>{});
@@ -1520,9 +1466,11 @@
       // Агент қурилмаси ҳеч қачон умумий базага ёзмайди — фақат ўз ёзувини
       // "inbox" орқали юборади.
       if(agentMode) return false;
-      if(!ready || syncing) return false;
+      if(!ready) return false;
+      // Агар шу пайтда бошқа юклаш кетаётган бўлса — жим ташлаб юбормаймиз,
+      // навбатга қўямиз: тугагач яна юкланади.
+      if(syncing){ pendingUpload = true; return false; }
       syncing = true;
-      await ensureAuth();
       try{
         setStatus("Сақланмоқда...");
 
@@ -1565,14 +1513,31 @@
         if(warnEl){ warnEl.style.display = "none"; warnEl.innerHTML = ""; }
         setStatus("Сақланди ✓", "var(--good)");
         setLastSyncLabel(now);
+        retryDelay = 0; clearTimeout(retryTimer);
         if(!silent) toast("Булутга сақланди ✓");
         return true;
       }catch(e){
         console.error("Булутга сақлашда хато:", e);
         setStatus("Сақланмади (офлайн?)", "var(--bad)");
         if(!silent) toast("Булутга сақлаб бўлмади — интернетни текширинг");
+        // Хато бўлса — ўзи қайта уриниб кўради (5с, 10с, 20с ... максимум 60с)
+        retryDelay = Math.min(retryDelay ? retryDelay*2 : 5000, 60000);
+        clearTimeout(retryTimer);
+        retryTimer = setTimeout(()=> upload(true), retryDelay);
         return false;
-      }finally{ syncing = false; }
+      }finally{
+        syncing = false;
+        if(pendingUpload){ pendingUpload = false; scheduleUpload(); }
+      }
+    }
+
+    // Юклаш ТАСДИҚЛАНГАНИНИ кутади: фақат булутга ҳақиқатан ёзилса true қайтаради.
+    async function uploadConfirmed(){
+      if(agentMode || !ready) return false;
+      clearTimeout(syncTimer);
+      for(let i=0; i<40 && syncing; i++) await new Promise(r=> setTimeout(r,250));
+      if(syncing) return false;
+      return await upload(true);
     }
 
     function scheduleUpload(){
@@ -1582,7 +1547,6 @@
     }
 
     async function fetchCloud(){
-      await ensureAuth();
       const main = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
       if(!main.exists) return null;
       const meta = main.data();
@@ -1618,7 +1582,6 @@
     // ---- Агент ёзувларини қабул қилиш ----
     async function pushAgentRecord(rec, agentName){
       if(!ready) throw new Error("OFFLINE");
-      await ensureAuth();
       await db.collection(COLL_INBOX).doc(rec.id).set({
         ...rec, agentName, createdAt: Date.now(), claimed: false
       });
@@ -1649,7 +1612,6 @@
 
     async function fetchAgentMonthRecords(agentName, month){
       if(!ready) return [];
-      await ensureAuth();
       const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
       const out = [];
       snap.forEach(d=>{
@@ -1661,7 +1623,6 @@
 
     async function fetchAgentTodayRecordsAll(agentName){
       if(!ready) return [];
-      await ensureAuth();
       const snap = await db.collection(COLL_INBOX).where("agentName","==",agentName).get();
       const out = [];
       snap.forEach(d=> out.push({id:d.id, ...d.data()}));
@@ -1670,7 +1631,6 @@
 
     async function fetchAgentTodayRecords(agentName, date){
       if(!ready) return [];
-      await ensureAuth();
       const snap = await db.collection(COLL_INBOX)
         .where("agentName","==",agentName).where("sana","==",date).get();
       const out = [];
@@ -1678,38 +1638,33 @@
       return out.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
     }
 
-    function listenAgentInbox(onNew){
+    function listenAgentInbox(onNew, onState){
       if(!ready || inboxUnsub) return;
-      inboxUnsub = true; // дарҳол белгилаб қўямиз — қайта-қайта чақирилишни олдини олиш учун
-      ensureAuth().then(()=>{
-        inboxUnsub = db.collection(COLL_INBOX)
-          .onSnapshot(snap=>{
-            const incoming = [];
-            snap.forEach(d=> incoming.push({id:d.id, ...d.data()}));
-            if(incoming.length) onNew(incoming);
-          }, e=> console.warn("Inbox кузатувида хато:", e && e.message));
-      });
+      inboxUnsub = db.collection(COLL_INBOX)
+        .onSnapshot(snap=>{
+          const incoming = [];
+          snap.forEach(d=> incoming.push({id:d.id, ...d.data()}));
+          if(onState) onState({ok:true, count:incoming.length});
+          if(incoming.length) onNew(incoming);
+        }, e=>{
+          console.warn("Inbox кузатувида хато:", e && e.message);
+          if(onState) onState({ok:false, error:(e && (e.code || e.message)) || "noma'lum"});
+        });
     }
 
     let backupMetaUnsub = null;
     function watchBackupMeta(onChange){
       if(!ready || backupMetaUnsub) return;
-      backupMetaUnsub = true;
-      ensureAuth().then(()=>{
-        backupMetaUnsub = db.collection(COLL_BACKUP).doc(DOC_MAIN)
-          .onSnapshot(doc=>{
-            if(doc.exists) onChange(doc.data());
-          }, e=> console.warn("Захира кузатувида хато:", e && e.message));
-      });
+      backupMetaUnsub = db.collection(COLL_BACKUP).doc(DOC_MAIN)
+        .onSnapshot(doc=>{
+          if(doc.exists) onChange(doc.data());
+        }, e=> console.warn("Захира кузатувида хато:", e && e.message));
     }
     let ownInboxUnsub = null;
     function watchOwnInbox(agentName, onChange){
       if(!ready || ownInboxUnsub) return;
-      ownInboxUnsub = true;
-      ensureAuth().then(()=>{
-        ownInboxUnsub = db.collection(COLL_INBOX).where("agentName","==",agentName)
-          .onSnapshot(()=> onChange(), e=> console.warn("Агент почтаси кузатувида хато:", e && e.message));
-      });
+      ownInboxUnsub = db.collection(COLL_INBOX).where("agentName","==",agentName)
+        .onSnapshot(()=> onChange(), e=> console.warn("Агент почтаси кузатувида хато:", e && e.message));
     }
     function stopLiveWatches(){
       if(backupMetaUnsub){ backupMetaUnsub(); backupMetaUnsub = null; }
@@ -1717,14 +1672,12 @@
     }
     async function deleteInboxRecord(id){
       if(!ready) return;
-      await ensureAuth();
       try{ await db.collection(COLL_INBOX).doc(id).delete(); }
       catch(e){ console.warn("Булутдан ўчиришда хато:", e && e.message); }
     }
 
     async function markClaimed(ids){
       if(!ready || !ids.length) return;
-      await ensureAuth();
       const batch = db.batch();
       ids.forEach(id=> batch.update(db.collection(COLL_INBOX).doc(id), {claimed:true}));
       await batch.commit();
@@ -1732,7 +1685,6 @@
 
     async function removeFromInbox(ids){
       if(!ready || !ids.length) return;
-      await ensureAuth();
       const batch = db.batch();
       ids.forEach(id=> batch.delete(db.collection(COLL_INBOX).doc(id)));
       await batch.commit();
@@ -1740,19 +1692,16 @@
 
     async function saveAgentsToCloud(list){
       if(!ready) return;
-      await ensureAuth();
       await db.collection(COLL_META).doc("agents").set({ list, updatedAt: Date.now() });
     }
     async function loadAgentsFromCloud(){
       if(!ready) return null;
-      await ensureAuth();
       const d = await db.collection(COLL_META).doc("agents").get();
       return d.exists ? (d.data().list || []) : null;
     }
 
     async function checkOnStart(){
       if(!ready) return;
-      await ensureAuth();
       try{
         const main = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
         const localSync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
@@ -1773,35 +1722,8 @@
       }catch(e){ setStatus("Уланмади (офлайн?)", "var(--bad)"); }
     }
 
-    async function debugAuthStatus(){
-      const lines = [];
-      lines.push("firebase юкланганми: " + (typeof firebase !== "undefined"));
-      lines.push("firebase.auth мавжудми: " + (typeof firebase !== "undefined" && !!firebase.auth));
-      try{
-        const before = firebase.auth().currentUser;
-        lines.push("Ҳозирги фойдаланувчи (кириш олдидан): " + (before ? before.uid : "null"));
-      }catch(e){ lines.push("currentUser ўқишда хато: " + e.message); }
-      try{
-        const cred = await firebase.auth().signInAnonymously();
-        lines.push("signInAnonymously натижаси: МУВАФФАҚИЯТЛИ, uid=" + (cred.user ? cred.user.uid : "?"));
-      }catch(e){
-        lines.push("signInAnonymously ХАТОСИ: code=" + e.code + " | message=" + e.message);
-      }
-      try{
-        const after = firebase.auth().currentUser;
-        lines.push("Ҳозирги фойдаланувчи (киришдан кейин): " + (after ? after.uid : "null"));
-      }catch(e){ lines.push("currentUser (кейин) ўқишда хато: " + e.message); }
-      try{
-        await db.collection(COLL_META).doc("diagnostic_check").get();
-        lines.push("Firestore'дан ЎҚИШ: МУВАФФАҚИЯТЛИ");
-      }catch(e){
-        lines.push("Firestore'дан ЎҚИШ ХАТОСИ: code=" + e.code + " | message=" + e.message);
-      }
-      alert(lines.join("\n"));
-    }
-
     return {
-      isReady, getDb, debugAuthStatus,
+      isReady, getDb,
       setAgentMode(v){ agentMode = !!v; },
       startReadOnly(){
         agentMode = true;
@@ -1818,21 +1740,20 @@
 
         // ЖОНЛИ КУЗАТУВ (реал вақт): бошқа қурилма/агент ёзган заҳоти —
         // тасдиқлашсиз, автоматик тортиб олинади ва саҳифа янгиланади.
-        ensureAuth().then(()=>{
-          db.collection(COLL_BACKUP).doc(DOC_MAIN).onSnapshot(doc=>{
-            if(!doc.exists) return;
-            const meta = doc.data();
-            const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
-            if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 1000 && !agentMode){
-              restore().then(ok=>{ if(ok) softRefreshAfterRestore(); });
-            }
-          }, e=> console.warn("Жонли кузатувда хато:", e && e.message));
-        });
+        db.collection(COLL_BACKUP).doc(DOC_MAIN).onSnapshot(doc=>{
+          if(!doc.exists) return;
+          const meta = doc.data();
+          const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
+          if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 1000 && !agentMode){
+            restore().then(ok=>{ if(ok) softRefreshAfterRestore(); });
+          }
+        }, e=> console.warn("Жонли кузатувда хато:", e && e.message));
 
         return true;
       },
       runCheck(){ if(!agentMode) checkOnStart(); },
       uploadNow(){ return upload(false); },
+      uploadConfirmed,
       async restoreNow(){
         if(!confirm("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?")) return;
         if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
@@ -2090,13 +2011,6 @@
     t.classList.add("show");
     setTimeout(()=>t.classList.remove("show"), 2200);
   }
-
-  // ---- Йиғма (collapsible) созлама карточкалари ----
-  document.querySelectorAll(".card.collapsible > h2").forEach(h=>{
-    h.addEventListener("click", ()=>{
-      h.closest(".card").classList.toggle("open");
-    });
-  });
 
   function initHelpTooltips(){
     document.body.addEventListener("click", e=>{
@@ -3154,10 +3068,7 @@ ${XL_PAGE}
     const month = document.getElementById("summaryMonth").value || currentMonthValue();
     printFullHtmlDoc(buildMonthlyReportPrintHTML(month));
   }
-  document.getElementById("monthlyDownloadBtn").addEventListener("click", ()=>{
-    if(document.getElementById("monthlyFormatSelect").value === "excel") downloadMonthlyWorkbook();
-    else printMonthlyReport();
-  });
+  document.getElementById("monthlyPdfBtn").addEventListener("click", printMonthlyReport);
   function buildMonthlyWorkbookXML(month){
     const list = records.filter(r=>r.sana && r.sana.slice(0,7)===month);
     const preparedStr = new Date().toLocaleDateString("uz-UZ") + " " + new Date().toLocaleTimeString("uz-UZ");
@@ -3245,7 +3156,7 @@ ${XL_PAGE}
     downloadFile(new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"}), "oylik_hisobot_"+month+".xls", "application/vnd.ms-excel;charset=utf-8;");
     toast("Ойлик отчет Excel'га юкланди ✓ ("+month+")");
   }
-  // (Ойлик Excel экспорти энди юқоридаги monthlyDownloadBtn орқали ишлайди)
+  document.getElementById("monthlyExcelBtn").addEventListener("click", downloadMonthlyWorkbook);
 
   async function sendMonthlyReportToTelegram(month, silent){
     const settings = loadTgSettings();
@@ -3737,12 +3648,8 @@ ${XL_PAGE}
   ["pivotMonth","pivotMetric","pivotUnit"].forEach(id=>{
     document.getElementById(id).addEventListener("change", renderPivot);
   });
-  document.getElementById("pivotShareBtn").addEventListener("click", ()=>{
-    const mode = document.getElementById("pivotShareFormat").value;
-    if(mode === "excel") exportPivotExcel();
-    else if(mode === "print") printPivot();
-    else sendPivotImageToTelegram();
-  });
+  document.getElementById("pivotExcelBtn").addEventListener("click", exportPivotExcel);
+  document.getElementById("pivotPrintBtn").addEventListener("click", printPivot);
 
   async function sendPivotImageToTelegram(){
     const settings = loadTgSettings();
@@ -3759,7 +3666,7 @@ ${XL_PAGE}
       alert("Расм яратиш кутубхонаси юкланмади. Интернетни текшириб, саҳифани янгиланг.");
       return;
     }
-    const btn = document.getElementById("pivotShareBtn");
+    const btn = document.getElementById("pivotTgBtn");
     btn.disabled = true;
     toast("Расм тайёрланмоқда...");
     // html2canvas "overflow:auto" (сурилувчи) қутиларнинг фақат кўринадиган
@@ -3821,7 +3728,7 @@ ${XL_PAGE}
       btn.disabled = false;
     }
   }
-  // (pivotShareBtn орқали чақирилади — юқорида улаb қўйилган)
+  document.getElementById("pivotTgBtn").addEventListener("click", sendPivotImageToTelegram);
   function renderYearly(){
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
     const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
@@ -3941,10 +3848,7 @@ ${XL_PAGE}
     const year = Number(document.getElementById("yearlyYear").value) || currentYearValue();
     printFullHtmlDoc(buildYearlyReportPrintHTML(year));
   }
-  document.getElementById("yearlyDownloadBtn").addEventListener("click", ()=>{
-    if(document.getElementById("yearlyFormatSelect").value === "excel") downloadYearlyWorkbook();
-    else printYearlyReport();
-  });
+  document.getElementById("yearlyPdfBtn").addEventListener("click", printYearlyReport);
 
   function buildYearlyWorkbookXML(year){
     const monthNames = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
@@ -3982,7 +3886,7 @@ ${XL_PAGE}
     downloadFile(new Blob(["\uFEFF"+xml], {type:"application/vnd.ms-excel;charset=utf-8;"}), "yillik_hisobot_"+year+".xls", "application/vnd.ms-excel;charset=utf-8;");
     toast("Йиллик отчет Excel'га юкланди ✓ ("+year+")");
   }
-  // (Йиллик Excel экспорти энди юқоридаги yearlyDownloadBtn орқали ишлайди)
+  document.getElementById("yearlyExcelBtn").addEventListener("click", downloadYearlyWorkbook);
 
   function loadDebtPayments(){
     try{ return JSON.parse(localStorage.getItem(LS_DEBTPAY)) || []; }catch(e){ return []; }
@@ -5833,9 +5737,30 @@ ${XL_PAGE}
     toast("Майдонлар сақланди ✓ — агент дастурни янгилагач кўринади");
   });
 
-  function startAgentInboxListener(){
-    CLOUD.listenAgentInbox(async incoming=>{
-      if(currentAgent) return;
+  // ХАВФСИЗ ҚАБУЛ ҚИЛИШ: агент ёзуви inbox'дан фақат ёзув булутдаги умумий
+  // нусхага ҲАҚИҚАТАН юкланганини тасдиқлагач ўчирилади. Юклаш амалга ошмаса
+  // (интернет, бошқа қурилма билан тўқнашув) — ёзув inbox'да сақланади ва
+  // ўзи қайта уриниб кўрилади.
+  let inboxLatest = [], inboxBusy = false, inboxAgain = false;
+  let inboxRetryTimer = null, inboxRetryDelay = 0, inboxReceivedTotal = 0;
+
+  function setAgentCountLabel(text, color){
+    const el = document.getElementById("cloudAgentCount");
+    if(el){ el.textContent = text; el.style.color = color || ""; }
+  }
+  function scheduleInboxRetry(){
+    inboxRetryDelay = Math.min(inboxRetryDelay ? inboxRetryDelay*2 : 5000, 60000);
+    clearTimeout(inboxRetryTimer);
+    inboxRetryTimer = setTimeout(processAgentInbox, inboxRetryDelay);
+  }
+
+  async function processAgentInbox(){
+    if(currentAgent) return;
+    if(inboxBusy){ inboxAgain = true; return; }
+    inboxBusy = true;
+    try{
+      const incoming = inboxLatest.slice();
+      if(!incoming.length) return;
       const existing = new Set(records.map(r=> r.id));
       const fresh = incoming.filter(r=> !existing.has(r.id));
       if(fresh.length){
@@ -5850,14 +5775,50 @@ ${XL_PAGE}
           });
         });
         saveRecords(records);
+        inboxReceivedTotal += fresh.length;
         logAudit("Агент ёзувлари қабул қилинди", `${fresh.length} та ёзув`);
         renderRecords(); renderEntryBanners(); renderSummary();
         toast(`Агентдан ${fresh.length} та янги ёзув келди ✓`);
         announceNewAgentRecords(fresh);
       }
-      const el = document.getElementById("cloudAgentCount");
-      if(el) el.textContent = incoming.length + " та";
-      CLOUD.removeFromInbox(incoming.map(r=> r.id)).catch(()=>{});
+      setAgentCountLabel(incoming.length + " та (булутга сақланмоқда...)", "var(--gold)");
+
+      // 1) булутга юклаймиз ва тасдиқни кутамиз
+      const ok = await CLOUD.uploadConfirmed();
+      // 2) ёзувлар ҳақиқатан хотирада борлигини қайта текширамиз
+      //    (булутдан тиклаш орталиқда уларни ўчириб юборган бўлиши мумкин)
+      const stored = new Set(loadRecords().map(r=> r.id));
+      const safeIds = incoming.filter(r=> stored.has(r.id)).map(r=> r.id);
+
+      if(ok && safeIds.length === incoming.length){
+        await CLOUD.removeFromInbox(safeIds);   // фақат энди ўчирамиз
+        inboxRetryDelay = 0; clearTimeout(inboxRetryTimer);
+        setAgentCountLabel("Қабул қилинди ✓ (жами: " + inboxReceivedTotal + " та)", "var(--good)");
+      }else{
+        // Ёзувлар inbox'да қолди — йўқолмайди. Бироздан кейин қайта уриниб кўрамиз.
+        setAgentCountLabel(incoming.length + " та кутмоқда — қайта уринилмоқда...", "var(--gold)");
+        scheduleInboxRetry();
+      }
+    }catch(e){
+      console.warn("Агент ёзувини қабул қилишда хато:", e && e.message);
+      setAgentCountLabel("Хато — қайта уринилмоқда...", "var(--bad)");
+      scheduleInboxRetry();
+    }finally{
+      inboxBusy = false;
+      if(inboxAgain){ inboxAgain = false; processAgentInbox(); }
+    }
+  }
+
+  function startAgentInboxListener(){
+    CLOUD.listenAgentInbox(incoming=>{
+      inboxLatest = incoming;
+      processAgentInbox();
+    }, st=>{
+      if(!st.ok){
+        setAgentCountLabel("Хато ✗ — inbox ўқилмади (" + st.error + ")", "var(--bad)");
+      }else if(st.count === 0 && !inboxBusy){
+        setAgentCountLabel("Уланган ✓ · кутилмоқда" + (inboxReceivedTotal ? " (жами: " + inboxReceivedTotal + " та)" : ""), "var(--good)");
+      }
     });
   }
   let currentAgent = null;
@@ -6367,7 +6328,6 @@ ${XL_PAGE}
 
   document.getElementById("cloudSyncNowBtn")?.addEventListener("click", ()=> CLOUD.uploadNow());
   document.getElementById("cloudRestoreBtn")?.addEventListener("click", ()=> CLOUD.restoreNow());
-  document.getElementById("cloudAuthCheckBtn")?.addEventListener("click", ()=> CLOUD.debugAuthStatus());
   if(currentAgent){
     CLOUD.startReadOnly();
   }else{
