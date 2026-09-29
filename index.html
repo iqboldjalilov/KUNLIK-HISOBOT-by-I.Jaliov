@@ -1686,7 +1686,7 @@
           .onSnapshot(snap=>{
             const incoming = [];
             snap.forEach(d=> incoming.push({id:d.id, ...d.data()}));
-            if(incoming.length) onNew(incoming);
+            onNew(incoming); // бўш бўлса ҳам чақирамиз — токи "кутилмоқда" ҳолати тўғри кўрсатилсин
           }, e=> console.warn("Inbox кузатувида хато:", e && e.message));
       });
     }
@@ -4905,7 +4905,7 @@ ${XL_PAGE}
     document.getElementById("e_sana").valueAsDate = new Date();
     computeExpensePreview();
     updateExpenseCatList();
-    renderExpensePaymentSection();
+    refreshExpensePaymentSection();
     renderExpenseTodayStats();
     renderExpenses();
   });
