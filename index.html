@@ -1174,7 +1174,7 @@
       <div class="grid-cards" style="margin-bottom:12px;">
         <div class="stat"><div class="label">Ҳолат</div><div class="value" id="cloudStatus" style="font-size:15px;">Текширилмоқда...</div></div>
         <div class="stat"><div class="label">Сўнгги сақлаш</div><div class="value" id="cloudLastSync" style="font-size:15px;">—</div></div>
-        <div class="stat"><div class="label">Агент ёзувлари</div><div class="value" id="cloudAgentCount" style="font-size:15px;">—</div></div>
+        <div class="stat"><div class="label">Агент ёзувлари</div><div class="value" id="cloudAgentCount" style="font-size:15px;">Текширилмоқда...</div></div>
       </div>
       <div id="cloudConflictWarn" style="display:none;"></div>
       <div class="actions-row">
@@ -1833,6 +1833,7 @@
       },
       runCheck(){ if(!agentMode) checkOnStart(); },
       uploadNow(){ return upload(false); },
+      uploadNowSilent(){ return upload(true); },
       async restoreNow(){
         if(!confirm("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?")) return;
         if(await restore()){ alert("Тикланди. Саҳифа янгиланади."); location.reload(); }
@@ -5833,9 +5834,62 @@ ${XL_PAGE}
     toast("Майдонлар сақланди ✓ — агент дастурни янгилагач кўринади");
   });
 
+  // ---- Агент inbox: ЎЧИРИШДАН ОЛДИН булутга тасдиқлаб юклаш + хато бўлса
+  // қайта-қайта уриниб бориш (5, 10, 20, 40, 60 сония оралиғида) ----
+  const AGENT_RETRY_DELAYS = [5000,10000,20000,40000,60000];
+  const agentInboxState = { status: "idle", lastConfirmedCount: 0, retryTimer: null, retryDelayIndex: 0 };
+
+  function renderAgentInboxStatus(){
+    const el = document.getElementById("cloudAgentCount");
+    if(!el) return;
+    if(agentInboxState.status === "uploading"){
+      el.textContent = "булутга сақланмоқда...";
+      el.style.color = "var(--gold)";
+    } else if(agentInboxState.status === "confirmed"){
+      el.textContent = `Қабул қилинди ✓ (жами: ${agentInboxState.lastConfirmedCount} та)`;
+      el.style.color = "var(--good)";
+    } else if(agentInboxState.status === "error"){
+      el.textContent = "Хато ✗ — қайта уринилмоқда";
+      el.style.color = "var(--bad)";
+    } else {
+      el.textContent = "Уланган ✓ · кутилмоқда";
+      el.style.color = "";
+    }
+  }
+
+  function attemptConfirmAndClearInbox(ids){
+    if(!ids.length) return;
+    agentInboxState.status = "uploading";
+    renderAgentInboxStatus();
+    CLOUD.uploadNowSilent().then(ok=>{
+      if(!ok) throw new Error("upload failed");
+      return CLOUD.removeFromInbox(ids).then(()=>{
+        agentInboxState.status = "confirmed";
+        agentInboxState.lastConfirmedCount = ids.length;
+        agentInboxState.retryDelayIndex = 0;
+        renderAgentInboxStatus();
+      });
+    }).catch(()=>{
+      agentInboxState.status = "error";
+      renderAgentInboxStatus();
+      const idx = Math.min(agentInboxState.retryDelayIndex, AGENT_RETRY_DELAYS.length-1);
+      const delay = AGENT_RETRY_DELAYS[idx];
+      agentInboxState.retryDelayIndex++;
+      clearTimeout(agentInboxState.retryTimer);
+      agentInboxState.retryTimer = setTimeout(()=> attemptConfirmAndClearInbox(ids), delay);
+    });
+  }
+
   function startAgentInboxListener(){
     CLOUD.listenAgentInbox(async incoming=>{
       if(currentAgent) return;
+      if(!incoming.length){
+        clearTimeout(agentInboxState.retryTimer);
+        agentInboxState.status = "idle";
+        agentInboxState.retryDelayIndex = 0;
+        renderAgentInboxStatus();
+        return;
+      }
       const existing = new Set(records.map(r=> r.id));
       const fresh = incoming.filter(r=> !existing.has(r.id));
       if(fresh.length){
@@ -5855,9 +5909,12 @@ ${XL_PAGE}
         toast(`Агентдан ${fresh.length} та янги ёзув келди ✓`);
         announceNewAgentRecords(fresh);
       }
-      const el = document.getElementById("cloudAgentCount");
-      if(el) el.textContent = incoming.length + " та";
-      CLOUD.removeFromInbox(incoming.map(r=> r.id)).catch(()=>{});
+      // Ҳар доим ЖОРИЙ, тўлиқ inbox ҳолатини (эски + янги) булутга тасдиқлаб
+      // юклашга ҳаракат қиламиз. Агар олдинги уриниш ҳали кутаётган (навбатда)
+      // бўлса — уни бекор қилиб, шу янги, тўлиқ рўйхат билан қайта бошлаймиз.
+      clearTimeout(agentInboxState.retryTimer);
+      agentInboxState.retryDelayIndex = 0;
+      attemptConfirmAndClearInbox(incoming.map(r=> r.id));
     });
   }
   let currentAgent = null;
