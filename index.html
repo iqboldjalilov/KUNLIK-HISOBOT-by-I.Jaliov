@@ -5905,7 +5905,8 @@ ${XL_PAGE}
         });
         saveRecords(records);
         logAudit("Агент ёзувлари қабул қилинди", `${fresh.length} та ёзув`);
-        renderRecords(); renderEntryBanners(); renderSummary();
+        renderEntryBanners();
+        refreshActiveView();
         toast(`Агентдан ${fresh.length} та янги ёзув келди ✓`);
         announceNewAgentRecords(fresh);
       }
@@ -6583,6 +6584,21 @@ ${XL_PAGE}
   // янгилаш — телефонда бу бир неча сония тезроқ бўлади. Хотирадаги
   // барча массивларни localStorage'дан қайта ўқиб, жорий очиқ бўлимни
   // қайта чизамиз.
+  // Ҳозир қайси бўлим очиқ турган бўлса, aynan ўшани қайта чизади. Булутдан
+  // (бошқа қурилма) ёки агентдан янги маълумот келганда — иккаласида ҳам
+  // шу БИТТА функция ишлатилади, токи иккаласи бир-биридан "орқада қолиб
+  // кетмасин".
+  function refreshActiveView(){
+    const activeEl = document.querySelector(".view.active");
+    const viewName = activeEl ? activeEl.id.replace("view-","") : "entry";
+    if(viewName === "records"){ renderRecords(); renderPivot(); }
+    else if(viewName === "summary") renderSummary();
+    else if(viewName === "settings"){ renderCarsList(); renderAuditLog(); }
+    else if(viewName === "expenses") renderExpenses();
+    else if(viewName === "yearly") renderYearly();
+    else if(viewName === "debts") renderDebts();
+  }
+
   function softRefreshAfterRestore(){
     try{
       records = loadRecords();
@@ -6609,14 +6625,7 @@ ${XL_PAGE}
       refreshExpensePaymentSection();
       renderAgentsList();
 
-      const activeEl = document.querySelector(".view.active");
-      const viewName = activeEl ? activeEl.id.replace("view-","") : "entry";
-      if(viewName === "records"){ renderRecords(); renderPivot(); }
-      else if(viewName === "summary") renderSummary();
-      else if(viewName === "settings"){ renderCarsList(); renderAuditLog(); }
-      else if(viewName === "expenses") renderExpenses();
-      else if(viewName === "yearly") renderYearly();
-      else if(viewName === "debts") renderDebts();
+      refreshActiveView();
 
       toast("Маълумот янгиланди ✓");
     }catch(e){
