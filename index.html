@@ -896,7 +896,8 @@
         <div class="stat" id="cs_qoldiq_box"><div class="label">Ҳозир қўлимда<span class="help-ic" data-tip="Ҳозир қўлимда = Мен олган нақд пул − Сарфладим. Бу — олинган пулдан ҳали сарфланмаган, қўлда қолиши керак бўлган сумма.">?</span></div><div class="value" id="cs_qoldiq">0 сўм</div></div>
       </div>
       <span id="cs_olingan" style="display:none;"></span>
-      <div class="table-wrap" style="margin-top:16px;">
+      <h3 style="margin:20px 0 4px;">🚗 Мошиналар кесимида (жами, барча вақт бўйича)</h3>
+      <div class="table-wrap" style="margin-top:8px;">
         <table>
           <thead>
             <tr><th>Машина</th><th>Жами топширилган</th><th>Мен олган нақд пул</th><th>Қолдиқ</th></tr>
@@ -931,6 +932,7 @@
           <label>Қайси мошинадан</label>
           <select id="ct_mashina"><option value="">Умумий (мошинага боғланмаган)</option></select>
         </div>
+        <div class="full" id="ct_dayPreview" style="font-size:13px;color:var(--muted);"></div>
         <div class="full">
           <label>Изоҳ (ихтиёрий)</label>
           <input type="text" id="ct_izoh" placeholder="Масалан: шахсий эҳтиёж учун олинди">
@@ -4104,6 +4106,7 @@ ${XL_PAGE}
   document.getElementById("cashTakenCancelEditBtn").addEventListener("click", ()=>{
     document.getElementById("cashTakenForm").reset();
     document.getElementById("ct_sana").valueAsDate = new Date();
+    if(typeof updateCtDayPreview === "function") updateCtDayPreview();
     exitCashTakenEditMode();
   });
 
@@ -4199,9 +4202,11 @@ ${XL_PAGE}
       if(!carKeys.length && !generalOlingan){
         rowsHtml = `<tr><td colspan="4" class="empty">Ҳозирча маълумот йўқ.</td></tr>`;
       } else {
+        let totTop = 0, totOl = 0;
         rowsHtml = carKeys.map(k=>{
           const d = perCar[k];
           const q = d.topshirilgan - d.olingan;
+          totTop += d.topshirilgan; totOl += d.olingan;
           return `<tr>
             <td>${carPill(k)}</td>
             <td>${fmt(d.topshirilgan)}</td>
@@ -4210,6 +4215,7 @@ ${XL_PAGE}
           </tr>`;
         }).join("");
         if(generalOlingan){
+          totOl += generalOlingan;
           rowsHtml += `<tr>
             <td><span style="color:var(--muted);">Умумий (мошинага боғланмаган)</span></td>
             <td>—</td>
@@ -4217,6 +4223,13 @@ ${XL_PAGE}
             <td class="neg">−${fmt(generalOlingan)}</td>
           </tr>`;
         }
+        const totQ = totTop - totOl;
+        rowsHtml += `<tr style="background:var(--gold-soft);font-weight:800;border-top:2px solid var(--gold);">
+          <td>ЖАМИ</td>
+          <td>${fmt(totTop)}</td>
+          <td>${fmt(totOl)}</td>
+          <td class="${totQ<0?'neg':'pos'}">${fmt(totQ)}</td>
+        </tr>`;
       }
       byCarBody.innerHTML = rowsHtml;
     }
@@ -4227,16 +4240,37 @@ ${XL_PAGE}
       return;
     }
     const sorted = cashTaken.slice().sort((a,b)=> b.sana.localeCompare(a.sana));
-    body.innerHTML = sorted.map(c=>`<tr>
-      <td>${fmtDate(c.sana)}</td>
-      <td>${c.mashina ? carPill(c.mashina) : '<span style="color:var(--muted);">Умумий</span>'}</td>
-      <td class="neg">${fmt(c.summa)}</td>
-      <td>${esc(c.izoh)}</td>
-      <td style="white-space:nowrap;">
-        <button class="btn outline small" data-ctedit="${c.id}">Таҳрирлаш</button>
-        <button class="btn danger small" data-ctdel="${c.id}">Ўчириш</button>
-      </td>
-    </tr>`).join("");
+    // Бир хил санадаги ёзувларни гуруҳлаб, шу куннинг ЖАМИсини (агар 2 та ёки
+    // кўпроқ ёзув бўлса) ҳар гуруҳ охирида кичик қатор қилиб кўрсатамиз —
+    // токи қўлда қўшиб чиқишга ҳожат қолмасин.
+    let rowsHtml = "";
+    let gi = 0;
+    while(gi < sorted.length){
+      const date = sorted[gi].sana;
+      const group = [];
+      while(gi < sorted.length && sorted[gi].sana === date){ group.push(sorted[gi]); gi++; }
+      group.forEach(c=>{
+        rowsHtml += `<tr>
+          <td>${fmtDate(c.sana)}</td>
+          <td>${c.mashina ? carPill(c.mashina) : '<span style="color:var(--muted);">Умумий</span>'}</td>
+          <td class="neg">${fmt(c.summa)}</td>
+          <td>${esc(c.izoh)}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn outline small" data-ctedit="${c.id}">Таҳрирлаш</button>
+            <button class="btn danger small" data-ctdel="${c.id}">Ўчириш</button>
+          </td>
+        </tr>`;
+      });
+      if(group.length > 1){
+        const daySum = group.reduce((s,c)=> s + Number(c.summa||0), 0);
+        rowsHtml += `<tr style="background:var(--gold-soft);">
+          <td colspan="2" style="text-align:right;font-weight:700;">Шу кун жами:</td>
+          <td class="neg" style="font-weight:800;">${fmt(daySum)}</td>
+          <td colspan="2"></td>
+        </tr>`;
+      }
+    }
+    body.innerHTML = rowsHtml;
     body.querySelectorAll("[data-ctedit]").forEach(b=>{
       b.addEventListener("click", ()=>{
         const c = cashTaken.find(x=>x.id===b.dataset.ctedit);
@@ -4249,6 +4283,7 @@ ${XL_PAGE}
           document.getElementById("ct_izoh").value = c.izoh || "";
           document.getElementById("cashTakenSubmitBtn").textContent = "Янгилаш";
           document.getElementById("cashTakenCancelEditBtn").style.display = "inline-block";
+          if(typeof updateCtDayPreview === "function") updateCtDayPreview();
           window.scrollTo({top:0, behavior:"smooth"});
         });
       });
@@ -4269,7 +4304,31 @@ ${XL_PAGE}
     });
   }
 
+  // Танланган санада жами қанча топширилганини (барча мошиналар бўйича,
+  // мошина кесимида) кўрсатади — "умумий олинадиган" пулни режалаштириш учун.
+  function updateCtDayPreview(){
+    const el = document.getElementById("ct_dayPreview");
+    if(!el) return;
+    const date = document.getElementById("ct_sana").value;
+    if(!date){ el.innerHTML = ""; return; }
+    const dayRecords = records.filter(r=> r.sana === date && r.topshirilgan !== null && r.topshirilgan !== undefined);
+    if(!dayRecords.length){
+      el.innerHTML = `<span style="color:var(--muted);">Шу санада ҳали "Топширилган сумма" киритилган ёзув йўқ.</span>`;
+      return;
+    }
+    const perCar = {};
+    let total = 0;
+    dayRecords.forEach(r=>{
+      const key = r.mashina || "(Номаълум)";
+      perCar[key] = (perCar[key] || 0) + Number(r.topshirilgan);
+      total += Number(r.topshirilgan);
+    });
+    const lines = Object.keys(perCar).map(name=> `${esc(name)}: ${fmt(perCar[name])} сўм`).join(" · ");
+    el.innerHTML = `<b style="color:var(--ink);">Шу санада жами топширилган: ${fmt(total)} сўм</b><br>${lines}`;
+  }
+  document.getElementById("ct_sana").addEventListener("change", updateCtDayPreview);
   document.getElementById("ct_sana").valueAsDate = new Date();
+  updateCtDayPreview();
   document.getElementById("cashTakenForm").addEventListener("submit", e=>{
     e.preventDefault();
     const data = {
@@ -4282,6 +4341,7 @@ ${XL_PAGE}
     const finish = ()=>{
       document.getElementById("cashTakenForm").reset();
       document.getElementById("ct_sana").valueAsDate = new Date();
+      updateCtDayPreview();
       renderCashTaken();
       renderCashSpend();
     };
