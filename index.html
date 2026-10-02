@@ -837,6 +837,9 @@
         <div class="fld">
           <button class="btn outline" id="monthlyTgBtn">📤 Telegram'га юбориш</button>
         </div>
+        <div class="fld">
+          <button class="btn outline" id="combinedReportBtn">📋 Йиғма ҳисобот (бухгалтер учун)</button>
+        </div>
       </div>
       <div id="monthComparison" style="font-size:13px;color:var(--muted);margin-bottom:14px;"></div>
       <div class="grid-cards" id="summaryTotals"></div>
@@ -1076,6 +1079,24 @@
             <tr><th>Сана</th><th>Нимага</th><th>Сумма</th><th>Изоҳ</th><th>Амал</th></tr>
           </thead>
           <tbody id="cashSpendBody"></tbody>
+        </table>
+      </div>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:20px 0;">
+      <h3 style="margin:0 0 4px;">🤝 Исломхон билан ҳисоб-китоб</h3>
+      <p style="margin:0 0 12px;font-size:13px;color:var(--muted);">
+        Юқоридаги сарф ёзувларидан "Исломхонга берилди" деб белгиланганлари автоматик шу ерда жамланади —
+        алоҳида ёзишнинг ҳожати йўқ.
+      </p>
+      <div class="grid-cards" style="margin-bottom:0;">
+        <div class="stat"><div class="label">Жами берилган (барча вақт)</div><div class="value" id="isl_jami">0 сўм</div></div>
+        <div class="stat"><div class="label">Шу ой берилган</div><div class="value" id="isl_shuoy">0 сўм</div></div>
+        <div class="stat"><div class="label">Охирги берилган сана</div><div class="value" id="isl_oxirgi" style="font-size:15px;">—</div></div>
+      </div>
+      <div class="table-wrap" style="margin-top:14px;">
+        <table>
+          <thead><tr><th>Ой</th><th>Берилган сумма</th></tr></thead>
+          <tbody id="islByMonthBody"></tbody>
         </table>
       </div>
     </div>
@@ -3495,6 +3516,119 @@ ${XL_PAGE}
     const month = document.getElementById("summaryMonth").value || currentMonthValue();
     printFullHtmlDoc(buildMonthlyReportPrintHTML(month));
   }
+
+  // ---- Йиғма ойлик ҳисобот: молия + нақд пул оқими + Исломхон +
+  // харажатлар — ҳаммаси БИТТА ҳужжатда (Исломхон/бухгалтер учун) ----
+  function buildCombinedMonthlyReportHTML(month){
+    const list = records.filter(r=>r.sana && r.sana.slice(0,7)===month);
+    const perCar = {};
+    cars.forEach(c=> perCar[c.name] = {tushum:0, xarajat:0, count:0});
+    list.forEach(r=>{
+      const xarajat = r.yoqilgi+r.yol+r.boshqa;
+      if(!perCar[r.mashina]) perCar[r.mashina] = {tushum:0,xarajat:0,count:0};
+      perCar[r.mashina].tushum += r.tushum;
+      perCar[r.mashina].xarajat += xarajat;
+      perCar[r.mashina].count += 1;
+    });
+    let grandT=0, grandX=0;
+    const bizExpByCar = expensesByCarForMonth(month);
+    const carRows = Object.keys(perCar).map(car=>{
+      const d = perCar[car];
+      const sof = d.tushum-d.xarajat;
+      grandT += d.tushum; grandX += d.xarajat;
+      const bizExp = bizExpByCar[car] || 0;
+      const fullSof = sof - bizExp;
+      return `<tr><td>${car}</td><td>${fmt(d.tushum)}</td><td>${fmt(d.xarajat)}</td><td>${fmt(bizExp)}</td><td>${fmt(fullSof)}</td><td>${d.count}</td></tr>`;
+    }).join("");
+    const grandSof = grandT - grandX;
+    const grandBizExp = Object.values(bizExpByCar).reduce((s,v)=>s+v,0);
+    const grandFullSof = grandSof - grandBizExp;
+
+    // Нақд пул оқими (шу ой учун)
+    const topshirilganOy = list.reduce((s,r)=> s + (r.topshirilgan!==null && r.topshirilgan!==undefined ? Number(r.topshirilgan) : 0), 0);
+    const olinganOy = cashTaken.filter(c=> c.sana && c.sana.slice(0,7)===month).reduce((s,c)=> s+Number(c.summa||0), 0);
+    const sarflanganOy = cashSpend.filter(c=> c.sana && c.sana.slice(0,7)===month).reduce((s,c)=> s+Number(c.summa||0), 0);
+    const totalOlinganAll = cashTaken.reduce((s,c)=> s+Number(c.summa||0), 0);
+    const totalSarflanganAll = cashSpend.reduce((s,c)=> s+Number(c.summa||0), 0);
+    const qolimdaHozir = totalOlinganAll - totalSarflanganAll;
+
+    // Исломхон билан ҳисоб-китоб (шу ой учун + жами)
+    const islOy = cashSpend.filter(c=> c.turi===ISL_LABEL && c.sana && c.sana.slice(0,7)===month).reduce((s,c)=> s+Number(c.summa||0), 0);
+    const islJami = cashSpend.filter(c=> c.turi===ISL_LABEL).reduce((s,c)=> s+Number(c.summa||0), 0);
+    const islRows = cashSpend.filter(c=> c.turi===ISL_LABEL && c.sana && c.sana.slice(0,7)===month)
+      .sort((a,b)=> a.sana.localeCompare(b.sana))
+      .map(c=> `<tr><td>${fmtDate(c.sana)}</td><td>${fmt(c.summa)}</td><td>${esc(c.izoh||"")}</td></tr>`).join("");
+
+    // Харажатлар рўйхати (шу ой учун)
+    const expOy = expenses.filter(e=> e.sana && e.sana.slice(0,7)===month);
+    const expRows = expOy.sort((a,b)=> a.sana.localeCompare(b.sana))
+      .map(e=> `<tr><td>${fmtDate(e.sana)}</td><td>${esc(e.turi)}</td><td>${esc(e.mashina||"—")}</td><td>${fmt(e.summa)}</td></tr>`).join("");
+    const expOyJami = expOy.reduce((s,e)=> s+Number(e.summa||0), 0);
+
+    const preparedStr = new Date().toLocaleDateString("uz-UZ") + " " + new Date().toLocaleTimeString("uz-UZ");
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Йиғма ойлик ҳисобот — ${month}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:26px;color:#1c2430;}
+      h1{font-size:21px;color:#0f2440;margin-bottom:2px;}
+      h2{font-size:15px;color:#0f2440;margin:28px 0 8px;border-bottom:2px solid #c9a227;padding-bottom:6px;}
+      p.meta{font-size:12px;color:#666;margin:0 0 18px;}
+      .totals{display:flex;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+      .totals div{border:1px solid #e3ddcd;border-radius:8px;padding:10px 16px;min-width:150px;}
+      .totals .lbl{font-size:11px;color:#6b7280;text-transform:uppercase;}
+      .totals .val{font-size:17px;font-weight:700;color:#0f2440;margin-top:4px;}
+      table{border-collapse:collapse;width:100%;font-size:12px;margin-top:6px;}
+      th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;}
+      th{background:#0f2440;color:#fff;}
+      tr:nth-child(even){background:#f6f4ee;}
+      .section-note{font-size:11.5px;color:#6b7280;margin:4px 0 0;}
+      footer{margin-top:30px;font-size:11px;color:#999;text-align:center;}
+      @media print{ body{padding:10mm;} h2{page-break-after:avoid;} table{page-break-inside:auto;} tr{page-break-inside:avoid;} }
+</style></head><body>
+    <h1>Кунлик Хисобот — Йиғма ойлик ҳисобот</h1>
+    <p class="meta">Ой: <b>${month}</b> · Тайёрланган сана: ${preparedStr} · by Iqbol Jalilov</p>
+
+    <h2>1. Умумий молиявий хулоса</h2>
+    <div class="totals">
+      <div><div class="lbl">Умумий тушум</div><div class="val">${fmt(grandT)}</div></div>
+      <div><div class="lbl">Жами харажат (сафар)</div><div class="val">${fmt(grandX)}</div></div>
+      <div><div class="lbl">Бизнес харажат</div><div class="val">${fmt(grandBizExp)}</div></div>
+      <div><div class="lbl">Тўлиқ соф тушум</div><div class="val">${fmt(grandFullSof)}</div></div>
+      <div><div class="lbl">Жами сафарлар</div><div class="val">${list.length}</div></div>
+    </div>
+    <table><thead><tr><th>Мошина</th><th>Умумий тушум</th><th>Жами харажат (сафар)</th><th>Бизнес харажат</th><th>Тўлиқ соф тушум</th><th>Сафарлар</th></tr></thead>
+    <tbody>${carRows || '<tr><td colspan="6">Маълумот йўқ</td></tr>'}</tbody></table>
+
+    <h2>2. Нақд пул оқими (шу ой)</h2>
+    <div class="totals">
+      <div><div class="lbl">Топширилган (шу ой)</div><div class="val">${fmt(topshirilganOy)}</div></div>
+      <div><div class="lbl">Олинган (шу ой)</div><div class="val">${fmt(olinganOy)}</div></div>
+      <div><div class="lbl">Сарфланган (шу ой)</div><div class="val">${fmt(sarflanganOy)}</div></div>
+      <div><div class="lbl">Ҳозир қўлимда (жами)</div><div class="val">${fmt(qolimdaHozir)}</div></div>
+    </div>
+    <p class="section-note">"Ҳозир қўлимда" — ҳисобот тайёрланган кундаги умумий (барча вақт бўйича) қолдиқ, фақат шу ойнинг эмас.</p>
+
+    <h2>3. Исломхон билан ҳисоб-китоб</h2>
+    <div class="totals">
+      <div><div class="lbl">Шу ой берилган</div><div class="val">${fmt(islOy)}</div></div>
+      <div><div class="lbl">Жами берилган (барча вақт)</div><div class="val">${fmt(islJami)}</div></div>
+    </div>
+    <table><thead><tr><th>Сана</th><th>Сумма</th><th>Изоҳ</th></tr></thead>
+    <tbody>${islRows || '<tr><td colspan="3">Шу ойда ёзув йўқ</td></tr>'}</tbody></table>
+
+    <h2>4. Харажатлар рўйхати (шу ой)</h2>
+    <p class="section-note">Жами: <b>${fmt(expOyJami)}</b> сўм</p>
+    <table><thead><tr><th>Сана</th><th>Тури</th><th>Мошина</th><th>Сумма</th></tr></thead>
+    <tbody>${expRows || '<tr><td colspan="4">Шу ойда харажат йўқ</td></tr>'}</tbody></table>
+
+    <footer>Кунлик Хисобот (by Iqbol Jalilov) — автоматик тайёрланган йиғма ойлик ҳисобот</footer>
+    </body></html>`;
+  }
+  function printCombinedMonthlyReport(){
+    const month = document.getElementById("summaryMonth").value || currentMonthValue();
+    printFullHtmlDoc(buildCombinedMonthlyReportHTML(month));
+  }
+  document.getElementById("combinedReportBtn").addEventListener("click", printCombinedMonthlyReport);
   document.getElementById("monthlyDownloadBtn").addEventListener("click", ()=>{
     if(document.getElementById("monthlyFormatSelect").value === "excel") downloadMonthlyWorkbook();
     else printMonthlyReport();
@@ -4705,6 +4839,40 @@ ${XL_PAGE}
     }
   });
 
+  // ---- Исломхон билан ҳисоб-китоб: cashSpend'нинг "Исломхонга берилди"
+  // деб белгиланган қисмини автоматик жамлайди (алоҳида ёзув олиб бормайди) ----
+  const ISL_LABEL = "Исломхонга берилди";
+  function renderIslomkhon(){
+    const el = document.getElementById("isl_jami");
+    if(!el) return;
+    const list = cashSpend.filter(c=> c.turi === ISL_LABEL);
+    const jami = list.reduce((s,c)=> s + Number(c.summa||0), 0);
+    const thisMonth = localDateStr().slice(0,7);
+    const shuOy = list.filter(c=> c.sana && c.sana.slice(0,7)===thisMonth).reduce((s,c)=> s + Number(c.summa||0), 0);
+    const lastDate = list.length ? list.slice().sort((a,b)=> b.sana.localeCompare(a.sana))[0].sana : null;
+    document.getElementById("isl_jami").textContent = fmt(jami);
+    document.getElementById("isl_shuoy").textContent = fmt(shuOy);
+    document.getElementById("isl_oxirgi").textContent = lastDate ? fmtDate(lastDate) : "—";
+
+    const byMonth = {};
+    list.forEach(c=>{
+      const m = (c.sana||"").slice(0,7);
+      byMonth[m] = (byMonth[m]||0) + Number(c.summa||0);
+    });
+    const monthNames = ["январь","февраль","март","апрель","май","июнь",
+                        "июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+    const months = Object.keys(byMonth).sort((a,b)=> b.localeCompare(a));
+    const body = document.getElementById("islByMonthBody");
+    if(body){
+      body.innerHTML = months.length
+        ? months.map(mo=>{
+            const [y,m] = mo.split("-").map(Number);
+            return `<tr><td>${monthNames[m-1]} ${y}</td><td class="neg">${fmt(byMonth[mo])}</td></tr>`;
+          }).join("")
+        : `<tr><td colspan="2" class="empty">Ҳали ёзув йўқ.</td></tr>`;
+    }
+  }
+
   // ---- Олинган нақд пулни сарфлаш: рендер ва форма (мустақил, бошқа ҳисоб-китобга тегмайди) ----
   function exitCashSpendEditMode(){
     editingCashSpendId = null;
@@ -4728,6 +4896,7 @@ ${XL_PAGE}
     const qEl = document.getElementById("cs_qoldiq");
     qEl.textContent = fmt(qoldiq);
     qEl.className = "value " + (qoldiq < 0 ? "neg" : "pos");
+    renderIslomkhon();
 
     const body = document.getElementById("cashSpendBody");
     if(!body) return;
