@@ -1112,7 +1112,12 @@
 
     <div class="grid-cards" id="expenseTodayStats"></div>
 
-    <div class="card">
+    <div class="actions-row" style="margin-top:0;margin-bottom:0;">
+      <button type="button" class="btn gold" id="expTabAddBtn">➕ Қўшиш</button>
+      <button type="button" class="btn outline" id="expTabPayBtn">💳 Қоплаш</button>
+    </div>
+
+    <div class="card" id="expTabAddCard">
       <h2>Янги харажат қўшиш</h2>
       <form class="entry" id="expenseForm">
         <div>
@@ -1154,7 +1159,7 @@
       </form>
     </div>
 
-    <div class="card" style="border-left:4px solid var(--gold);">
+    <div class="card" id="expTabPayCard" style="border-left:4px solid var(--gold);display:none;">
       <h2>💳 Харажатни қоплаш</h2>
       <p style="margin-top:-8px;font-size:13px;color:var(--muted);">
         Қайси харажат учун қанча пул тўланганини алоҳида қайд қилинг. Бир харажатни бир неча марта қисм-қисм қилиб қоплаш мумкин. Қолдиқ автоматик ҳисобланади.
@@ -1200,28 +1205,6 @@
     </div>
 
     <div class="card">
-      <h2>💰 Харажатларни қоплаш тарихи</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>№</th><th>Сана</th><th>Автомобиль</th><th>Харажат</th><th>Кимга</th><th>Қопланган сумма</th><th>Изоҳ</th><th>Амал</th></tr>
-          </thead>
-          <tbody id="expensePaymentsBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>🚗 Автомобиллар бўйича қопланган харажатлар</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Автомобиль</th><th>Қоплашлар сони</th><th>Қопланган сумма</th></tr></thead>
-          <tbody id="expensePaymentCarSummaryBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
       <h2>Харажатлар рўйхати</h2>
       <div class="filters">
         <div class="fld">
@@ -1253,8 +1236,11 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2>🚗 Мошиналар бўйича харажат хулосаси <span style="font-size:12px;color:var(--muted);font-weight:400;">(танланган ойда, барча мошиналар)</span></h2>
+    <div class="section-divider">🔧 Таҳлил ва хулосалар — номига босиб очинг</div>
+
+    <div class="card collapsible">
+      <h2>🚗 Мошиналар бўйича харажат хулосаси <span style="font-size:12px;color:var(--muted);font-weight:400;">(танланган ойда)</span> <span class="chev2">▸</span></h2>
+      <div class="collapse-body">
       <div class="table-wrap">
         <table>
           <thead>
@@ -1263,11 +1249,40 @@
           <tbody id="expenseCarSummaryBody"></tbody>
         </table>
       </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Харажат туркумлари бўйича таҳлил (шу ой)</h2>
+    <div class="card collapsible">
+      <h2>Харажат туркумлари бўйича таҳлил (шу ой) <span class="chev2">▸</span></h2>
+      <div class="collapse-body">
       <div id="expenseCategoryChart"></div>
+      </div>
+    </div>
+
+    <div class="card collapsible">
+      <h2>💰 Харажатларни қоплаш тарихи <span style="font-size:12px;color:var(--muted);font-weight:400;">(барча вақт)</span> <span class="chev2">▸</span></h2>
+      <div class="collapse-body">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>№</th><th>Сана</th><th>Автомобиль</th><th>Харажат</th><th>Кимга</th><th>Қопланган сумма</th><th>Изоҳ</th><th>Амал</th></tr>
+          </thead>
+          <tbody id="expensePaymentsBody"></tbody>
+        </table>
+      </div>
+      </div>
+    </div>
+
+    <div class="card collapsible">
+      <h2>🚗 Автомобиллар бўйича қопланган харажатлар <span style="font-size:12px;color:var(--muted);font-weight:400;">(барча вақт)</span> <span class="chev2">▸</span></h2>
+      <div class="collapse-body">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Автомобиль</th><th>Қоплашлар сони</th><th>Қопланган сумма</th></tr></thead>
+          <tbody id="expensePaymentCarSummaryBody"></tbody>
+        </table>
+      </div>
+      </div>
     </div>
   </section>
 
@@ -1535,6 +1550,56 @@
 <script>
 (function(){
   "use strict";
+
+  // ---- ГЛОБАЛ ХАТО ТУТУВЧИ ----
+  // Бу — файлдаги ЭНГ БИРИНЧИ кодлардан бири (атайин), чунки у ҳеч қандай
+  // бошқа функцияга (toast, customAlert ва ҳ.к.) БОҒЛИҚ ЭМАС — агар ўша
+  // функцияларнинг ўзида хато бўлса ҳам, бу баннер ишлайверади. Мақсад:
+  // кутилмаган хато "оқ экран" эмас, тинч, тушунарли хабар билан кўринсин,
+  // ва фойдаланувчи "маълумотим йўқолдими" деб қўрқмасин (аслида йўқолмайди
+  // — хато фақат экранда кўриниш/ҳисоблашда, localStorage'даги маълумотга
+  // тегмайди).
+  var __errBannerShown = false;
+  function __showGlobalErrorBanner(){
+    if(__errBannerShown) return;
+    __errBannerShown = true;
+    try{
+      var b = document.createElement("div");
+      b.id = "__globalErrorBanner";
+      b.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:999999;"+
+        "background:#b3402a;color:#fff;padding:14px 18px;font-family:Arial,sans-serif;"+
+        "font-size:13.5px;line-height:1.5;box-shadow:0 -2px 14px rgba(0,0,0,.35);"+
+        "display:flex;align-items:center;gap:14px;flex-wrap:wrap;";
+      b.innerHTML = "⚠️ Кечирасиз, техник хато юз берди. <b>Маълумотларингиз хавфсиз</b> — улар аллақачон сақланган. "+
+        "Саҳифани янгилаб кўринг." +
+        '<button id="__globalErrorReloadBtn" style="margin-left:auto;background:#fff;color:#b3402a;border:none;'+
+        'padding:8px 16px;border-radius:7px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">'+
+        "Саҳифани янгилаш</button>";
+      document.body.appendChild(b);
+      document.getElementById("__globalErrorReloadBtn").addEventListener("click", function(){ location.reload(); });
+    }catch(e){ /* агар бу ҳам ишламаса, жим қоламиз — асосий дастурга халақит бермаслик учун */ }
+  }
+  window.addEventListener("error", __showGlobalErrorBanner);
+  window.addEventListener("unhandledrejection", __showGlobalErrorBanner);
+
+  // ⚠️ МАРКАЗИЙ РЎЙХАТ — барча "бизнес маълумоти" турлари (ёзувлар, нақд
+  // пул ва ҳ.к.) шу ерда, БИТТА жойда рўйхатга олинган. Булут синхронизацияси
+  // (SYNC_KEYS) ва заҲира/тиклаш (collectBusinessData/applyBusinessData)
+  // ИККАЛАСИ ҲАМ шу рўйхатдан фойдаланади. Янги маълумот тури қўшсангиз —
+  // ФАҚАТ шу ерга ва пастдаги collectBusinessData/applyBusinessData
+  // функцияларига қўшиш кифоя (бошқа 2 жойни қидиришнинг ҳожати йўқ).
+  const BUSINESS_DATA_KEYS = [
+    {varName:"records", storageKey:"kh_records_v1"},
+    {varName:"cars", storageKey:"kh_cars_v1"},
+    {varName:"expenses", storageKey:"kh_expenses_v1"},
+    {varName:"expensePayments", storageKey:"kh_expense_payments_v1"},
+    {varName:"cashTaken", storageKey:"kh_cashtaken_v1"},
+    {varName:"cashSpend", storageKey:"kh_cashspend_v1"},
+    {varName:"debtPayments", storageKey:"kh_debtpay_v1"},
+    {varName:"agents", storageKey:"kh_agents_v1"},
+    {varName:"agentFields", storageKey:"kh_agent_fields_v1"},
+  ];
+
   const LS_KEY = "kh_records_v1";
   const LS_CARS = "kh_cars_v1";
   const LS_PW = "kh_pw_v1";
@@ -1548,6 +1613,26 @@
   const LS_AUTOSEND = "kh_autosend_v1";
   const LS_LASTAUTOSENT = "kh_lastautosent_v1";
   const LS_AGENTS = "kh_agents_v1";
+
+  // Диққат: kh_pw_v1 (парол) АТАЙИН СИНХРОНЛАНМАЙДИ — у ҳар қурилмага хос,
+  // локал созлама. Акс ҳолда, эски/фонда очиқ турган қурилма булутга ёзиб
+  // қолса, барча қурилмаларда парол ўзининг эскисига қайтиб кетиши мумкин
+  // (худди шу хато олдин юз берган эди).
+  // "Бизнес маълумоти" турлари (ёзувлар, нақд пул ва ҳ.к.) БИТТА марказий
+  // BUSINESS_DATA_KEYS рўйхатидан олинади (файл бошида) — шу орқали
+  // синхронизация ва заҲира/тиклаш доим бир хил рўйхатни ишлатади.
+  // Қолганлари — созламалар (тема, Telegram токени ва ҳ.к.).
+  // ⚠️ Бу рўйхат атайин CLOUD модулидан ТАШҚАРИДА (умумий кўринадиган
+  // жойда) турибди — чунки уни CLOUD'нинг ўзи ҳам, бир xil браузернинг
+  // бошқа табидаги ўзгаришни кузатувчи код ҳам (пастроқда) ишлатади.
+  const SYNC_KEYS = [
+    ...BUSINESS_DATA_KEYS.map(d=> d.storageKey),
+    "kh_audit_v1","kh_telegram_v1",
+    "kh_lockmin_v1","kh_autosend_v1","kh_lastautosent_v1",
+    "kh_theme_v1","kh_logo_v1","kh_brand_v1",
+    "kh_daily_autosend_v1","kh_daily_send_time_v1","kh_last_daily_sent_v1",
+    "kh_dash_debt_limit_v1","kh_trust_hours_v1"
+  ];
 
   /* =========================================================
      БУЛУТ (Firestore): АСОСИЙ маълумот манбаи + реал вақт синхронизация.
@@ -1572,25 +1657,6 @@
     const CHUNK_SIZE = 700000;
     const LS_LASTSYNC = "kh_lastsync_v1";
     const LS_DEVICE   = "kh_deviceid_v1";
-
-    // Диққат: kh_pw_v1 (парол) АТАЙИН СИНХРОНЛАНМАЙДИ — у ҳар қурилмага хос,
-    // локал созлама. Акс ҲОЛДА, эски/фонда очиқ турган қурилма булутга ёзиб
-    // қолса, барча қурилмаларда парол ўзининг эскисига қайтиб кетиши мумкин
-    // (худди шу хато олдин юз берган эди).
-    // ⚠️ ЭСЛАТМА (келажакда янги маълумот тури — масалан янги рўйхат ёки
-    // ҳисоб-китоб — қўшилганда): ЯНГИ localStorage калитини шу рўйхатга ҳам
-    // ("backupBtn" ва "sendTelegramBackup" функцияларидаги backup/restore
-    // кодига ҳам) албатта қўшиш керак — акс ҳолда ўша маълумот бошқа
-    // қурилмаларга ўтмайди (батафсил: restore() энди ўчирмайди, фақат
-    // "кўринмайди" муаммоси қолади).
-    const SYNC_KEYS = [
-      "kh_records_v1","kh_cars_v1","kh_audit_v1","kh_telegram_v1",
-      "kh_lockmin_v1","kh_debtpay_v1","kh_autosend_v1","kh_lastautosent_v1",
-      "kh_cashtaken_v1","kh_cashspend_v1","kh_expenses_v1","kh_expense_payments_v1",
-      "kh_theme_v1","kh_logo_v1","kh_brand_v1","kh_agents_v1","kh_agent_fields_v1",
-      "kh_daily_autosend_v1","kh_daily_send_time_v1","kh_last_daily_sent_v1",
-      "kh_dash_debt_limit_v1","kh_trust_hours_v1"
-    ];
 
     let db = null, ready = false, syncTimer = null, syncing = false, inboxUnsub = null;
     let agentMode = false;   // ТРУЕ бўлса — бу қурилма фақат ЎҚИЙДИ, булутга ҳеч нарса ёзмайди
@@ -4708,7 +4774,7 @@ ${XL_PAGE}
 
     const body = document.getElementById("cashTakenBody");
     if(!cashTaken.length){
-      body.innerHTML = `<tr><td colspan="5" class="empty">Ҳали нақд пул олиш қайд этилмаган.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="5" class="empty">Ҳали нақд пул олиш қайд этилмаган. Юқоридаги формадан биринчи ёзувни қўшинг ↑</td></tr>`;
       return;
     }
     const sorted = cashTaken.slice().sort((a,b)=> b.sana.localeCompare(a.sana));
@@ -4901,7 +4967,7 @@ ${XL_PAGE}
     const body = document.getElementById("cashSpendBody");
     if(!body) return;
     if(!cashSpend.length){
-      body.innerHTML = `<tr><td colspan="5" class="empty">Ҳали сарф қайд этилмаган.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="5" class="empty">Ҳали сарф қайд этилмаган. Юқоридаги формадан биринчи ёзувни қўшинг ↑</td></tr>`;
       return;
     }
     const sorted = cashSpend.slice().sort((a,b)=> b.sana.localeCompare(a.sana));
@@ -5029,11 +5095,7 @@ ${XL_PAGE}
   });
 
   document.getElementById("backupBtn").addEventListener("click", ()=>{
-    const data = {
-      records, cars, expenses, expensePayments,
-      cashTaken, cashSpend, debtPayments, agents, agentFields,
-      exportedAt: new Date().toISOString()
-    };
+    const data = collectBusinessData();
     downloadFile(new Blob([JSON.stringify(data,null,2)], {type:"application/json"}), "kunlik_hisobot_zaxira_"+localDateStr()+".json", "application/json");
     toast("Захира нусха юкланди ✓");
   });
@@ -5047,30 +5109,7 @@ ${XL_PAGE}
     reader.onload = ev=>{
       try{
         const data = JSON.parse(ev.target.result);
-        if(Array.isArray(data.records)){
-          records = data.records;
-          saveRecords(records);
-        }
-        if(Array.isArray(data.cars) && data.cars.length){
-          cars = data.cars.map(item => typeof item === "string" ? {name:item, driver:""} : item);
-          saveCars(cars);
-        }
-        if(Array.isArray(data.expenses)){
-          expenses = data.expenses;
-          saveExpenses(expenses);
-          if(Array.isArray(data.expensePayments)){
-            expensePayments = data.expensePayments;
-            saveExpensePayments(expensePayments);
-          }
-        }
-        if(Array.isArray(data.cashTaken)){ cashTaken = data.cashTaken; saveCashTaken(cashTaken); }
-        if(Array.isArray(data.cashSpend)){ cashSpend = data.cashSpend; saveCashSpend(cashSpend); }
-        if(Array.isArray(data.debtPayments)){ debtPayments = data.debtPayments; saveDebtPayments(debtPayments); }
-        if(Array.isArray(data.agents)){ agents = data.agents; saveAgents(agents); }
-        if(data.agentFields && typeof data.agentFields === "object"){
-          agentFields = data.agentFields;
-          safeSave(LS_AGENT_FIELDS, JSON.stringify(agentFields));
-        }
+        applyBusinessData(data);
         populateCarSelects();
         renderCarsList();
         renderTodayStats();
@@ -5131,11 +5170,7 @@ ${XL_PAGE}
       alert("Аввал Созламалар → Telegram бўлимида Bot Token ва Chat ID'ни киритиб, «Сақлаш» тугмасини босинг.");
       return false;
     }
-    const data = {
-      records, cars, expenses, expensePayments,
-      cashTaken, cashSpend, debtPayments, agents, agentFields,
-      exportedAt: new Date().toISOString()
-    };
+    const data = collectBusinessData();
     const jsonStr = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonStr], {type:"application/json"});
     const fileName = "kunlik_hisobot_zaxira_"+localDateStr()+".json";
@@ -5464,7 +5499,28 @@ ${XL_PAGE}
     exitExpenseEditMode();
   });
 
-  document.getElementById("expenseForm").addEventListener("submit", e=>{
+  // ---- Харажат: "Қўшиш" / "Қоплаш" таблари ----
+  (function(){
+    const addBtn = document.getElementById("expTabAddBtn");
+    const payBtn = document.getElementById("expTabPayBtn");
+    const addCard = document.getElementById("expTabAddCard");
+    const payCard = document.getElementById("expTabPayCard");
+    if(!addBtn || !payBtn || !addCard || !payCard) return;
+    addBtn.addEventListener("click", ()=>{
+      addCard.style.display = "";
+      payCard.style.display = "none";
+      addBtn.className = "btn gold";
+      payBtn.className = "btn outline";
+    });
+    payBtn.addEventListener("click", ()=>{
+      addCard.style.display = "none";
+      payCard.style.display = "";
+      addBtn.className = "btn outline";
+      payBtn.className = "btn gold";
+    });
+  })();
+
+  document.getElementById("expenseForm").addEventListener("submit", async e=>{
     e.preventDefault();
     const data = {
       sana: document.getElementById("e_sana").value,
@@ -5475,6 +5531,17 @@ ${XL_PAGE}
       kimga: document.getElementById("e_kimga").value.trim(),
       izoh: document.getElementById("e_izoh").value.trim(),
     };
+    if(!editingExpenseId){
+      const dup = expenses.find(x=> x.sana===data.sana && x.mashina===data.mashina && Number(x.summa)===data.summa && data.mashina);
+      if(dup){
+        const carLabel = data.mashina || "(мошинасиз)";
+        const ok = await customConfirmAsync(
+          `Диққат: ${fmtDate(data.sana)} санада, ${carLabel} учун ${fmt(data.summa)} сўмлик харажат аллақачон мавжуд ` +
+          `(${dup.turi}). Бундай харажатни такрор қайд этиш хатодан бўлиши мумкин.\n\nШунга қарамай давом этайми?`
+        );
+        if(!ok) return;
+      }
+    }
     if(editingExpenseId){
       const idx = expenses.findIndex(x=>x.id===editingExpenseId);
       if(idx !== -1) expenses[idx] = {...expenses[idx], ...data};
@@ -5559,7 +5626,7 @@ ${XL_PAGE}
     if(!body) return;
     const list = expensePayments.slice().sort((a,b)=> (b.sana||"").localeCompare(a.sana||"") || (b.createdAt||"").localeCompare(a.createdAt||""));
     if(!list.length){
-      body.innerHTML = `<tr><td colspan="7" class="empty">Ҳали харажат қоплаш ёзуви йўқ.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="7" class="empty">Ҳали харажат қоплаш ёзуви йўқ. "💳 Қоплаш" табидан қоплашни қайд этинг.</td></tr>`;
       return;
     }
     body.innerHTML = list.map((p,i)=>{
@@ -5787,12 +5854,21 @@ ${XL_PAGE}
     );
     const body = document.getElementById("expensesBody");
     if(!list.length){
-      body.innerHTML = `<tr><td colspan="10" class="empty">Бу даврда харажат ёзуви йўқ.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="10" class="empty">Бу даврда харажат ёзуви йўқ. "➕ Қўшиш" табидан янги харажат қўшинг, ёки юқоридаги ой/мошина филтрини текширинг.</td></tr>`;
       return;
     }
     body.innerHTML = list.map((x,i)=>{
       const qoplangan = x.qoplangan || 0;
       const qoldiq = x.summa - qoplangan;
+      let statusBadge;
+      if(qoldiq <= 0){
+        statusBadge = `<span class="pill" style="background:var(--good);color:#fff;white-space:nowrap;">✓ Тўлиқ</span>`;
+      } else if(qoplangan > 0){
+        const pct = x.summa>0 ? Math.round((qoplangan/x.summa)*100) : 0;
+        statusBadge = `<span class="pill" style="background:#e0a020;color:#fff;white-space:nowrap;">◐ Қисман — ${pct}%</span>`;
+      } else {
+        statusBadge = `<span class="pill" style="background:var(--bad);color:#fff;white-space:nowrap;">✗ Қопланмаган</span>`;
+      }
       return `<tr>
       <td>${i+1}</td>
       <td>${fmtDate(x.sana)}</td>
@@ -5800,7 +5876,7 @@ ${XL_PAGE}
       <td>${x.mashina ? carPill(x.mashina) : '<span style="color:var(--muted);">—</span>'}</td>
       <td class="neg">${fmt(x.summa)}</td>
       <td class="pos">${fmt(qoplangan)}</td>
-      <td class="${qoldiq>0?'neg':'pos'}">${fmt(qoldiq)}</td>
+      <td class="${qoldiq>0?'neg':'pos'}">${fmt(qoldiq)}<br>${statusBadge}</td>
       <td>${esc(x.kimga)||"—"}</td>
       <td>${esc(x.izoh)}</td>
       <td style="white-space:nowrap;">
@@ -5812,12 +5888,22 @@ ${XL_PAGE}
 
     body.querySelectorAll("[data-edel]").forEach(b=>{
       b.addEventListener("click", async ()=>{
-        if(await customConfirmAsync("Ушбу харажат ёзувини ўчирмоқчимисиз?")){
+        const x = expenses.find(i=>i.id===b.dataset.edel);
+        const linkedPayments = expensePayments.filter(p=> p.expenseId===b.dataset.edel);
+        const linkedSum = linkedPayments.reduce((s,p)=> s+Number(p.summa||0), 0);
+        const msg = linkedPayments.length
+          ? `Диққат: бу харажатга ${fmt(linkedSum)} сўмлик ${linkedPayments.length} та тўлов ёзуви боғланган. ` +
+            `Харажатни ўчирсангиз, ўша тўлов ёзув(лар)и ҳам бирга ўчирилади.\n\nДавом этасизми?`
+          : "Ушбу харажат ёзувини ўчирмоқчимисиз?";
+        if(await customConfirmAsync(msg)){
           requirePasswordThen(()=>{
-            const x = expenses.find(i=>i.id===b.dataset.edel);
             expenses = expenses.filter(x=>x.id!==b.dataset.edel);
             saveExpenses(expenses);
-            logAudit("Харажат ўчирилди", x ? `${fmtDate(x.sana)} · ${x.turi} · ${fmt(x.summa)}` : "");
+            if(linkedPayments.length){
+              expensePayments = expensePayments.filter(p=> p.expenseId!==b.dataset.edel);
+              saveExpensePayments(expensePayments);
+            }
+            logAudit("Харажат ўчирилди", x ? `${fmtDate(x.sana)} · ${x.turi} · ${fmt(x.summa)}` + (linkedPayments.length ? ` · ${linkedPayments.length} та боғлиқ тўлов ҳам ўчирилди` : "") : "");
             updateExpenseCatList();
             refreshExpensePaymentSection();
             renderExpenses();
@@ -6396,6 +6482,49 @@ ${XL_PAGE}
     }catch(e){ return defaultAgentFields(); }
   }
   let agentFields = loadAgentFields();
+
+  // ⚠️ Шу иккита функция — заҲира олиш/тиклашнинг ЯГОНА марказий жойи.
+  // BUSINESS_DATA_KEYS'даги ҳар бир тур шу ерда (ва ФАҚАТ шу ерда) ўзининг
+  // ўзгарувчиси ва saqlash funksiyasi bilan bog'lanadi. Backup tugmasi,
+  // Restore qayta tiklash, va Telegram'ga avto-zaxira — uchalasi ham shu
+  // ikki funksiyani chaqiradi, shuning uchun ularning hech biri endi
+  // alohida-alohida ro'yxat saqlamaydi.
+  function collectBusinessData(){
+    const data = {};
+    BUSINESS_DATA_KEYS.forEach(d=>{
+      switch(d.varName){
+        case "records": data.records = records; break;
+        case "cars": data.cars = cars; break;
+        case "expenses": data.expenses = expenses; break;
+        case "expensePayments": data.expensePayments = expensePayments; break;
+        case "cashTaken": data.cashTaken = cashTaken; break;
+        case "cashSpend": data.cashSpend = cashSpend; break;
+        case "debtPayments": data.debtPayments = debtPayments; break;
+        case "agents": data.agents = agents; break;
+        case "agentFields": data.agentFields = agentFields; break;
+      }
+    });
+    data.exportedAt = new Date().toISOString();
+    return data;
+  }
+  function applyBusinessData(data){
+    if(!data || typeof data !== "object") return;
+    if(Array.isArray(data.records)){ records = data.records; saveRecords(records); }
+    if(Array.isArray(data.cars) && data.cars.length){
+      cars = data.cars.map(item => typeof item === "string" ? {name:item, driver:""} : item);
+      saveCars(cars);
+    }
+    if(Array.isArray(data.expenses)){ expenses = data.expenses; saveExpenses(expenses); }
+    if(Array.isArray(data.expensePayments)){ expensePayments = data.expensePayments; saveExpensePayments(expensePayments); }
+    if(Array.isArray(data.cashTaken)){ cashTaken = data.cashTaken; saveCashTaken(cashTaken); }
+    if(Array.isArray(data.cashSpend)){ cashSpend = data.cashSpend; saveCashSpend(cashSpend); }
+    if(Array.isArray(data.debtPayments)){ debtPayments = data.debtPayments; saveDebtPayments(debtPayments); }
+    if(Array.isArray(data.agents)){ agents = data.agents; saveAgents(agents); }
+    if(data.agentFields && typeof data.agentFields === "object"){
+      agentFields = data.agentFields;
+      safeSave(LS_AGENT_FIELDS, JSON.stringify(agentFields));
+    }
+  }
 
   function renderAgentFieldsList(){
     const el = document.getElementById("agentFieldsList");
@@ -7192,6 +7321,7 @@ ${XL_PAGE}
       expenses = loadExpenses();
       expensePayments = loadExpensePayments();
       cashTaken = loadCashTaken();
+      cashSpend = loadCashSpend();
       debtPayments = loadDebtPayments();
       agents = loadAgents();
       agentFields = loadAgentFields();
@@ -7219,6 +7349,21 @@ ${XL_PAGE}
       location.reload();
     }
   }
+
+  // ---- Бир xil браузернинг БОШҚА таби (ёки ойнаси) ЎЗГАРТИРГАН
+  // маълумотни ушбу табга ҳам тезда етказиш (қурилма даражасидаги булут
+  // синхронизацияси бунда ёрдам бермайди, чунки иккала таб ҳам БИР xil
+  // қурилма деб ҳисобланади). Браузернинг стандарт "storage" ҳодисаси
+  // фақат БОШҚА таб localStorage'ни ўзгартирганда ишга тушади — шу
+  // қурилманинг ЎЗИ ёзса, бу ҳодиса шу табда чақирилмайди (табиий ҳимоя).
+  let __storageSyncTimer = null;
+  window.addEventListener("storage", function(e){
+    if(!e.key || typeof SYNC_KEYS === "undefined" || !SYNC_KEYS.includes(e.key)) return;
+    clearTimeout(__storageSyncTimer);
+    __storageSyncTimer = setTimeout(()=>{
+      if(typeof softRefreshAfterRestore === "function") softRefreshAfterRestore();
+    }, 300);
+  });
 
   if(getPwHash() && !isTrusted()){
     document.getElementById("lockScreen").classList.remove("hidden");
