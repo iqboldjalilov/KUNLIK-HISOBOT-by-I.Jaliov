@@ -1721,9 +1721,14 @@
         setStatus("Тикланмоқда...");
         const cloud = await fetchCloud();
         if(!cloud){ toast("Булутда ҳали нусха йўқ"); return false; }
+        // Диққат: агар булутда шу турдаги маълумот ҳали УМУМАН бўлмаса (масалан,
+        // янги қўшилган маълумот тури бошқа қурилма уни ҳали булутга юбормаган
+        // бўлса), уни ЛОКАЛДАН ЎЧИРМАЙМИЗ — акс ҳолда бошқа қурилманинг "бўш"
+        // ҳолати бу қурилмадаги реал маълумотни ўчириб юбориши мумкин эди
+        // (худди шундай хато юз берган эди). Фақат булутда ҲАҚИҚАТАН БОР
+        // маълумотларни тиклаймиз.
         SYNC_KEYS.forEach(k=>{
           if(cloud.data[k] !== undefined) localStorage.setItem(k, cloud.data[k]);
-          else localStorage.removeItem(k);
         });
         localStorage.setItem(LS_LASTSYNC, String(cloud.meta.updatedAt || Date.now()));
         return true;
@@ -4849,7 +4854,11 @@ ${XL_PAGE}
   });
 
   document.getElementById("backupBtn").addEventListener("click", ()=>{
-    const data = {records, cars, expenses, expensePayments, exportedAt: new Date().toISOString()};
+    const data = {
+      records, cars, expenses, expensePayments,
+      cashTaken, cashSpend, debtPayments, agents, agentFields,
+      exportedAt: new Date().toISOString()
+    };
     downloadFile(new Blob([JSON.stringify(data,null,2)], {type:"application/json"}), "kunlik_hisobot_zaxira_"+localDateStr()+".json", "application/json");
     toast("Захира нусха юкланди ✓");
   });
@@ -4879,6 +4888,14 @@ ${XL_PAGE}
             saveExpensePayments(expensePayments);
           }
         }
+        if(Array.isArray(data.cashTaken)){ cashTaken = data.cashTaken; saveCashTaken(cashTaken); }
+        if(Array.isArray(data.cashSpend)){ cashSpend = data.cashSpend; saveCashSpend(cashSpend); }
+        if(Array.isArray(data.debtPayments)){ debtPayments = data.debtPayments; saveDebtPayments(debtPayments); }
+        if(Array.isArray(data.agents)){ agents = data.agents; saveAgents(agents); }
+        if(data.agentFields && typeof data.agentFields === "object"){
+          agentFields = data.agentFields;
+          safeSave(LS_AGENT_FIELDS, JSON.stringify(agentFields));
+        }
         populateCarSelects();
         renderCarsList();
         renderTodayStats();
@@ -4886,6 +4903,8 @@ ${XL_PAGE}
         renderExpenseTodayStats();
         renderExpenses();
         updateExpenseCatList();
+        if(typeof renderCashTaken === "function") renderCashTaken();
+        if(typeof renderCashSpend === "function") renderCashSpend();
         toast("Маълумотлар тикланди ✓");
       }catch(err){
         alert("Файлни ўқишда хатолик. Тўғри захира файлини танланг.");
@@ -4937,7 +4956,11 @@ ${XL_PAGE}
       alert("Аввал Созламалар → Telegram бўлимида Bot Token ва Chat ID'ни киритиб, «Сақлаш» тугмасини босинг.");
       return false;
     }
-    const data = {records, cars, expenses, expensePayments, exportedAt: new Date().toISOString()};
+    const data = {
+      records, cars, expenses, expensePayments,
+      cashTaken, cashSpend, debtPayments, agents, agentFields,
+      exportedAt: new Date().toISOString()
+    };
     const jsonStr = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonStr], {type:"application/json"});
     const fileName = "kunlik_hisobot_zaxira_"+localDateStr()+".json";
