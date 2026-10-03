@@ -1312,6 +1312,28 @@
       </p>
     </div>
 
+    <div class="card collapsible" id="versionsCard" style="border-left:4px solid var(--navy-2);">
+      <h2>🕰️ Версиялар тарихи (аввалги ҳолатга қайтариш) <span class="chev2">▸</span></h2>
+      <div class="collapse-body">
+      <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
+        Маълумот ўзгариб, булутга сақланганда, охирги версиядан камида <b>2 соат</b> ўтган бўлса, дастур
+        <b>янги версия</b> олиб қўяди (охирги 30 таси сақланади). Бирор хато кетса — керакли санани танлаб
+        «Қайтариш»ни босинг. Қайтаришдан олдин дастур ҳозирги ҳолатни ҳам алоҳида версия қилиб сақлайди,
+        шунинг учун қайтаришнинг ўзини ҳам бекор қилиш мумкин.
+      </p>
+      <div class="actions-row" style="margin-top:4px;">
+        <button class="btn gold" id="versionSaveNowBtn">📌 Ҳозир версия сақлаш</button>
+        <button class="btn outline" id="versionRefreshBtn">🔄 Рўйхатни янгилаш</button>
+      </div>
+      <div id="versionsList" style="margin-top:12px;"></div>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:0;">
+        Эслатма: қайтариш барча <b>бизнес маълумотни</b> (ёзув, харажат, нақд пул, қарз тўловлари, агентлар)
+        танланган вақтдаги ҳолатга келтиради — ундан кейинги ўзгаришлар йўқолади. Созламалар (парол,
+        Telegram, тема) ўзгармайди.
+      </p>
+      </div>
+    </div>
+
     <div class="section-divider">🔧 Кенгайтирилган созламалар — камдан-кам керак бўлади, номига босиб очинг</div>
 
     <div class="card collapsible" id="systemCheckCard" style="border-left:4px solid var(--navy-2);">
@@ -1653,10 +1675,18 @@
     const COLL_BACKUP = "kunlik_backup";      // асосий маълумот (чанкларга бўлинган)
     const COLL_INBOX  = "kunlik_agent_inbox"; // агентлар киритган ёзувлар
     const COLL_META   = "kunlik_meta";        // агентлар рўйхати, умумий маълумот
+    const COLL_VERS   = "kunlik_versions";    // версиялар тарихи (чекланган сонда)
     const DOC_MAIN = "main";
-    const CHUNK_SIZE = 700000;
+    // Firestore ҳужжати чегараси — 1 МБ (БАЙТ ҳисобида). Кирилл ҳарф 2 байт
+    // эгаллайди, шунинг учун чанк ҳажми 300 000 ҲАРФ (≈600 КБ гача) қилинди —
+    // маълумот кўпайгач ҳам ҳужжат чегарасидан ошиб кетмаслиги учун.
+    // (Эски, каттароқ чанкли нусхалар ҳам муаммосиз ўқилади.)
+    const CHUNK_SIZE = 300000;
     const LS_LASTSYNC = "kh_lastsync_v1";
     const LS_DEVICE   = "kh_deviceid_v1";
+    const LS_LASTVER  = "kh_lastver_v1";            // ҳар қурилмага хос (синхронланмайди)
+    const VERSION_MIN_GAP = 2*60*60*1000;           // автомат версиялар орасида камида 2 соат
+    const VERSION_KEEP = 30;                         // охирги нечта версия сақланади
 
     let db = null, ready = false, syncTimer = null, syncing = false, inboxUnsub = null;
     let agentMode = false;   // ТРУЕ бўлса — бу қурилма фақат ЎҚИЙДИ, булутга ҳеч нарса ёзмайди
@@ -1726,7 +1756,7 @@
       el.textContent = fmtDate(localDateStr(d)) + " " + d.toLocaleTimeString("uz-UZ");
     }
 
-    async function upload(silent){
+    async function upload(silent, force){
       // Агент қурилмаси ҳеч қачон умумий базага ёзмайди — фақат ўз ёзувини
       // "inbox" орқали юборади.
       if(agentMode) return false;
@@ -1741,7 +1771,7 @@
         // ўзимизникини УСТИГА ЁЗМАЙМИЗ, аввал ўзимиз булутдагини тортиб оламиз.
         try{
           const cur = await db.collection(COLL_BACKUP).doc(DOC_MAIN).get();
-          if(cur.exists){
+          if(cur.exists && !force){
             const meta = cur.data();
             const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
             if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 1000){
@@ -1776,6 +1806,9 @@
         setStatus("Сақланди ✓", "var(--good)");
         setLastSyncLabel(now);
         if(!silent) toast("Булутга сақланди ✓");
+        // Версиялар тарихи: керак бўлса (2 соатдан ошган бўлса) янги версия оламиз.
+        // Бу юклашнинг ЎЗИНИ кечиктирмайди ва хато берса ҳам юклашга таъсир қилмайди.
+        maybeCreateVersion(payload).catch(e=> console.warn("Версия сақланмади:", e && e.message));
         return true;
       }catch(e){
         console.error("Булутга сақлашда хато:", e);
@@ -1828,6 +1861,107 @@
       }catch(e){
         console.error(e); toast("Тиклаб бўлмади"); return false;
       }
+    }
+
+    // ---- ВЕРСИЯЛАР ТАРИХИ (булутда, чекланган сонда) ----
+    // Ҳар версия — шу пайтдаги бутун маълумотнинг тўлиқ нусхаси. Охирги
+    // VERSION_KEEP таси сақланади, эскилари ўзи ўчади (жой тўлиб кетмаслиги учун).
+    const VERSION_COUNT_KEYS = ["records","expenses","cashTaken","cashSpend","debtPayments"];
+    let versionBackoffUntil = 0;
+    function summarizePayload(payload){
+      const counts = {};
+      try{
+        const data = JSON.parse(payload);
+        BUSINESS_DATA_KEYS.forEach(d=>{
+          if(VERSION_COUNT_KEYS.indexOf(d.varName) === -1) return;
+          try{ const arr = JSON.parse(data[d.storageKey]); if(Array.isArray(arr)) counts[d.varName] = arr.length; }catch(e){}
+        });
+      }catch(e){}
+      return counts;
+    }
+    async function pruneVersions(){
+      const snap = await db.collection(COLL_VERS).orderBy("createdAt","desc").get();
+      if(snap.docs.length <= VERSION_KEEP) return;
+      const old = snap.docs.slice(VERSION_KEEP);
+      const batch = db.batch();
+      old.forEach(d=>{
+        const m = d.data() || {};
+        for(let i=0;i<(m.chunkCount||0);i++) batch.delete(db.collection(COLL_VERS).doc(d.id+"_c"+i));
+        batch.delete(db.collection(COLL_VERS).doc(d.id));
+      });
+      await batch.commit();
+    }
+    async function createVersion(payload, label){
+      await ensureAuth();
+      const now = Date.now();
+      const id = "v_" + now + "_" + Math.random().toString(36).slice(2,5);
+      const chunks = [];
+      for(let i=0;i<payload.length;i+=CHUNK_SIZE) chunks.push(payload.slice(i,i+CHUNK_SIZE));
+      const batch = db.batch();
+      chunks.forEach((ch,i)=> batch.set(db.collection(COLL_VERS).doc(id+"_c"+i), {data:ch}));
+      batch.set(db.collection(COLL_VERS).doc(id), {
+        createdAt: now, chunkCount: chunks.length, sizeBytes: payload.length,
+        device: deviceId(), label: label || "Автомат", counts: summarizePayload(payload)
+      });
+      await batch.commit();
+      localStorage.setItem(LS_LASTVER, String(now));
+      pruneVersions().catch(e=> console.warn("Эски версияларни тозалашда хато:", e && e.message));
+      return id;
+    }
+    async function maybeCreateVersion(payload){
+      if(agentMode || !ready) return;
+      if(Date.now() < versionBackoffUntil) return;
+      const last = Number(localStorage.getItem(LS_LASTVER) || 0);
+      if(Date.now() - last < VERSION_MIN_GAP) return;
+      try{
+        await ensureAuth();
+        const snap = await db.collection(COLL_VERS).orderBy("createdAt","desc").limit(1).get();
+        if(!snap.empty){
+          const t = Number(snap.docs[0].data().createdAt || 0);
+          if(t > last) localStorage.setItem(LS_LASTVER, String(t));
+          if(Date.now() - t < VERSION_MIN_GAP) return;
+        }
+        await createVersion(payload, "Автомат");
+      }catch(e){
+        // Масалан, Firebase қоидаларига «kunlik_versions» ҳали қўшилмаган бўлса:
+        // ҳар ўзгаришда такрор уринмаслик учун 10 дақиқа кутамиз.
+        versionBackoffUntil = Date.now() + 10*60*1000;
+        throw e;
+      }
+    }
+    async function listVersions(){
+      await ensureAuth();
+      const snap = await db.collection(COLL_VERS).orderBy("createdAt","desc").limit(30).get();
+      return snap.docs.map(d=> ({ id: d.id, ...d.data() }));
+    }
+    async function createVersionNow(label){
+      if(!ready || agentMode) return null;
+      return createVersion(collectLocal(), label);
+    }
+    async function restoreVersion(id){
+      if(!ready) throw new Error("Булут уланмаган");
+      await ensureAuth();
+      // 1) Версияни ЮКЛАБ ОЛАМИЗ (хато бўлса — ҳеч нарса ўзгармайди)
+      const metaDoc = await db.collection(COLL_VERS).doc(id).get();
+      if(!metaDoc.exists) throw new Error("Версия топилмади");
+      const meta = metaDoc.data();
+      const docs = await Promise.all(
+        Array.from({length: meta.chunkCount||0}, (_,i)=> db.collection(COLL_VERS).doc(id+"_c"+i).get()));
+      let payload = "";
+      docs.forEach(ch=>{ if(!ch.exists) throw new Error("Версия тўлиқ эмас"); payload += ch.data().data; });
+      const data = JSON.parse(payload);
+      // 2) Қайтаришни ҳам бекор қилиш мумкин бўлиши учун — ҳозирги ҳолатни сақлаймиз
+      await createVersion(collectLocal(), "Қайтаришдан олдинги ҳолат (автомат)");
+      // 3) Бошқа юклаш тугашини кутамиз (улар бизнинг ўзгаришимизни босиб кетмаслиги учун)
+      let waited = 0;
+      while(syncing && waited < 20){ await new Promise(r=> setTimeout(r, 250)); waited++; }
+      // 4) Фақат БИЗНЕС маълумотни қўллаймиз (созламалар — парол, Telegram, тема — ўзгармайди)
+      BUSINESS_DATA_KEYS.forEach(d=>{
+        if(data[d.storageKey] !== undefined) localStorage.setItem(d.storageKey, data[d.storageKey]);
+      });
+      // 5) Булутга МАЖБУРИЙ юклаймиз ("булут янгироқ" текширувисиз), ораларида await йўқ
+      clearTimeout(syncTimer);
+      return upload(true, true);
     }
 
     // ---- Агент ёзувларини қабул қилиш ----
@@ -2017,6 +2151,7 @@
 
     return {
       isReady, getDb, debugAuthStatus,
+      listVersions, createVersionNow, restoreVersion,
       setAgentMode(v){ agentMode = !!v; },
       startReadOnly(){
         agentMode = true;
@@ -2051,6 +2186,7 @@
       uploadNowSilent(){ return upload(true); },
       async restoreNow(){
         if(!(await customConfirmAsync("Булутдаги нусха юклаб олиниб, жорий маълумот алмаштирилади.\n\nДавом этасизми?"))) return;
+        try{ await createVersionNow("Булутдан тиклашдан олдинги ҳолат (автомат)"); }catch(e){ /* версия олиб бўлмаса ҳам тиклашни тўхтатмаймиз */ }
         if(await restore()){ customAlert("Тикланди. Саҳифа янгиланади.", ()=> location.reload()); }
       },
       pushAgentRecord, fetchAgentTodayRecords, fetchAgentTodayRecordsAll, fetchAgentMonthRecords,
@@ -5106,9 +5242,10 @@ ${XL_PAGE}
     const file = e.target.files[0];
     if(!file) return;
     const reader = new FileReader();
-    reader.onload = ev=>{
+    reader.onload = async ev=>{
       try{
         const data = JSON.parse(ev.target.result);
+        try{ await CLOUD.createVersionNow("JSON файлдан тиклашдан олдинги ҳолат (автомат)"); }catch(e){ /* версия олиб бўлмаса ҳам давом этамиз */ }
         applyBusinessData(data);
         populateCarSelects();
         renderCarsList();
@@ -5309,7 +5446,8 @@ ${XL_PAGE}
   document.getElementById("wipeBtn").addEventListener("click", async ()=>{
     if(await customConfirmAsync("ДИҚҚАТ: Барча кунлик ёзувлар ВА харажатлар бутунлай ўчирилади. Давом этасизми?")){
       if(await customConfirmAsync("Тасдиқланг: улар қайта тикланмайди. Ўчиришни давом эттирасизми?")){
-        requirePasswordThen(()=>{
+        requirePasswordThen(async ()=>{
+          try{ await CLOUD.createVersionNow("Тозалашдан олдинги ҳолат (автомат)"); }catch(e){ /* версия олиб бўлмаса ҳам давом этамиз */ }
           records = [];
           expenses = [];
           saveRecords(records);
@@ -7135,6 +7273,92 @@ ${XL_PAGE}
   document.getElementById("agPivotPdfBtn")?.addEventListener("click", exportAgentPivotPdf);
   ["agPivotMonth","agPivotMetric","agPivotUnit"].forEach(id=>{
     document.getElementById(id)?.addEventListener("change", renderAgentPivot);
+  });
+
+  // ---- Версиялар тарихи (интерфейс) ----
+  const VER_COUNT_LABELS = { records:"ёзув", expenses:"харажат", cashTaken:"нақд олиш", cashSpend:"нақд сарфи", debtPayments:"қарз тўлови" };
+  function fmtVersionTime(ms){
+    const d = new Date(ms);
+    const p = n => String(n).padStart(2,"0");
+    const base = `${p(d.getDate())}.${p(d.getMonth()+1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    return d.getFullYear() === new Date().getFullYear() ? base : base.replace(" ", `.${d.getFullYear()} `);
+  }
+  function versionErrorText(e){
+    const denied = e && (e.code === "permission-denied" || /permission/i.test(e.message||""));
+    return denied
+      ? "Версиялар учун Firebase қоидаларида рухсат йўқ — қоидаларга «kunlik_versions» блокини қўшиш керак."
+      : (e && e.message ? e.message : "номаълум хато");
+  }
+  async function renderVersionsList(){
+    const el = document.getElementById("versionsList");
+    if(!el) return;
+    if(!CLOUD.isReady()){ el.innerHTML = `<p class="empty">Булут уланмаган — версиялар рўйхатини кўриб бўлмайди.</p>`; return; }
+    el.innerHTML = `<p class="empty">Юкланмоқда...</p>`;
+    let list;
+    try{ list = await CLOUD.listVersions(); }
+    catch(e){ el.innerHTML = `<p class="empty">Рўйхатни юклаб бўлмади: ${esc(versionErrorText(e))}</p>`; return; }
+    if(!list.length){
+      el.innerHTML = `<p class="empty">Ҳали версия йўқ. Биринчи версия маълумот ўзгариб, булутга сақлангандан кейин ўзи пайдо бўлади, ёки «Ҳозир версия сақлаш»ни босинг.</p>`;
+      return;
+    }
+    const rows = list.map((v,i)=>{
+      const counts = Object.keys(VER_COUNT_LABELS)
+        .filter(k=> v.counts && v.counts[k] !== undefined)
+        .map(k=> `${VER_COUNT_LABELS[k]} ${v.counts[k]}`).join(" · ");
+      return `<tr>
+        <td style="white-space:nowrap;"><b>${fmtVersionTime(v.createdAt)}</b>${i===0 ? ' <span class="pill">охирги</span>' : ''}</td>
+        <td>${esc(v.label || "Автомат")}</td>
+        <td style="font-size:12.5px;">${esc(counts || "—")}</td>
+        <td><button class="btn outline small" data-verrestore="${esc(v.id)}">⏪ Қайтариш</button></td>
+      </tr>`;
+    }).join("");
+    el.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Сана ва вақт</th><th>Тури</th><th>Ичида</th><th>Амал</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+    el.querySelectorAll("[data-verrestore]").forEach(b=>{
+      b.addEventListener("click", async ()=>{
+        const v = list.find(x=> x.id === b.dataset.verrestore);
+        if(!v) return;
+        const ok = await customConfirmAsync(
+          `${fmtVersionTime(v.createdAt)} ҳолатига қайтарилсинми?\n\n` +
+          `Ундан кейин киритилган барча ёзув, харажат, нақд пул ўзгаришлари йўқолади (созламалар ўзгармайди).\n\n` +
+          `Ҳозирги ҳолат ҳам автомат версия сифатида сақлаб қўйилади — керак бўлса, унга қайтиш мумкин.`);
+        if(!ok) return;
+        requirePasswordThen(()=>{ doRestoreVersion(v); });
+      });
+    });
+  }
+  async function doRestoreVersion(v){
+    toast("Версия тикланмоқда...");
+    try{
+      const uploaded = await CLOUD.restoreVersion(v.id);
+      softRefreshAfterRestore();
+      logAudit("Версияга қайтарилди", fmtVersionTime(v.createdAt));
+      if(uploaded === false){
+        customAlert("Маълумот шу қурилмада тикланди, лекин булутга юборилмади (интернет?). Интернет қайтгач, «Ҳозир булутга сақлаш»ни босинг.");
+      } else {
+        toast("Версияга қайтарилди ✓");
+      }
+      renderVersionsList();
+    }catch(e){
+      console.error(e);
+      customAlert("Версияга қайтариб бўлмади: " + versionErrorText(e) + "\n\nМаълумотларингиз ўзгармади.");
+    }
+  }
+  document.getElementById("versionSaveNowBtn")?.addEventListener("click", async ()=>{
+    if(!CLOUD.isReady()){ customAlert("Булут уланмаган."); return; }
+    try{
+      await CLOUD.createVersionNow("Қўлда сақланган");
+      toast("Версия сақланди ✓");
+      renderVersionsList();
+    }catch(e){ customAlert("Версияни сақлаб бўлмади: " + versionErrorText(e)); }
+  });
+  document.getElementById("versionRefreshBtn")?.addEventListener("click", renderVersionsList);
+  document.querySelector("#versionsCard > h2")?.addEventListener("click", ()=>{
+    setTimeout(()=>{
+      const card = document.getElementById("versionsCard");
+      if(card && card.classList.contains("open")) renderVersionsList();
+    }, 0);
   });
 
   document.getElementById("cloudSyncNowBtn")?.addEventListener("click", ()=> CLOUD.uploadNow());
