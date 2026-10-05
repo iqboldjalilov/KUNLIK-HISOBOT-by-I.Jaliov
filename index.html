@@ -846,11 +846,15 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Мошина</th><th>Умумий тушум</th><th>Жами харажат (сафар)</th><th>Соф тушум</th><th>Сафарлар сони</th><th>Кунлик ўртача соф тушум</th><th>Рентабеллик</th><th>Бизнес харажат (мошинага)</th><th>Тўлиқ рентабеллик</th></tr>
+            <tr><th>Мошина</th><th>Умумий тушум</th><th>Жами харажат (сафар)</th><th>Соф тушум</th><th>Сафарлар сони</th><th>Кунлик ўртача соф тушум</th><th>Рентабеллик</th><th>Бизнес харажат: қолдиқ (мошинага)</th><th>Тўлиқ рентабеллик</th></tr>
           </thead>
           <tbody id="summaryBody"></tbody>
         </table>
       </div>
+      <p style="font-size:12.5px;color:var(--muted);margin:10px 0 0;">
+        «Бизнес харажат» устунида харажатнинг <b>қопланмаган қисми (қолдиқ)</b> кўрсатилади — «Тўлиқ рентабеллик» шундан ҳисобланади.
+        Тўлиқ қопланган харажат учун бу устунда <b>0</b> чиқади, лекин унинг <b>асл суммаси ва қопланганлиги</b> пастида кичик ёзувда кўринади.
+      </p>
     </div>
 
     <div class="card">
@@ -904,7 +908,7 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Ой</th><th>Умумий тушум</th><th>Жами харажат</th><th>Соф тушум</th><th>Харажатлар (бизнес)</th><th>Сафарлар сони</th></tr>
+            <tr><th>Ой</th><th>Умумий тушум</th><th>Жами харажат</th><th>Соф тушум</th><th>Харажатлар (бизнес): қолдиқ</th><th>Сафарлар сони</th></tr>
           </thead>
           <tbody id="yearlyBody"></tbody>
         </table>
@@ -1689,6 +1693,12 @@
     const VERSION_KEEP = 30;                         // охирги нечта версия сақланади
 
     let db = null, ready = false, syncTimer = null, syncing = false, inboxUnsub = null;
+    // restore() ўз ёзувлари билан «ўзгариш бўлди» деб қайта юклашни ЧАҚИРМАСЛИГИ учун белги.
+    let restoring = false;
+    // Заҳира ҳимоя: автомат янгилаш бир дақиқада 6 мартадан кўп бўлса — 2 дақиқага тўхтатилади
+    // (қандайдир сабабдан «акс-садо» такрорланса, лимитни тўлдириб юбормаслиги учун).
+    const autoRestoreLog = [];
+    let autoRestorePausedUntil = 0;
     let agentMode = false;   // ТРУЕ бўлса — бу қурилма фақат ЎҚИЙДИ, булутга ҳеч нарса ёзмайди
     let authPromise = null;
 
@@ -1853,10 +1863,21 @@
         // ҳолати бу қурилмадаги реал маълумотни ўчириб юбориши мумкин эди
         // (худди шундай хато юз берган эди). Фақат булутда ҲАҚИҚАТАН БОР
         // маълумотларни тиклаймиз.
-        SYNC_KEYS.forEach(k=>{
-          if(cloud.data[k] !== undefined) localStorage.setItem(k, cloud.data[k]);
-        });
-        localStorage.setItem(LS_LASTSYNC, String(cloud.meta.updatedAt || Date.now()));
+        // ⚠️ Булутдан олинган маълумотни локалга ёзиш булутга ҚАЙТА ЮКЛАШНИ чақирмаслиги
+        // керак: акс ҳолда иккита қурилма бир-бирига чексиз «акс-садо» қилади
+        // (A ёзади → B тортиб олиб қайта ёзади → A тортиб олиб қайта ёзади → ...).
+        // Фақат булутда ЙЎҚ, локалда БОР калитлар бўлса (масалан янги маълумот тури)
+        // — уларни булутга чиқариш учун БИР марта юклаймиз.
+        let localOnly = false;
+        restoring = true;
+        try{
+          SYNC_KEYS.forEach(k=>{
+            if(cloud.data[k] !== undefined) localStorage.setItem(k, cloud.data[k]);
+            else if(localStorage.getItem(k) !== null) localOnly = true;
+          });
+          localStorage.setItem(LS_LASTSYNC, String(cloud.meta.updatedAt || Date.now()));
+        }finally{ restoring = false; }
+        if(localOnly) scheduleUpload();
         return true;
       }catch(e){
         console.error(e); toast("Тиклаб бўлмади"); return false;
@@ -2122,6 +2143,21 @@
       }catch(e){ setStatus("Уланмади (офлайн?)", "var(--bad)"); }
     }
 
+    function autoRestoreAllowed(){
+      const now = Date.now();
+      if(now < autoRestorePausedUntil) return false;
+      while(autoRestoreLog.length && now - autoRestoreLog[0] > 60000) autoRestoreLog.shift();
+      if(autoRestoreLog.length >= 6){
+        autoRestorePausedUntil = now + 2*60*1000;
+        setStatus("Автоматик янгилаш вақтинча тўхтатилди (тез-тез ўзгариш)", "var(--bad)");
+        console.warn("Автоматик янгилаш 2 дақиқага тўхтатилди: 1 дақиқада 6 тадан кўп.");
+        setTimeout(()=>{ if(!agentMode) checkOnStart(); }, 2*60*1000 + 500);
+        return false;
+      }
+      autoRestoreLog.push(now);
+      return true;
+    }
+
     async function debugAuthStatus(){
       const lines = [];
       lines.push("firebase юкланганми: " + (typeof firebase !== "undefined"));
@@ -2162,8 +2198,8 @@
         if(!init()){ setStatus("Уланмади (интернет йўқ)", "var(--bad)"); return false; }
         const origSet = localStorage.setItem.bind(localStorage);
         const origRemove = localStorage.removeItem.bind(localStorage);
-        localStorage.setItem = function(k,v){ origSet(k,v); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
-        localStorage.removeItem = function(k){ origRemove(k); if(SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
+        localStorage.setItem = function(k,v){ origSet(k,v); if(!restoring && SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
+        localStorage.removeItem = function(k){ origRemove(k); if(!restoring && SYNC_KEYS.indexOf(k)!==-1) scheduleUpload(); };
         setLastSyncLabel(Number(localStorage.getItem(LS_LASTSYNC)||0) || null);
 
         // ЖОНЛИ КУЗАТУВ (реал вақт): бошқа қурилма/агент ёзган заҳоти —
@@ -2173,7 +2209,7 @@
             if(!doc.exists) return;
             const meta = doc.data();
             const mySync = Number(localStorage.getItem(LS_LASTSYNC) || 0);
-            if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 1000 && !agentMode){
+            if(meta.device !== deviceId() && (meta.updatedAt||0) > mySync + 1000 && !agentMode && autoRestoreAllowed()){
               restore().then(ok=>{ if(ok) softRefreshAfterRestore(); });
             }
           }, e=> console.warn("Жонли кузатувда хато:", e && e.message));
@@ -3331,6 +3367,7 @@ ${XL_PAGE}
     });
     grandSof = grandTushum-grandXarajat;
     const bizExpByCar = expensesByCarForMonth(month);
+    const bizStatsByCar = expenseStatsByCarForMonth(month);
 
     document.getElementById("summaryTotals").innerHTML = `
       <div class="stat"><div class="label">Умумий тушум</div><div class="value" data-target="${grandTushum}"></div></div>
@@ -3350,6 +3387,9 @@ ${XL_PAGE}
       const avg = d.count ? sof/d.count : 0;
       const margin = d.tushum>0 ? Math.round((sof/d.tushum)*100) : 0;
       const bizExp = bizExpByCar[car] || 0;
+      const bizSt = bizStatsByCar[car];
+      const bizCell = fmt(bizExp) + (bizSt && bizSt.summa>0
+        ? `<div style="font-size:11.5px;color:var(--muted);font-weight:400;white-space:nowrap;">жами ${fmt(bizSt.summa)} · қопл. ${fmt(bizSt.qoplangan)}</div>` : "");
       const fullSof = sof - bizExp;
       const fullMargin = d.tushum>0 ? Math.round((fullSof/d.tushum)*100) : 0;
       return `<tr>
@@ -3360,7 +3400,7 @@ ${XL_PAGE}
         <td>${d.count}</td>
         <td>${fmt(avg)}</td>
         <td class="${margin>=0?'pos':'neg'}">${margin}%</td>
-        <td>${fmt(bizExp)}</td>
+        <td>${bizCell}</td>
         <td class="${fullMargin>=0?'pos':'neg'}">${fullMargin}%</td>
       </tr>`;
     });
@@ -3369,18 +3409,44 @@ ${XL_PAGE}
     renderTrendChart(month, list);
     renderDonutChart(list);
     renderDriverRating(list);
-    renderCarCompareChart(perCar, bizExpByCar);
+    renderCarCompareChart(perCar, bizExpByCar, bizStatsByCar);
   }
 
-  function expensesByCarForMonth(month){
+  // Мошина бўйича бизнес харажатлар — ҳар бири учун УЧТА сон: ЖАМИ (асл сумма),
+  // ҚОПЛАНГАН ва ҚОЛДИҚ. Ҳисоботларда учаласи ҳам кўрсатилади, шунда тўлиқ
+  // қопланган харажат «0» бўлиб ғойиб бўлиб қолмайди.
+  function expenseStatsByCarForMonth(month){
     const result = {};
     expenses.forEach(x=>{
       if(!x.mashina) return;
       if(!x.sana || x.sana.slice(0,7)!==month) return;
-      const sof = x.summa - (x.qoplangan||0);
-      result[x.mashina] = (result[x.mashina]||0) + sof;
+      const summa = Number(x.summa||0), qop = Number(x.qoplangan||0);
+      const d = result[x.mashina] || (result[x.mashina] = {summa:0, qoplangan:0, qoldiq:0, count:0});
+      d.summa += summa; d.qoplangan += qop; d.qoldiq += (summa - qop); d.count += 1;
     });
     return result;
+  }
+  // Соф тушумга таъсир қилувчи сумма — харажатнинг ҚОПЛАНМАГАН қисми (аввалгидек).
+  function expensesByCarForMonth(month){
+    const st = expenseStatsByCarForMonth(month), out = {};
+    Object.keys(st).forEach(k=> out[k] = st[k].qoldiq);
+    return out;
+  }
+  function sumExpenseStats(st){
+    return Object.values(st).reduce((a,d)=>({summa:a.summa+d.summa, qoplangan:a.qoplangan+d.qoplangan, qoldiq:a.qoldiq+d.qoldiq}), {summa:0, qoplangan:0, qoldiq:0});
+  }
+  // Шу ойдаги ҲАР БИР харажат: жами / қопланган / қолдиқ (PDF ва йиғма ҳисобот учун)
+  function monthExpenseDetailHTML(month){
+    const list = expenses.filter(e=> e.sana && e.sana.slice(0,7)===month).slice().sort((a,b)=> a.sana.localeCompare(b.sana));
+    let tS=0, tQ=0;
+    const rows = list.map(e=>{
+      const s = Number(e.summa||0), q = Number(e.qoplangan||0);
+      tS += s; tQ += q;
+      return `<tr><td>${fmtDate(e.sana)}</td><td>${esc(e.turi)}</td><td>${esc(e.mashina||"—")}</td><td>${fmt(s)}</td><td>${fmt(q)}</td><td>${fmt(s-q)}</td></tr>`;
+    }).join("");
+    const total = list.length
+      ? `<tr style="font-weight:700;background:#efe7c8;"><td colspan="3">ЖАМИ</td><td>${fmt(tS)}</td><td>${fmt(tQ)}</td><td>${fmt(tS-tQ)}</td></tr>` : "";
+    return { rows, total, count: list.length, sum: tS, covered: tQ, rest: tS-tQ };
   }
 
   function prevMonthOf(month){
@@ -3593,8 +3659,9 @@ ${XL_PAGE}
     }).join("");
   }
 
-  function renderCarCompareChart(perCar, bizExpByCar){
+  function renderCarCompareChart(perCar, bizExpByCar, bizStatsByCar){
     bizExpByCar = bizExpByCar || {};
+    bizStatsByCar = bizStatsByCar || {};
     const el = document.getElementById("carCompareChart");
     if(!el) return;
     const carsData = Object.keys(perCar).map(name=>{
@@ -3603,7 +3670,7 @@ ${XL_PAGE}
       const bizExp = bizExpByCar[name] || 0;
       const fullSof = sof - bizExp;
       const margin = d.tushum>0 ? Math.round((fullSof/d.tushum)*100) : 0;
-      return {name, tushum:d.tushum, xarajat:d.xarajat+bizExp, bizExp, sof:fullSof, margin, count:d.count};
+      return {name, tushum:d.tushum, xarajat:d.xarajat+bizExp, bizExp, bizSt:bizStatsByCar[name], sof:fullSof, margin, count:d.count};
     }).filter(c=> c.tushum>0 || c.xarajat>0 || c.count>0);
     if(!carsData.length){
       el.innerHTML = `<p class="empty">Бу ойда маълумот йўқ.</p>`;
@@ -3617,7 +3684,7 @@ ${XL_PAGE}
       <div style="margin-bottom:20px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
           ${carPill(c.name)}
-          <span style="font-size:12.5px;color:var(--muted);">Тўлиқ рентабеллик: <b style="color:${c.margin>=0?'var(--good)':'var(--bad)'};">${c.margin}%</b> · Соф тушум: <b class="${c.sof>=0?'pos':'neg'}">${fmt(c.sof)}</b> · ${c.count} сафар${c.bizExp>0?` · Бизнес харажат: <b>${fmt(c.bizExp)}</b>`:""}</span>
+          <span style="font-size:12.5px;color:var(--muted);">Тўлиқ рентабеллик: <b style="color:${c.margin>=0?'var(--good)':'var(--bad)'};">${c.margin}%</b> · Соф тушум: <b class="${c.sof>=0?'pos':'neg'}">${fmt(c.sof)}</b> · ${c.count} сафар${(c.bizSt && c.bizSt.summa>0)?` · Бизнес харажат: жами <b>${fmt(c.bizSt.summa)}</b>, қопланган <b>${fmt(c.bizSt.qoplangan)}</b>, қолдиқ <b>${fmt(c.bizSt.qoldiq)}</b>`:""}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
           <span style="font-size:11px;color:var(--muted);width:64px;flex:none;">Тушум</span>
@@ -3650,14 +3717,17 @@ ${XL_PAGE}
     });
     let grandT=0, grandX=0;
     const bizExpByCar = expensesByCarForMonth(month);
+    const bizStatsByCar = expenseStatsByCarForMonth(month);
+    const bizExpDetail = monthExpenseDetailHTML(month);
     const carRows = Object.keys(perCar).map(car=>{
       const d = perCar[car];
       const sof = d.tushum-d.xarajat;
       grandT += d.tushum; grandX += d.xarajat;
       const bizExp = bizExpByCar[car] || 0;
+      const bz = bizStatsByCar[car] || {summa:0, qoplangan:0, qoldiq:0};
       const fullSof = sof - bizExp;
       const margin = d.tushum>0 ? Math.round((fullSof/d.tushum)*100) : 0;
-      return `<tr><td>${car}</td><td>${fmt(d.tushum)}</td><td>${fmt(d.xarajat)}</td><td>${fmt(bizExp)}</td><td>${fmt(fullSof)}</td><td>${d.count}</td><td>${margin}%</td></tr>`;
+      return `<tr><td>${car}</td><td>${fmt(d.tushum)}</td><td>${fmt(d.xarajat)}</td><td>${fmt(bz.summa)}</td><td>${fmt(bz.qoplangan)}</td><td>${fmt(bz.qoldiq)}</td><td>${fmt(fullSof)}</td><td>${d.count}</td><td>${margin}%</td></tr>`;
     }).join("");
     const grandSof = grandT - grandX;
 
@@ -3706,8 +3776,12 @@ ${XL_PAGE}
       <div><div class="lbl">Жами сафарлар</div><div class="val">${list.length}</div></div>
     </div>
     <h2>Мошиналар бўйича хулоса</h2>
-    <table><thead><tr><th>Мошина</th><th>Умумий тушум</th><th>Жами харажат (сафар)</th><th>Бизнес харажат</th><th>Тўлиқ соф тушум</th><th>Сафарлар</th><th>Рентабеллик</th></tr></thead>
-    <tbody>${carRows || '<tr><td colspan="7">Маълумот йўқ</td></tr>'}</tbody></table>
+    <table style="font-size:11px;"><thead><tr><th>Мошина</th><th>Умумий тушум</th><th>Жами харажат (сафар)</th><th>Бизнес харажат: жами</th><th>Қопланган</th><th>Қолдиқ</th><th>Тўлиқ соф тушум</th><th>Сафарлар</th><th>Рентабеллик</th></tr></thead>
+    <tbody>${carRows || '<tr><td colspan="9">Маълумот йўқ</td></tr>'}</tbody></table>
+    <p class="meta" style="margin-top:6px;">Тўлиқ соф тушум = Умумий тушум − сафар харажати − бизнес харажатнинг <b>қолдиғи</b> (қопланмаган қисми). Тўлиқ қопланган харажат «Қолдиқ»да 0 бўлади, лекин асл суммаси «Жами»да кўринади.</p>
+    <h2>Бизнес харажатлар рўйхати (шу ой)</h2>
+    <table><thead><tr><th>Сана</th><th>Тоифа</th><th>Мошина</th><th>Жами (асл сумма)</th><th>Қопланган</th><th>Қолдиқ</th></tr></thead>
+    <tbody>${bizExpDetail.rows ? bizExpDetail.rows + bizExpDetail.total : '<tr><td colspan="6">Шу ойда харажат йўқ</td></tr>'}</tbody></table>
     <h2>Шофёрлар рейтинги</h2>
     <table><thead><tr><th>№</th><th>Шофёр</th><th>Сафарлар</th><th>Умумий тушум</th><th>Соф тушум</th><th>Кунлик ўртача</th></tr></thead>
     <tbody>${driverRows || '<tr><td colspan="6">Маълумот йўқ</td></tr>'}</tbody></table>
@@ -3734,16 +3808,19 @@ ${XL_PAGE}
     });
     let grandT=0, grandX=0;
     const bizExpByCar = expensesByCarForMonth(month);
+    const bizStatsByCar = expenseStatsByCarForMonth(month);
     const carRows = Object.keys(perCar).map(car=>{
       const d = perCar[car];
       const sof = d.tushum-d.xarajat;
       grandT += d.tushum; grandX += d.xarajat;
       const bizExp = bizExpByCar[car] || 0;
+      const bz = bizStatsByCar[car] || {summa:0, qoplangan:0, qoldiq:0};
       const fullSof = sof - bizExp;
-      return `<tr><td>${car}</td><td>${fmt(d.tushum)}</td><td>${fmt(d.xarajat)}</td><td>${fmt(bizExp)}</td><td>${fmt(fullSof)}</td><td>${d.count}</td></tr>`;
+      return `<tr><td>${car}</td><td>${fmt(d.tushum)}</td><td>${fmt(d.xarajat)}</td><td>${fmt(bz.summa)}</td><td>${fmt(bz.qoplangan)}</td><td>${fmt(bz.qoldiq)}</td><td>${fmt(fullSof)}</td><td>${d.count}</td></tr>`;
     }).join("");
     const grandSof = grandT - grandX;
-    const grandBizExp = Object.values(bizExpByCar).reduce((s,v)=>s+v,0);
+    const grandBiz = sumExpenseStats(bizStatsByCar);
+    const grandBizExp = grandBiz.qoldiq;
     const grandFullSof = grandSof - grandBizExp;
 
     // Нақд пул оқими (шу ой учун)
@@ -3762,10 +3839,7 @@ ${XL_PAGE}
       .map(c=> `<tr><td>${fmtDate(c.sana)}</td><td>${fmt(c.summa)}</td><td>${esc(c.izoh||"")}</td></tr>`).join("");
 
     // Харажатлар рўйхати (шу ой учун)
-    const expOy = expenses.filter(e=> e.sana && e.sana.slice(0,7)===month);
-    const expRows = expOy.sort((a,b)=> a.sana.localeCompare(b.sana))
-      .map(e=> `<tr><td>${fmtDate(e.sana)}</td><td>${esc(e.turi)}</td><td>${esc(e.mashina||"—")}</td><td>${fmt(e.summa)}</td></tr>`).join("");
-    const expOyJami = expOy.reduce((s,e)=> s+Number(e.summa||0), 0);
+    const expDetail = monthExpenseDetailHTML(month);
 
     const preparedStr = new Date().toLocaleDateString("uz-UZ") + " " + new Date().toLocaleTimeString("uz-UZ");
 
@@ -3794,12 +3868,15 @@ ${XL_PAGE}
     <div class="totals">
       <div><div class="lbl">Умумий тушум</div><div class="val">${fmt(grandT)}</div></div>
       <div><div class="lbl">Жами харажат (сафар)</div><div class="val">${fmt(grandX)}</div></div>
-      <div><div class="lbl">Бизнес харажат</div><div class="val">${fmt(grandBizExp)}</div></div>
+      <div><div class="lbl">Бизнес харажат (жами)</div><div class="val">${fmt(grandBiz.summa)}</div></div>
+      <div><div class="lbl">Шундан қопланган</div><div class="val">${fmt(grandBiz.qoplangan)}</div></div>
+      <div><div class="lbl">Қолдиқ</div><div class="val">${fmt(grandBiz.qoldiq)}</div></div>
       <div><div class="lbl">Тўлиқ соф тушум</div><div class="val">${fmt(grandFullSof)}</div></div>
       <div><div class="lbl">Жами сафарлар</div><div class="val">${list.length}</div></div>
     </div>
-    <table><thead><tr><th>Мошина</th><th>Умумий тушум</th><th>Жами харажат (сафар)</th><th>Бизнес харажат</th><th>Тўлиқ соф тушум</th><th>Сафарлар</th></tr></thead>
-    <tbody>${carRows || '<tr><td colspan="6">Маълумот йўқ</td></tr>'}</tbody></table>
+    <table style="font-size:11px;"><thead><tr><th>Мошина</th><th>Умумий тушум</th><th>Жами харажат (сафар)</th><th>Бизнес харажат: жами</th><th>Қопланган</th><th>Қолдиқ</th><th>Тўлиқ соф тушум</th><th>Сафарлар</th></tr></thead>
+    <tbody>${carRows || '<tr><td colspan="8">Маълумот йўқ</td></tr>'}</tbody></table>
+    <p class="section-note">Тўлиқ соф тушум = Умумий тушум − сафар харажати − бизнес харажатнинг <b>қолдиғи</b> (қопланмаган қисми). Тўлиқ қопланган харажат «Қолдиқ»да 0 бўлади, лекин асл суммаси «Жами»да кўринади. Мошинага боғланмаган харажатлар мошиналар жадвалига киритилмайди (пастдаги рўйхатда бор).</p>
 
     <h2>2. Нақд пул оқими (шу ой)</h2>
     <div class="totals">
@@ -3819,9 +3896,9 @@ ${XL_PAGE}
     <tbody>${islRows || '<tr><td colspan="3">Шу ойда ёзув йўқ</td></tr>'}</tbody></table>
 
     <h2>4. Харажатлар рўйхати (шу ой)</h2>
-    <p class="section-note">Жами: <b>${fmt(expOyJami)}</b> сўм</p>
-    <table><thead><tr><th>Сана</th><th>Тури</th><th>Мошина</th><th>Сумма</th></tr></thead>
-    <tbody>${expRows || '<tr><td colspan="4">Шу ойда харажат йўқ</td></tr>'}</tbody></table>
+    <p class="section-note">Жами: <b>${fmt(expDetail.sum)}</b> сўм · қопланган: <b>${fmt(expDetail.covered)}</b> · қолдиқ: <b>${fmt(expDetail.rest)}</b></p>
+    <table><thead><tr><th>Сана</th><th>Тури</th><th>Мошина</th><th>Жами (асл сумма)</th><th>Қопланган</th><th>Қолдиқ</th></tr></thead>
+    <tbody>${expDetail.rows ? expDetail.rows + expDetail.total : '<tr><td colspan="6">Шу ойда харажат йўқ</td></tr>'}</tbody></table>
 
     <footer>Кунлик Хисобот (by Iqbol Jalilov) — автоматик тайёрланган йиғма ойлик ҳисобот</footer>
     </body></html>`;
@@ -3849,23 +3926,37 @@ ${XL_PAGE}
       perCar[r.mashina].xarajat += xarajat;
       perCar[r.mashina].count += 1;
     });
-    let s1Rows = dateRowMaker(7) + "<Row>" + ["Мошина","Умумий тушум","Жами харажат (сафар)","Бизнес харажат","Тўлиқ соф тушум","Сафарлар сони","Рентабеллик %"].map(cellH).join("") + "</Row>";
+    let s1Rows = dateRowMaker(9) + "<Row>" + ["Мошина","Умумий тушум","Жами харажат (сафар)","Бизнес харажат: жами","Қопланган","Қолдиқ","Тўлиқ соф тушум","Сафарлар сони","Рентабеллик %"].map(cellH).join("") + "</Row>";
     let grandT=0, grandX=0;
     const bizExpByCar = expensesByCarForMonth(month);
+    const bizStatsByCar = expenseStatsByCarForMonth(month);
     Object.keys(perCar).forEach(car=>{
       const d = perCar[car];
       const sof = d.tushum-d.xarajat;
       const bizExp = bizExpByCar[car] || 0;
+      const bz = bizStatsByCar[car] || {summa:0, qoplangan:0, qoldiq:0};
       const fullSof = sof - bizExp;
       const margin = d.tushum>0 ? Math.round((fullSof/d.tushum)*100) : 0;
       grandT += d.tushum; grandX += d.xarajat;
-      s1Rows += "<Row>" + cellS(car)+cellN(d.tushum)+cellN(d.xarajat)+cellN(bizExp)+cellN(fullSof)+cellN(d.count)+cellN(margin) + "</Row>";
+      s1Rows += "<Row>" + cellS(car)+cellN(d.tushum)+cellN(d.xarajat)+cellN(bz.summa)+cellN(bz.qoplangan)+cellN(bz.qoldiq)+cellN(fullSof)+cellN(d.count)+cellN(margin) + "</Row>";
     });
     const grandSof = grandT-grandX;
-    const grandBizExp = Object.values(bizExpByCar).reduce((s,v)=>s+v,0);
-    const grandFullSof = grandSof - grandBizExp;
+    const grandBiz = sumExpenseStats(bizStatsByCar);
+    const grandFullSof = grandSof - grandBiz.qoldiq;
     const grandMargin = grandT>0 ? Math.round((grandFullSof/grandT)*100) : 0;
-    s1Rows += "<Row>" + cellB("ЖАМИ")+cellBN(grandT)+cellBN(grandX)+cellBN(grandBizExp)+cellBN(grandFullSof)+cellBN(list.length)+cellBN(grandMargin) + "</Row>";
+    s1Rows += "<Row>" + cellB("ЖАМИ")+cellBN(grandT)+cellBN(grandX)+cellBN(grandBiz.summa)+cellBN(grandBiz.qoplangan)+cellBN(grandBiz.qoldiq)+cellBN(grandFullSof)+cellBN(list.length)+cellBN(grandMargin) + "</Row>";
+    s1Rows += `<Row><Cell ss:MergeAcross="8" ss:StyleID="dateNote"><Data ss:Type="String">Тўлиқ соф тушум = Умумий тушум − сафар харажати − бизнес харажатнинг ҚОЛДИҒИ (қопланмаган қисми). Тўлиқ қопланган харажат «Қолдиқ»да 0 бўлади, асл суммаси «Бизнес харажат: жами»да кўринади.</Data></Cell></Row>`;
+
+    // Шу ойдаги ҲАР БИР бизнес харажат: жами / қопланган / қолдиқ
+    const expMonthList = expenses.filter(e=> e.sana && e.sana.slice(0,7)===month).slice().sort((a,b)=> a.sana.localeCompare(b.sana));
+    let s4Rows = dateRowMaker(8) + "<Row>" + ["Сана","Тоифа","Мошина","Жами (асл сумма)","Қопланган","Қолдиқ","Кимга","Изоҳ"].map(cellH).join("") + "</Row>";
+    let eS=0, eQ=0;
+    expMonthList.forEach(e=>{
+      const s = Number(e.summa||0), q = Number(e.qoplangan||0);
+      eS += s; eQ += q;
+      s4Rows += "<Row>" + cellS(fmtDate(e.sana))+cellS(e.turi)+cellS(e.mashina||"—")+cellN(s)+cellN(q)+cellN(s-q)+cellS(e.kimga)+cellS(e.izoh) + "</Row>";
+    });
+    s4Rows += "<Row>" + cellB("ЖАМИ")+cellB("")+cellB("")+cellBN(eS)+cellBN(eQ)+cellBN(eS-eQ)+cellB("")+cellB("") + "</Row>";
 
     const perDriver = {};
     list.forEach(r=>{
@@ -3904,6 +3995,10 @@ ${XL_PAGE}
 ${XL_STYLES}
  <Worksheet ss:Name="Мошиналар хулосаси">
   <Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="140"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="75"/><Column ss:AutoFitWidth="0" ss:Width="85"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="160"/>${s1Rows}</Table>
+${XL_PAGE}
+</Worksheet>
+ <Worksheet ss:Name="Бизнес харажатлар">
+  <Table><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="140"/><Column ss:AutoFitWidth="0" ss:Width="150"/><Column ss:AutoFitWidth="0" ss:Width="110"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="120"/><Column ss:AutoFitWidth="0" ss:Width="200"/>${s4Rows}</Table>
 ${XL_PAGE}
 </Worksheet>
  <Worksheet ss:Name="Шофёрлар рейтинги">
@@ -4505,7 +4600,7 @@ ${XL_PAGE}
     const body = document.getElementById("yearlyBody");
     let rows = "";
     const monthlySof = [];
-    let yTushum=0, yXarajat=0, yExp=0, yCount=0;
+    let yTushum=0, yXarajat=0, yExp=0, yExpS=0, yExpQ=0, yCount=0;
     for(let mIdx=1; mIdx<=12; mIdx++){
       const mStr = String(year)+"-"+String(mIdx).padStart(2,"0");
       const recList = records.filter(r=>r.sana && r.sana.slice(0,7)===mStr);
@@ -4513,15 +4608,18 @@ ${XL_PAGE}
       const xarajat = recList.reduce((s,r)=>s+r.yoqilgi+r.yol+r.boshqa,0);
       const sof = tushum-xarajat;
       const expList = expenses.filter(x=>x.sana && x.sana.slice(0,7)===mStr);
-      const expTotal = expList.reduce((s,x)=>s + x.summa - (x.qoplangan||0), 0);
+      const expS = expList.reduce((s,x)=>s + Number(x.summa||0), 0);
+      const expQ = expList.reduce((s,x)=>s + Number(x.qoplangan||0), 0);
+      const expTotal = expS - expQ;
       monthlySof.push(sof);
-      yTushum += tushum; yXarajat += xarajat; yExp += expTotal; yCount += recList.length;
+      yTushum += tushum; yXarajat += xarajat; yExp += expTotal; yExpS += expS; yExpQ += expQ; yCount += recList.length;
+      const expCell = fmt(expTotal) + (expS>0 ? `<div style="font-size:11.5px;color:var(--muted);font-weight:400;white-space:nowrap;">жами ${fmt(expS)} · қопл. ${fmt(expQ)}</div>` : "");
       rows += `<tr>
         <td>${monthNames[mIdx-1]}</td>
         <td>${fmt(tushum)}</td>
         <td>${fmt(xarajat)}</td>
         <td class="${sof>=0?'pos':'neg'}">${arrowFmt(sof)}</td>
-        <td>${fmt(expTotal)}</td>
+        <td>${expCell}</td>
         <td>${recList.length}</td>
       </tr>`;
     }
@@ -4531,7 +4629,7 @@ ${XL_PAGE}
       <td>${fmt(yTushum)}</td>
       <td>${fmt(yXarajat)}</td>
       <td class="${ySof>=0?'pos':'neg'}">${arrowFmt(ySof)}</td>
-      <td>${fmt(yExp)}</td>
+      <td>${fmt(yExp)}<div style="font-size:11.5px;color:var(--muted);font-weight:400;white-space:nowrap;">жами ${fmt(yExpS)} · қопл. ${fmt(yExpQ)}</div></td>
       <td>${yCount}</td>
     </tr>`;
     body.innerHTML = rows;
@@ -5960,7 +6058,18 @@ ${XL_PAGE}
     const monthTotal = monthList.reduce((s,x)=>s+x.summa,0);
     const monthQoplangan = monthList.reduce((s,x)=>s+(x.qoplangan||0),0);
     const monthQoldiq = monthTotal - monthQoplangan;
+    // УМУМИЙ (барча вақт, барча мошина ва мошинасиз харажатлар): жами / қопланган / қолдиқ
+    const allTotal = expenses.reduce((s,x)=> s + Number(x.summa||0), 0);
+    const allQoplangan = expenses.reduce((s,x)=> s + Number(x.qoplangan||0), 0);
+    const allQoldiq = allTotal - allQoplangan;
+    const openCount = expenses.filter(x=> Number(x.summa||0) - Number(x.qoplangan||0) > 0).length;
+    const headStyle = 'grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:-6px;';
     document.getElementById("expenseTodayStats").innerHTML = `
+      <div style="${headStyle}">Умумий — барча вақт бўйича</div>
+      <div class="stat"><div class="label">Жами қилинган харажат (${expenses.length} та)</div><div class="value">${fmt(allTotal)}</div></div>
+      <div class="stat"><div class="label">Жами қопланган</div><div class="value">${fmt(allQoplangan)}</div></div>
+      <div class="stat"><div class="label">Жами қолдиқ${openCount ? ` (${openCount} та қопланмаган)` : ""}</div><div class="value" style="color:${allQoldiq>0?'var(--bad)':'var(--good)'};">${fmt(allQoldiq)}</div></div>
+      <div style="${headStyle}margin-top:6px;">Бугун ва шу ой</div>
       <div class="stat"><div class="label">Бугунги харажат</div><div class="value">${fmt(todaysTotal)}</div></div>
       <div class="stat"><div class="label">Шу ойги жами харажат</div><div class="value">${fmt(monthTotal)}</div></div>
       <div class="stat"><div class="label">Шу ойги қопланган</div><div class="value">${fmt(monthQoplangan)}</div></div>
@@ -6737,7 +6846,9 @@ ${XL_PAGE}
       if(currentAgent) return;
       if(!incoming.length){
         clearTimeout(agentInboxState.retryTimer);
-        agentInboxState.status = "idle";
+        // Қабул қилингач inbox'дан ўчирилади ва Firestore «энди бўш» деб хабар беради —
+        // бу «Қабул қилинди ✓» хабарини дарҳол ўчириб юбормаслиги керак.
+        if(agentInboxState.status !== "confirmed") agentInboxState.status = "idle";
         agentInboxState.retryDelayIndex = 0;
         renderAgentInboxStatus();
         return;
