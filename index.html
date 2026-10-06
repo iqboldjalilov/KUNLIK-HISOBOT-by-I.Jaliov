@@ -198,7 +198,7 @@
   .filters .fld{min-width:160px;}
 
   .toast{
-    position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;
+    position:fixed;bottom:22px;right:22px;z-index:9650;background:var(--navy);color:#fff;
     padding:12px 20px;border-radius:8px;font-size:13.5px;box-shadow:0 6px 20px rgba(0,0,0,.2);
     opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;
     border-left:4px solid var(--gold);
@@ -268,6 +268,62 @@
     padding:8px;transform:translateY(-100%);transition:transform .2s;z-index:600;
   }
   #pullRefreshIndicator.show{transform:translateY(0);}
+
+  /* ---------- Ҳисоблагич (оддий + кредит/лизинг) ---------- */
+  .calc-fab{
+    position:fixed;left:18px;bottom:18px;z-index:450;width:52px;height:52px;border-radius:50%;
+    border:2px solid var(--gold);background:var(--navy);color:#fff;font-size:24px;line-height:1;
+    cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;
+    transition:transform .15s, box-shadow .15s;padding:0;
+  }
+  .calc-fab:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.32);}
+  .calc-fab:active{transform:scale(.94);}
+  .calc-overlay{display:none;position:fixed;inset:0;background:rgba(15,36,64,.55);z-index:900;align-items:center;justify-content:center;padding:16px;animation:fadeIn .15s ease;}
+  .calc-overlay.show{display:flex;}
+  .calc-box{background:var(--card);border-radius:var(--radius);width:100%;max-width:840px;max-height:92vh;display:flex;flex-direction:column;border:1px solid var(--line);box-shadow:var(--shadow-hover);overflow:hidden;}
+  .calc-head{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);border-bottom:3px solid var(--gold);padding:10px 12px;}
+  .calc-tabs{display:flex;gap:6px;flex:1;flex-wrap:wrap;}
+  .calc-tabs button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:7px 14px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .calc-tabs button.active{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+  .calc-x{background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 10px;line-height:1;}
+  .calc-body{padding:16px;overflow-y:auto;}
+  .calc-simple{max-width:340px;margin:0 auto;}
+  .calc-screen{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;text-align:right;margin-bottom:12px;min-height:78px;}
+  .calc-expr{font-size:13px;color:var(--muted);min-height:18px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+  .calc-val{font-size:30px;font-weight:700;color:var(--navy);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+  [data-theme="dark"] .calc-val{color:#f3d98a;}
+  .calc-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .calc-keys button{padding:14px 0;font-size:18px;font-weight:600;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;}
+  .calc-keys button.op{background:var(--gold-soft);color:var(--navy);}
+  .calc-keys button.eq{background:var(--gold);color:var(--navy);}
+  .calc-keys button.fn{background:var(--paper);}
+  .calc-keys button:active{transform:scale(.95);}
+  .calc-subtabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .calc-subtabs button{background:var(--paper);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .calc-subtabs button.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  [data-theme="dark"] .calc-subtabs button.active{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+  .calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+  .calc-h3{margin:18px 0 8px;font-size:14.5px;color:var(--navy);border-bottom:1px solid var(--line);padding-bottom:5px;}
+  [data-theme="dark"] .calc-h3{color:#f3d98a;}
+  .calc-save{margin-top:16px;padding:12px 14px;border:1px dashed var(--gold);border-radius:10px;background:var(--paper);}
+  .calc-save .calc-h3{margin-top:0;border-bottom:none;padding-bottom:0;}
+  .calc-note{font-size:12.5px;color:var(--muted);margin:8px 0 0;}
+  .calc-eq{font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;}
+  .calc-fx{max-width:430px;margin:0 auto;}
+  .calc-fx .calc-grid{grid-template-columns:1fr;}
+  .st-ok{color:var(--good);font-weight:700;}
+  .st-bad{color:var(--bad);font-weight:700;}
+  .st-part{color:#b07b00;font-weight:700;}
+  .st-wait{color:var(--muted);}
+  .calc-row-next td{background:var(--gold-soft);}
+  [data-theme="dark"] .calc-row-next td{background:#3a3320;}
+  @media(max-width:760px){
+    .calc-fab{left:12px;bottom:78px;width:48px;height:48px;font-size:22px;}
+    .calc-overlay{align-items:flex-end;padding:0;}
+    .calc-box{max-width:none;border-radius:var(--radius) var(--radius) 0 0;max-height:94vh;}
+    .calc-body{padding:12px;}
+    .toast{bottom:78px;right:12px;}
+  }
 
   /* ---------- дастур услубидаги alert/confirm модаллари ---------- */
   .custom-modal-overlay{
@@ -1220,6 +1276,9 @@
           <input type="month" id="expenseMonth">
         </div>
         <div class="fld">
+          <button type="button" class="btn outline" id="expAllMonthsBtn" title="Барча ойлардаги харажатларни кўрсатиш (яна босилса — жорий ойга қайтади)">📅 Барча ойлар</button>
+        </div>
+        <div class="fld">
           <label>Мошина</label>
           <select id="expenseFilterCar"><option value="">Барчаси</option></select>
         </div>
@@ -1243,7 +1302,7 @@
     <div class="section-divider">🔧 Таҳлил ва хулосалар — номига босиб очинг</div>
 
     <div class="card collapsible">
-      <h2>🚗 Мошиналар бўйича харажат хулосаси <span style="font-size:12px;color:var(--muted);font-weight:400;">(танланган ойда)</span> <span class="chev2">▸</span></h2>
+      <h2>🚗 Мошиналар бўйича харажат хулосаси <span id="expCarPeriod" style="font-size:12px;color:var(--muted);font-weight:400;">(танланган ойда)</span> <span class="chev2">▸</span></h2>
       <div class="collapse-body">
       <div class="table-wrap">
         <table>
@@ -1257,7 +1316,7 @@
     </div>
 
     <div class="card collapsible">
-      <h2>Харажат туркумлари бўйича таҳлил (шу ой) <span class="chev2">▸</span></h2>
+      <h2>Харажат туркумлари бўйича таҳлил <span id="expCatPeriod" style="font-size:12px;color:var(--muted);font-weight:400;">(танланган ой)</span> <span class="chev2">▸</span></h2>
       <div class="collapse-body">
       <div id="expenseCategoryChart"></div>
       </div>
@@ -1543,6 +1602,134 @@
 </main>
 
 <footer>Кунлик Хисобот дастури (by Iqbol Jalilov) · Булутдан ишлайди, интернетсиз ҳам ишлайверади · Реал вақтда синхронланади</footer>
+
+<!-- ===== Ҳисоблагич: тугма ва ойна (#mainApp ичида — агент режимида яширилади) ===== -->
+<button type="button" class="calc-fab" id="calcFab" title="Ҳисоблагич" aria-label="Ҳисоблагични очиш">🧮</button>
+<div class="calc-overlay" id="calcOverlay">
+  <div class="calc-box" role="dialog" aria-label="Ҳисоблагич">
+    <div class="calc-head">
+      <div class="calc-tabs">
+        <button type="button" id="calcTabSimple" class="active">🧮 Оддий</button>
+        <button type="button" id="calcTabCredit">🏦 Кредит / Лизинг</button>
+        <button type="button" id="calcTabFx">💵 Валюта</button>
+      </div>
+      <button type="button" class="calc-x" id="calcCloseBtn" aria-label="Ёпиш">✕</button>
+    </div>
+    <div class="calc-body">
+
+      <section id="calcSimple">
+        <div class="calc-simple">
+          <div class="calc-screen">
+            <div class="calc-expr" id="calcExpr"></div>
+            <div class="calc-val" id="calcVal">0</div>
+          </div>
+          <div class="calc-keys" id="calcKeys"></div>
+          <div class="actions-row" style="justify-content:center;margin-top:10px;">
+            <button type="button" class="btn outline small" id="calcCopyBtn">📋 Натижани нусха олиш</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="calcFx" style="display:none;">
+        <div class="calc-fx">
+          <div class="calc-grid">
+            <div><label>Курс: 1 доллар ($) = неча сўм</label><input type="text" inputmode="decimal" id="fx_kurs" placeholder="Масалан: 12 650"></div>
+            <div><label>Доллар ($)</label><input type="text" inputmode="decimal" id="fx_usd" placeholder="0.00"></div>
+            <div><label>Сўм</label><input type="text" inputmode="decimal" id="fx_uzs" placeholder="0"></div>
+          </div>
+          <div id="fxNote" class="calc-note">Иккала томонга ёзса бўлади: биттасини ёзсангиз, иккинчиси курс бўйича ҳисобланади. Курс шу қурилмада эсда қолади.</div>
+          <div class="actions-row">
+            <button type="button" class="btn outline small" id="fxCopyUsd">📋 $ нусха олиш</button>
+            <button type="button" class="btn outline small" id="fxCopyUzs">📋 Сўм нусха олиш</button>
+            <button type="button" class="btn outline small" id="fxClearBtn">↺ Тозалаш</button>
+          </div>
+          <p class="calc-note">Харажат ёки тўловни сўмда ёзиш учун: долларни киритинг, пастдаги «Сўм»ни нусха олиб, керакли майдонга қўйинг.</p>
+        </div>
+      </section>
+
+      <section id="calcCredit" style="display:none;">
+        <div class="calc-subtabs">
+          <button type="button" id="ccSubCalcBtn" class="active">🧮 Ҳисоблаш</button>
+          <button type="button" id="ccSubPayBtn">💳 Тўловлар ҳисоб-китоби</button>
+        </div>
+
+        <div id="ccCalcPane">
+          <div class="calc-grid">
+            <div><label>Валюта</label>
+              <select id="cc_valyuta"><option value="UZS">Сўм</option><option value="USD">Доллар ($)</option></select>
+            </div>
+            <div id="cc_kursWrap" style="display:none;"><label>Курс: 1 $ = неча сўм (ихтиёрий)</label><input type="text" inputmode="decimal" id="cc_kurs" placeholder="Масалан: 12 650"></div>
+            <div><label>Нарх / кредит суммаси <span id="cc_unit">(сўм)</span></label><input type="text" inputmode="decimal" id="cc_summa" placeholder="Масалан: 250 000 000"></div>
+            <div><label>Бошланғич тўлов</label>
+              <div style="display:flex;gap:6px;">
+                <input type="text" inputmode="decimal" id="cc_boshl" placeholder="0" style="flex:1;min-width:0;">
+                <select id="cc_boshlTur" style="width:96px;"><option value="som">сумма</option><option value="foiz">%</option></select>
+              </div>
+            </div>
+            <div><label>Йиллик фоиз (%)</label><input type="text" inputmode="decimal" id="cc_foiz" placeholder="Масалан: 24"></div>
+            <div><label>Муддат (ой)</label><input type="text" inputmode="numeric" id="cc_oy" placeholder="Масалан: 36"></div>
+            <div><label>Тўлов тури</label>
+              <select id="cc_tur"><option value="annuitet">Аннуитет (ҳар ой бир хил)</option><option value="differensial">Дифференциал (камайиб боради)</option></select>
+            </div>
+            <div><label>Биринчи тўлов санаси</label><input type="date" id="cc_sana"></div>
+          </div>
+          <div class="actions-row">
+            <button type="button" class="btn gold" id="ccCalcBtn">Ҳисоблаш</button>
+            <button type="button" class="btn outline" id="ccPrintBtn">🖨 Чоп этиш</button>
+            <button type="button" class="btn outline" id="ccExcelBtn">📊 Excel</button>
+            <button type="button" class="btn outline" id="ccCopyBtn">📋 Нусха олиш</button>
+            <button type="button" class="btn outline" id="ccResetBtn">↺ Тозалаш</button>
+          </div>
+          <div id="ccError" class="notice" style="display:none;margin-top:12px;"></div>
+          <div id="ccResult"></div>
+          <div id="ccSaveBox" class="calc-save" style="display:none;">
+            <h3 class="calc-h3" id="ccSaveTitle">💾 Шартнома сифатида сақлаш (тўловларни юритиш учун)</h3>
+            <div class="calc-grid">
+              <div><label>Шартнома номи</label><input type="text" id="cc_nom" placeholder="Масалан: ASIA ALLIANCE BANK — JOYLONG"></div>
+              <div><label>Банк / ташкилот</label><input type="text" id="cc_bank" placeholder="ихтиёрий"></div>
+              <div><label>Мошина</label><select id="cc_mashina"><option value="">— мошинасиз —</option></select></div>
+            </div>
+            <div class="actions-row">
+              <button type="button" class="btn gold" id="ccSaveBtn">💾 Шартнома сифатида сақлаш</button>
+              <button type="button" class="btn outline" id="ccCancelEditBtn" style="display:none;">Бекор қилиш</button>
+            </div>
+          </div>
+          <p class="calc-note">Тахминий ҳисоб: банкнинг расмий жадвалидан озгина фарқ қилиши мумкин (кунларни ҳисоблаш усули, комиссия, суғурта, юмалоқлаш). Доллардаги «≈ сўм» қийматлари киритилган курс бўйича тахминий.</p>
+        </div>
+
+        <div id="ccPayPane" style="display:none;">
+          <div class="calc-grid"><div><label>Шартнома</label><select id="lz_select"></select></div>
+            <div id="lz_kursWrap" style="display:none;"><label>Жорий курс: 1 $ = неча сўм</label><input type="text" inputmode="decimal" id="lz_kurs" placeholder="Масалан: 12 650"></div>
+          </div>
+          <div id="lzEmpty" class="empty" style="display:none;">Ҳали шартнома йўқ. «Ҳисоблаш» бўлимида кредит/лизинг шартларини киритиб, «Шартнома сифатида сақлаш»ни босинг.</div>
+          <div id="lzBody">
+            <div id="lzSummary"></div>
+            <h3 class="calc-h3">Тўловни қайд этиш</h3>
+            <form id="lzPayForm" class="calc-grid">
+              <div><label>Сана</label><input type="date" id="lz_pSana"></div>
+              <div><label>Сумма <span id="lz_unit">(сўм)</span></label><input type="text" inputmode="decimal" id="lz_pSumma" placeholder="Масалан: 15 000 000"></div>
+              <div id="lz_pSomWrap" style="display:none;"><label>Сўмда тўланган (ихтиёрий)</label><input type="text" inputmode="decimal" id="lz_pSom" placeholder="курс бўйича $ га айлантирилади"></div>
+              <div id="lz_pKursWrap" style="display:none;"><label>Тўлов куни курси</label><input type="text" inputmode="decimal" id="lz_pKurs" placeholder="Масалан: 12 650"></div>
+              <div><label>Изоҳ (ихтиёрий)</label><input type="text" id="lz_pIzoh" placeholder="ихтиёрий"></div>
+              <div style="align-self:end;"><button type="submit" class="btn gold" id="lzPaySubmit">Тўловни қайд этиш</button></div>
+            </form>
+            <h3 class="calc-h3">Қилинган тўловлар</h3>
+            <div id="lzPayments"></div>
+            <h3 class="calc-h3">Тўлов жадвали (ҳолати билан)</h3>
+            <div id="lzSchedule"></div>
+            <div class="actions-row">
+              <button type="button" class="btn outline" id="lzPrintBtn">🖨 Чоп этиш (ҳисоб-китоб)</button>
+              <button type="button" class="btn outline" id="lzExcelBtn">📊 Excel (жадвал ва тўловлар)</button>
+              <button type="button" class="btn outline" id="lzEditBtn">✏️ Шартларини ўзгартириш</button>
+              <button type="button" class="btn danger" id="lzDeleteBtn">🗑 Шартномани ўчириш</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -1624,6 +1811,7 @@
     {varName:"debtPayments", storageKey:"kh_debtpay_v1"},
     {varName:"agents", storageKey:"kh_agents_v1"},
     {varName:"agentFields", storageKey:"kh_agent_fields_v1"},
+    {varName:"leasing", storageKey:"kh_leasing_v1"},
   ];
 
   const LS_KEY = "kh_records_v1";
@@ -1887,7 +2075,7 @@
     // ---- ВЕРСИЯЛАР ТАРИХИ (булутда, чекланган сонда) ----
     // Ҳар версия — шу пайтдаги бутун маълумотнинг тўлиқ нусхаси. Охирги
     // VERSION_KEEP таси сақланади, эскилари ўзи ўчади (жой тўлиб кетмаслиги учун).
-    const VERSION_COUNT_KEYS = ["records","expenses","cashTaken","cashSpend","debtPayments"];
+    const VERSION_COUNT_KEYS = ["records","expenses","cashTaken","cashSpend","debtPayments","leasing"];
     let versionBackoffUntil = 0;
     function summarizePayload(payload){
       const counts = {};
@@ -3523,6 +3711,21 @@ ${XL_PAGE}
         }
       });
     }
+    leasing.forEach(lc=>{
+      const li = leasingInfo(lc, today);
+      if(li.closed || !li.rows.length) return;
+      const nm = esc(lc.nom), cur = lzCur(lc);
+      const eq = v => (cur === "USD" && Number(lc.kurs) > 0) ? ` (≈ ${fmt(somOfUsd(v, lc.kurs))} сўм)` : "";
+      if(li.overdueAmount > 0){
+        attentionItems.push({color:"var(--bad)", text:`🏦 Лизинг/кредит «${nm}»: <b>${fmtMU(li.overdueAmount, cur)}</b>${eq(li.overdueAmount)} кечикиш${li.nextRow ? ` (кейинги тўлов санаси: ${fmtDate(li.nextRow.sana)})` : ""}`});
+      } else if(li.nextRow){
+        const days = Math.round((new Date(li.nextRow.sana) - new Date(today)) / 86400000);
+        if(days >= 0 && days <= 7){
+          const rem = li.nextRow.tolov - li.nextRow.covered;
+          attentionItems.push({color:"var(--gold)", text:`🏦 Лизинг/кредит «${nm}»: ${days === 0 ? "бугун" : days + " кундан кейин"} (${fmtDate(li.nextRow.sana)}) — <b>${fmtMU(rem, cur)}</b>${eq(rem)} тўлов`});
+        }
+      }
+    });
     if(typeof agentInboxState !== "undefined" && agentInboxState.status === "error"){
       attentionItems.push({color:"var(--bad)", text:`📡 Агент ёзувларини булутга юклашда муаммо бор — дастур қайта уринмоқда.`});
     }
@@ -3858,6 +4061,8 @@ ${XL_PAGE}
       th{background:#0f2440;color:#fff;}
       tr:nth-child(even){background:#f6f4ee;}
       .section-note{font-size:11.5px;color:#6b7280;margin:4px 0 0;}
+      .eq{font-size:10px;color:#6b7280;font-weight:400;}
+      .st-bad{color:#b3402a;font-weight:700;}
       footer{margin-top:30px;font-size:11px;color:#999;text-align:center;}
       @media print{ body{padding:10mm;} h2{page-break-after:avoid;} table{page-break-inside:auto;} tr{page-break-inside:avoid;} }
 </style></head><body>
@@ -3899,6 +4104,8 @@ ${XL_PAGE}
     <p class="section-note">Жами: <b>${fmt(expDetail.sum)}</b> сўм · қопланган: <b>${fmt(expDetail.covered)}</b> · қолдиқ: <b>${fmt(expDetail.rest)}</b></p>
     <table><thead><tr><th>Сана</th><th>Тури</th><th>Мошина</th><th>Жами (асл сумма)</th><th>Қопланган</th><th>Қолдиқ</th></tr></thead>
     <tbody>${expDetail.rows ? expDetail.rows + expDetail.total : '<tr><td colspan="6">Шу ойда харажат йўқ</td></tr>'}</tbody></table>
+
+    ${leasingReportSectionHTML(month)}
 
     <footer>Кунлик Хисобот (by Iqbol Jalilov) — автоматик тайёрланган йиғма ойлик ҳисобот</footer>
     </body></html>`;
@@ -6085,6 +6292,13 @@ ${XL_PAGE}
   document.getElementById("expenseMonth").addEventListener("change", renderExpenses);
   document.getElementById("expenseFilterCar").addEventListener("change", renderExpenses);
   document.getElementById("searchExpenses").addEventListener("input", renderExpenses);
+  // «📅 Барча ойлар»: ой майдони тозаланади → барча ойларнинг харажатлари кўринади.
+  // Яна босилса — жорий ойга қайтади.
+  document.getElementById("expAllMonthsBtn")?.addEventListener("click", ()=>{
+    const m = document.getElementById("expenseMonth");
+    m.value = m.value ? "" : currentMonthValueExp();
+    renderExpenses();
+  });
 
   function renderExpenses(){
     const month = document.getElementById("expenseMonth").value;
@@ -6100,8 +6314,16 @@ ${XL_PAGE}
       (x.izoh||"").toLowerCase().includes(q)
     );
     const body = document.getElementById("expensesBody");
+    // «Барча ойлар» тугмаси: ой танланмаган (бўш) бўлса — фаол (тилла), акс ҳолда оддий
+    const allMonthsBtn = document.getElementById("expAllMonthsBtn");
+    if(allMonthsBtn) allMonthsBtn.className = month ? "btn outline" : "btn gold";
+    const periodText = month ? `(${month})` : "(барча ойлар)";
+    const carPeriodEl = document.getElementById("expCarPeriod"); if(carPeriodEl) carPeriodEl.textContent = periodText;
+    const catPeriodEl = document.getElementById("expCatPeriod"); if(catPeriodEl) catPeriodEl.textContent = periodText;
     if(!list.length){
       body.innerHTML = `<tr><td colspan="10" class="empty">Бу даврда харажат ёзуви йўқ. "➕ Қўшиш" табидан янги харажат қўшинг, ёки юқоридаги ой/мошина филтрини текширинг.</td></tr>`;
+      renderExpenseCategoryChart(month);
+      renderExpenseCarSummary(month);
       return;
     }
     body.innerHTML = list.map((x,i)=>{
@@ -6203,7 +6425,7 @@ ${XL_PAGE}
     });
     const keys = Object.keys(perCar).filter(k=> perCar[k].count>0 || k!=="__NONE__");
     if(!keys.length){
-      body.innerHTML = `<tr><td colspan="5" class="empty">Бу ойда харажат ёзуви йўқ.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="5" class="empty">${month ? "Бу ойда харажат ёзуви йўқ." : "Ҳали харажат ёзуви йўқ."}</td></tr>`;
       return;
     }
     keys.sort((a,b)=> perCar[b].summa - perCar[a].summa);
@@ -6228,7 +6450,7 @@ ${XL_PAGE}
     let list = expenses.slice();
     if(month) list = list.filter(x=>x.sana && x.sana.slice(0,7)===month);
     if(!list.length){
-      el.innerHTML = `<p class="empty">Бу ойда харажат ёзуви йўқ.</p>`;
+      el.innerHTML = `<p class="empty">${month ? "Бу ойда харажат ёзуви йўқ." : "Ҳали харажат ёзуви йўқ."}</p>`;
       return;
     }
     const perCat = {};
@@ -6730,6 +6952,162 @@ ${XL_PAGE}
   }
   let agentFields = loadAgentFields();
 
+  // ===================== ЛИЗИНГ / КРЕДИТ: маълумот ва ҳисоб-китоб =====================
+  // Ҳар бир шартнома: {id, nom, bank, mashina, summa (нарх), boshlangich, foiz (йиллик %), oy,
+  //   turi: "annuitet"|"differensial", birinchiTolov: "YYYY-MM-DD",
+  //   tolovlar: [{id, sana, summa, izoh}], createdAt}
+  // Тўлов жадвали сақланмайди — шартлардан ҳар сафар қайта ҳисобланади (шунда у доим тўғри).
+  const LS_LEASING = "kh_leasing_v1";
+  function loadLeasing(){
+    try{ const v = JSON.parse(localStorage.getItem(LS_LEASING)); return Array.isArray(v) ? v : []; }
+    catch(e){ return []; }
+  }
+  function saveLeasing(list){ safeSave(LS_LEASING, JSON.stringify(list)); }
+  let leasing = loadLeasing();
+  let calcRefreshHook = null;   // ҳисоблагич ойнаси очиқ бўлса, маълумот янгиланганда уни қайта чизади
+
+  // Санага n ой қўшиш (ой охиридан ошмайди: 31.01 + 1 ой = 28.02)
+  function addMonthsISO(iso, n){
+    const p = String(iso || "").slice(0,10).split("-").map(Number);
+    if(p.length !== 3 || p.some(isNaN)) return "";
+    const total = p[1] - 1 + n;
+    const y = p[0] + Math.floor(total / 12);
+    const m0 = ((total % 12) + 12) % 12;
+    const d = Math.min(p[2], new Date(y, m0 + 1, 0).getDate());
+    return y + "-" + String(m0 + 1).padStart(2,"0") + "-" + String(d).padStart(2,"0");
+  }
+
+  // Тўлов жадвали. type: "annuitet" (ҳар ой бир хил) ёки "differensial" (асосий қарз тенг, фоиз камаяди).
+  // Барча суммалар бутун сўмга юмалоқланади, охирги ой қолдиқни ёпади (жами асосий қарз аниқ P га тенг).
+  function buildCreditSchedule(p){
+    const n = Math.max(1, Math.round(p.months));
+    const P = Math.max(0, Math.round(p.principal));
+    const r = Number(p.rate || 0) / 100 / 12;
+    const first = /^\d{4}-\d{2}-\d{2}$/.test(p.firstDate || "") ? p.firstDate : localDateStr();
+    const annuity = p.type === "differensial" ? 0
+      : Math.round(r === 0 ? P / n : P * r / (1 - Math.pow(1 + r, -n)));
+    const baseAsosiy = Math.round(P / n);
+    const rows = [];
+    let balance = P;
+    for(let i = 1; i <= n; i++){
+      const foiz = Math.round(balance * r);
+      let asosiy;
+      if(i === n) asosiy = balance;
+      else if(p.type === "differensial") asosiy = Math.min(baseAsosiy, balance);
+      else asosiy = Math.max(0, Math.min(annuity - foiz, balance));
+      rows.push({ n:i, sana: addMonthsISO(first, i - 1), tolov: asosiy + foiz, asosiy, foiz, qoldiq: balance - asosiy });
+      balance -= asosiy;
+    }
+    return rows;
+  }
+
+  // Шартнома ҳолати: жадвал + қилинган тўловлар. Тўловлар жадвалдаги ойларга КЕТМА-КЕТ тақсимланади
+  // (биринчи ойдан бошлаб), шунда ҳар бир ой «тўланган / қисман / тўланмаган» деб кўринади.
+  function leasingInfo(c, today){
+    today = today || localDateStr();
+    const principal = Math.max(0, Math.round(Number(c.summa || 0) - Number(c.boshlangich || 0)));
+    const rows = (principal > 0 && Number(c.oy) >= 1)
+      ? buildCreditSchedule({ principal, rate: Number(c.foiz || 0), months: Number(c.oy), type: c.turi, firstDate: c.birinchiTolov })
+      : [];
+    const payments = Array.isArray(c.tolovlar) ? c.tolovlar : [];
+    const paidTotal = payments.reduce((s,p)=> s + Number(p.summa || 0), 0);
+    let rest = paidTotal;
+    rows.forEach(r=>{
+      const cover = Math.max(0, Math.min(r.tolov, rest));
+      rest -= cover;
+      r.covered = cover;
+      r.status = cover >= r.tolov ? "paid" : (cover > 0 ? "partial" : "unpaid");
+      r.overdue = r.status !== "paid" && r.sana < today;
+    });
+    const total = rows.reduce((s,r)=> s + r.tolov, 0);
+    const interest = rows.reduce((s,r)=> s + r.foiz, 0);
+    const dueSoFar = rows.filter(r=> r.sana <= today).reduce((s,r)=> s + r.tolov, 0);   // бугун ҳам киради
+    const dueBefore = rows.filter(r=> r.sana < today).reduce((s,r)=> s + r.tolov, 0);   // бугундан олдингилар
+    return {
+      principal, rows, payments, total, interest, paidTotal,
+      remaining: Math.max(0, total - paidTotal),
+      extra: Math.max(0, paidTotal - total),
+      dueSoFar, dueBefore,
+      overdueAmount: Math.max(0, dueBefore - paidTotal),
+      ahead: Math.max(0, paidTotal - dueSoFar),
+      nextRow: rows.find(r=> r.status !== "paid") || null,
+      closed: total > 0 && paidTotal >= total
+    };
+  }
+
+  // ---- Пул бирликлари ----
+  // Сўм — бутун сўм; доллар — СЕНТ (1 $ = 100 сент). Шунда барча ҳисоб-китоб бутун сонларда қолади
+  // (суза нуқтали хато чиқмайди), «валюта» белгиси йўқ эски шартномалар эса сўм ҳисобланади.
+  const lzCur = c => (c && c.valyuta === "USD") ? "USD" : "UZS";
+  function fmtUsd(cents){
+    const n = Math.round(Number(cents) || 0);
+    const v = Math.abs(n);
+    const whole = String(Math.floor(v / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return (n < 0 ? "-" : "") + whole + "." + String(v % 100).padStart(2, "0");
+  }
+  const fmtMN = (v, cur) => cur === "USD" ? fmtUsd(v) : fmt(v);                    // жадвал катаклари учун (бирликсиз)
+  const fmtMC = (v, cur) => cur === "USD" ? fmtUsd(v) + " $" : fmt(v);              // карточкалар учун
+  const fmtMU = (v, cur) => cur === "USD" ? fmtUsd(v) + " $" : fmt(v) + " сўм";     // жумла ичида
+  const somOfUsd = (cents, kurs) => Math.round(Number(cents || 0) / 100 * Number(kurs || 0));
+
+  // ---- Йиғма ойлик ҳисобот учун: лизинг бўлими ----
+  // Ҳолат «ҳисобот санаси» бўйича: ой тугаган бўлса — ой охирига, тугамаган бўлса — бугунга.
+  // Шу санадан кейинги тўловлар ҳисобга олинмайди (ўтган ой ҳисоботи кейинги тўловлардан ўзгармаслиги учун).
+  function leasingMonthSummary(month){
+    const today = localDateStr();
+    const y = Number(month.slice(0,4)), m = Number(month.slice(5,7));
+    const monthEnd = month + "-" + String(new Date(y, m, 0).getDate()).padStart(2, "0");
+    const asOf = monthEnd < today ? monthEnd : today;
+    return leasing.map(c=>{
+      const upto = Object.assign({}, c, { tolovlar: (c.tolovlar || []).filter(p=> String(p.sana || "") <= asOf) });
+      const info = leasingInfo(upto, asOf);
+      const monthPays = (c.tolovlar || []).filter(p=> String(p.sana || "").slice(0,7) === month);
+      return {
+        c, cur: lzCur(c), info, asOf, monthPays,
+        dueMonth: info.rows.filter(r=> r.sana.slice(0,7) === month).reduce((s,r)=> s + r.tolov, 0),
+        paidMonth: monthPays.reduce((s,p)=> s + Number(p.summa || 0), 0)
+      };
+    });
+  }
+  function leasingReportSectionHTML(month){
+    if(!leasing.length) return "";
+    const list = leasingMonthSummary(month);
+    const asOf = list[0].asOf;
+    const eqLine = (v, cur, kurs) => (cur === "USD" && Number(kurs) > 0) ? `<div class="eq">≈ ${fmt(somOfUsd(v, kurs))} сўм</div>` : "";
+    const cell = (v, cur, kurs) => fmtMN(v, cur) + eqLine(v, cur, kurs);
+    const unit = cur => cur === "USD" ? "$" : "сўм";
+    const T = { UZS:{n:0,due:0,paid:0,all:0,rest:0,late:0}, USD:{n:0,due:0,paid:0,all:0,rest:0,late:0} };
+    const rows = list.map(x=>{
+      const { c, cur, info } = x, t = T[cur];
+      t.n++; t.due += x.dueMonth; t.paid += x.paidMonth; t.all += info.paidTotal; t.rest += info.remaining; t.late += info.overdueAmount;
+      return `<tr><td>${esc(c.nom)}${info.closed ? " ✓ ёпилган" : ""}${c.bank ? `<div class="eq">${esc(c.bank)}</div>` : ""}</td><td>${esc(c.mashina || "—")}</td><td>${unit(cur)}</td>` +
+        `<td>${cell(x.dueMonth, cur, c.kurs)}</td><td>${cell(x.paidMonth, cur, c.kurs)}</td><td>${cell(info.paidTotal, cur, c.kurs)}</td>` +
+        `<td>${cell(info.remaining, cur, c.kurs)}</td><td${info.overdueAmount > 0 ? ' class="st-bad"' : ""}>${cell(info.overdueAmount, cur, c.kurs)}</td></tr>`;
+    }).join("");
+    const totRow = cur => T[cur].n
+      ? `<tr style="font-weight:700;background:#efe7c8;"><td colspan="2">ЖАМИ (${cur === "USD" ? "доллар" : "сўм"} шартномалар)</td><td>${unit(cur)}</td>` +
+        `<td>${fmtMN(T[cur].due, cur)}</td><td>${fmtMN(T[cur].paid, cur)}</td><td>${fmtMN(T[cur].all, cur)}</td><td>${fmtMN(T[cur].rest, cur)}</td><td>${fmtMN(T[cur].late, cur)}</td></tr>` : "";
+    const pays = [];
+    list.forEach(x=> x.monthPays.forEach(p=> pays.push({ c:x.c, cur:x.cur, p })));
+    pays.sort((a,b)=> String(a.p.sana).localeCompare(String(b.p.sana)));
+    const PT = { UZS:0, USD:0 };
+    const payRows = pays.map(({c, cur, p})=>{
+      PT[cur] += Number(p.summa || 0);
+      return `<tr><td>${fmtDate(p.sana)}</td><td>${esc(c.nom)}</td><td>${fmtMC(p.summa, cur)}</td>` +
+        `<td>${p.som ? fmt(p.som) + (p.kurs ? ` (курс ${fmt(p.kurs)})` : "") : "—"}</td><td>${esc(p.izoh || "")}</td></tr>`;
+    }).join("");
+    const payTot = ["UZS","USD"].filter(cur=> pays.some(x=> x.cur === cur))
+      .map(cur=> `<tr style="font-weight:700;background:#efe7c8;"><td colspan="2">ЖАМИ (${cur === "USD" ? "доллар" : "сўм"})</td><td>${fmtMC(PT[cur], cur)}</td><td colspan="2"></td></tr>`).join("");
+    return `
+    <h2>5. Лизинг / кредит тўловлари</h2>
+    <p class="section-note">Ҳолат <b>${fmtDate(asOf)}</b> санасига. «Кечикиш» — шу санадан олдин тўланиши керак бўлган, лекин тўланмаган сумма. Доллардаги «≈ сўм» қийматлари шартномада киритилган курс бўйича тахминий.</p>
+    <table><thead><tr><th>Шартнома</th><th>Мошина</th><th>Валюта</th><th>Шу ой графикда</th><th>Шу ойда тўланган</th><th>Жами тўланган</th><th>Қолган жами</th><th>Кечикиш</th></tr></thead>
+    <tbody>${rows}${totRow("UZS")}${totRow("USD")}</tbody></table>
+    <p class="section-note"><b>Шу ойда қилинган тўловлар</b></p>
+    <table><thead><tr><th>Сана</th><th>Шартнома</th><th>Сумма</th><th>Сўмда тўланган (курс)</th><th>Изоҳ</th></tr></thead>
+    <tbody>${payRows ? payRows + payTot : '<tr><td colspan="5">Шу ойда лизинг тўлови қайд этилмаган</td></tr>'}</tbody></table>`;
+  }
+
   // ⚠️ Шу иккита функция — заҲира олиш/тиклашнинг ЯГОНА марказий жойи.
   // BUSINESS_DATA_KEYS'даги ҳар бир тур шу ерда (ва ФАҚАТ шу ерда) ўзининг
   // ўзгарувчиси ва saqlash funksiyasi bilan bog'lanadi. Backup tugmasi,
@@ -6749,6 +7127,7 @@ ${XL_PAGE}
         case "debtPayments": data.debtPayments = debtPayments; break;
         case "agents": data.agents = agents; break;
         case "agentFields": data.agentFields = agentFields; break;
+        case "leasing": data.leasing = leasing; break;
       }
     });
     data.exportedAt = new Date().toISOString();
@@ -6771,6 +7150,7 @@ ${XL_PAGE}
       agentFields = data.agentFields;
       safeSave(LS_AGENT_FIELDS, JSON.stringify(agentFields));
     }
+    if(Array.isArray(data.leasing)){ leasing = data.leasing; saveLeasing(leasing); }
   }
 
   function renderAgentFieldsList(){
@@ -7386,8 +7766,844 @@ ${XL_PAGE}
     document.getElementById(id)?.addEventListener("change", renderAgentPivot);
   });
 
+  // ===================== ҲИСОБЛАГИЧ (интерфейс): оддий + кредит/лизинг + валюта =====================
+  (function setupCalculator(){
+    const el = id => document.getElementById(id);
+    const overlay = el("calcOverlay"), fab = el("calcFab");
+    if(!overlay || !fab) return;
+
+    let calcTab = "simple";     // simple | credit | fx
+    let ccSub = "calc";         // calc | pay
+    let lzSelectedId = null;    // «Тўловлар» бўлимида танланган шартнома
+    let ccState = null;         // охирги муваффақиятли ҳисоб
+    let ccEditId = null;        // шартнома шартлари таҳрирланаётган бўлса — унинг id'си
+    let lzSummaManual = false;  // доллар тўловида сумма қўлда ёзилганми (шунда сўм/курсдан ўзи ҳисобланмайди)
+    let fxLast = "usd";         // «Валюта» табида охирги ёзилган майдон
+    const LS_CALC_LAST = "kh_calc_last_v1";   // охирги киритилган қийматлар (фақат шу қурилмада, булутга кетмайди)
+    const LS_FX = "kh_fx_rate_v1";            // охирги ишлатилган доллар курси (фақат шу қурилмада)
+
+    const parseNum = v => {
+      const s = String(v ?? "").replace(/[\s\u00A0]/g, "").replace(",", ".");
+      return s === "" ? NaN : Number(s);
+    };
+    const isOpen = () => overlay.classList.contains("show");
+    const fxRate = () => { const v = Number(localStorage.getItem(LS_FX)); return v > 0 ? v : 0; };
+    const setFxRate = v => { if(v > 0){ try{ localStorage.setItem(LS_FX, String(v)); }catch(e){} } };
+    const toMinor = (x, cur) => cur === "USD" ? Math.round(+(x * 100).toFixed(6)) : Math.round(x);
+    const majorStr = (v, cur) => cur === "USD" ? String(Math.round(v) / 100) : String(Math.round(v));
+    const unitOf = cur => cur === "USD" ? "$" : "сўм";
+
+    // ---------- очиш / ёпиш ----------
+    function openCalc(tab){
+      overlay.classList.add("show");
+      document.body.style.overflow = "hidden";
+      showTab(tab || calcTab);
+    }
+    function closeCalc(){
+      overlay.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+    function showTab(t){
+      calcTab = t;
+      el("calcSimple").style.display = t === "simple" ? "" : "none";
+      el("calcCredit").style.display = t === "credit" ? "" : "none";
+      el("calcFx").style.display = t === "fx" ? "" : "none";
+      el("calcTabSimple").className = t === "simple" ? "active" : "";
+      el("calcTabCredit").className = t === "credit" ? "active" : "";
+      el("calcTabFx").className = t === "fx" ? "active" : "";
+      if(t === "credit"){ ccPrepare(); showSub(ccSub); }
+      if(t === "fx") fxPrepare();
+    }
+    function showSub(s){
+      ccSub = s;
+      el("ccCalcPane").style.display = s === "calc" ? "" : "none";
+      el("ccPayPane").style.display = s === "pay" ? "" : "none";
+      el("ccSubCalcBtn").className = s === "calc" ? "active" : "";
+      el("ccSubPayBtn").className = s === "pay" ? "active" : "";
+      if(s === "pay") renderLeasingPane();
+    }
+    fab.addEventListener("click", ()=> openCalc());
+    el("calcCloseBtn").addEventListener("click", closeCalc);
+    overlay.addEventListener("click", e=>{ if(e.target === overlay) closeCalc(); });
+    el("calcTabSimple").addEventListener("click", ()=> showTab("simple"));
+    el("calcTabCredit").addEventListener("click", ()=> showTab("credit"));
+    el("calcTabFx").addEventListener("click", ()=> showTab("fx"));
+    el("ccSubCalcBtn").addEventListener("click", ()=> showSub("calc"));
+    el("ccSubPayBtn").addEventListener("click", ()=> showSub("pay"));
+
+    // ---------- умумий ёрдамчилар ----------
+    async function copyText(text){
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(text); return true; }
+      }catch(e){}
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.style.cssText = "position:fixed;opacity:0;";
+        document.body.appendChild(ta); ta.select();
+        const ok = document.execCommand("copy"); ta.remove();
+        return !!ok;
+      }catch(e){ return false; }
+    }
+    const statCard = (label, value, attr) => `<div class="stat"><div class="label">${label}</div><div class="value"${attr || ""}>${value}</div></div>`;
+    const eqDiv = (v, cur, kurs) => (cur === "USD" && Number(kurs) > 0) ? `<div class="calc-eq">≈ ${fmt(somOfUsd(v, kurs))} сўм</div>` : "";
+    const mcard = (label, v, cur, kurs, attr) => statCard(label, fmtMC(v, cur) + eqDiv(v, cur, kurs), attr);
+
+    // =====================================================================
+    //  1) ОДДИЙ ҲИСОБЛАГИЧ
+    // =====================================================================
+    const CS = { cur:"0", acc:null, op:null, fresh:false, justEq:false, err:false, expr:"" };
+    const OPSYM = { "+":"+", "-":"−", "*":"×", "/":"÷" };
+    const KEYS = [
+      ["C","C","fn"], ["DEL","⌫","fn"], ["%","%","fn"], ["/","÷","op"],
+      ["7","7",""], ["8","8",""], ["9","9",""], ["*","×","op"],
+      ["4","4",""], ["5","5",""], ["6","6",""], ["-","−","op"],
+      ["1","1",""], ["2","2",""], ["3","3",""], ["+","+","op"],
+      ["NEG","±","fn"], ["0","0",""], [".",".",""], ["=","=","eq"],
+    ];
+    function calcNumStr(x){
+      if(!isFinite(x)) return "Хато";
+      const v = parseFloat(x.toPrecision(12));
+      let s = String(v);
+      if(/e/i.test(s)) s = v.toLocaleString("en-US", { useGrouping:false, maximumFractionDigits:10 });
+      return s;
+    }
+    function calcFmtNum(s){
+      s = String(s);
+      const neg = s.startsWith("-");
+      const t = neg ? s.slice(1) : s;
+      const parts = t.split(".");
+      const ig = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+      return (neg ? "-" : "") + ig + (parts.length > 1 ? "." + parts[1] : "");
+    }
+    function calcApply(a, op, b){
+      if(op === "+") return a + b;
+      if(op === "-") return a - b;
+      if(op === "*") return a * b;
+      if(op === "/") return b === 0 ? NaN : a / b;
+      return b;
+    }
+    function calcReset(){ CS.cur = "0"; CS.acc = null; CS.op = null; CS.fresh = false; CS.justEq = false; CS.err = false; CS.expr = ""; }
+    function calcRender(){
+      el("calcVal").textContent = CS.err ? "Хато" : calcFmtNum(CS.cur);
+      el("calcExpr").textContent = CS.expr;
+    }
+    function calcPress(k){
+      if(CS.err) calcReset();
+      if(/^[0-9]$/.test(k)){
+        if(CS.justEq) calcReset();
+        if(CS.fresh || CS.cur === "0"){ CS.cur = k; CS.fresh = false; }
+        else if(CS.cur.replace(/[-.]/g, "").length < 15) CS.cur += k;
+      } else if(k === "."){
+        if(CS.justEq) calcReset();
+        if(CS.fresh){ CS.cur = "0."; CS.fresh = false; }
+        else if(!CS.cur.includes(".")) CS.cur += ".";
+      } else if(k === "C"){
+        calcReset();
+      } else if(k === "DEL"){
+        if(!CS.fresh && !CS.justEq){
+          CS.cur = (CS.cur.length > 1 && !(CS.cur.length === 2 && CS.cur[0] === "-")) ? CS.cur.slice(0, -1) : "0";
+        }
+      } else if(k === "NEG"){
+        if(!CS.fresh && CS.cur !== "0" && CS.cur !== "0."){
+          CS.cur = CS.cur.startsWith("-") ? CS.cur.slice(1) : "-" + CS.cur;
+        }
+      } else if(k === "+" || k === "-" || k === "*" || k === "/"){
+        const curN = Number(CS.cur);
+        if(CS.op && !CS.fresh){
+          const r = calcApply(CS.acc, CS.op, curN);
+          if(!isFinite(r)){ CS.err = true; CS.expr = ""; CS.op = null; CS.acc = null; calcRender(); return; }
+          CS.acc = r; CS.cur = calcNumStr(r);
+        } else if(!CS.op){
+          CS.acc = curN;
+        }
+        CS.op = k; CS.fresh = true; CS.justEq = false;
+        CS.expr = calcFmtNum(calcNumStr(CS.acc)) + " " + OPSYM[k];
+      } else if(k === "="){
+        if(CS.op){
+          const b = Number(CS.cur);
+          const r = calcApply(CS.acc, CS.op, b);
+          CS.expr = calcFmtNum(calcNumStr(CS.acc)) + " " + OPSYM[CS.op] + " " + calcFmtNum(CS.cur) + " =";
+          if(!isFinite(r)){ CS.err = true; CS.op = null; CS.acc = null; calcRender(); return; }
+          CS.cur = calcNumStr(r); CS.acc = null; CS.op = null; CS.fresh = false; CS.justEq = true;
+        }
+      } else if(k === "%"){
+        const v = Number(CS.cur);
+        const r = (CS.op && CS.acc !== null && (CS.op === "+" || CS.op === "-")) ? CS.acc * v / 100 : v / 100;
+        CS.cur = calcNumStr(r); CS.fresh = false;
+      }
+      calcRender();
+    }
+    (function renderKeypad(){
+      const box = el("calcKeys");
+      box.innerHTML = KEYS.map(k=> `<button type="button" class="${k[2]}" data-ckey="${k[0]}">${k[1]}</button>`).join("");
+      box.querySelectorAll("[data-ckey]").forEach(b=> b.addEventListener("click", ()=> calcPress(b.dataset.ckey)));
+      calcRender();
+    })();
+    el("calcCopyBtn").addEventListener("click", async ()=>{
+      const plain = CS.err ? "" : CS.cur;
+      if(!plain){ return; }
+      toast((await copyText(plain)) ? "Нусха олинди: " + plain + " ✓" : "Нусха олиб бўлмади");
+    });
+    // Клавиатура орқали: рақамлар, + − * /, Enter, Backspace, %, C, Escape
+    document.addEventListener("keydown", e=>{
+      if(!isOpen()) return;
+      if(e.key === "Escape"){ closeCalc(); return; }
+      if(calcTab !== "simple") return;
+      if(e.ctrlKey || e.metaKey || e.altKey) return;
+      const tag = e.target && e.target.tagName ? String(e.target.tagName).toUpperCase() : "";
+      if(tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+      if(tag === "BUTTON" && (e.key === "Enter" || e.key === " ")) return;   // тугманинг ўз ҳаракати
+      let k = null;
+      if(/^[0-9]$/.test(e.key)) k = e.key;
+      else if(e.key === "." || e.key === ",") k = ".";
+      else if(e.key === "+" || e.key === "-" || e.key === "*" || e.key === "/") k = e.key;
+      else if(e.key === "Enter" || e.key === "=") k = "=";
+      else if(e.key === "Backspace") k = "DEL";
+      else if(e.key === "%") k = "%";
+      else if(e.key === "c" || e.key === "C" || e.key === "Delete") k = "C";
+      if(k){ e.preventDefault(); calcPress(k); }
+    });
+
+    // =====================================================================
+    //  2) ВАЛЮТА: доллар ↔ сўм (курс эсда қолади)
+    // =====================================================================
+    function fxPrepare(){
+      if(!String(el("fx_kurs").value).trim() && fxRate()) el("fx_kurs").value = String(fxRate());
+      fxCompute();
+    }
+    function fxCompute(){
+      const kurs = parseNum(el("fx_kurs").value);
+      const note = el("fxNote");
+      if(!(kurs > 0)){
+        note.textContent = "Курсни киритинг (1 доллар неча сўм).";
+        if(fxLast === "usd") el("fx_uzs").value = ""; else el("fx_usd").value = "";
+        return;
+      }
+      note.textContent = `Курс: 1 $ = ${fmt(kurs)} сўм.`;
+      if(fxLast === "usd"){
+        const usd = parseNum(el("fx_usd").value);
+        el("fx_uzs").value = isNaN(usd) ? "" : fmt(Math.round(usd * kurs));
+      } else {
+        const uzs = parseNum(el("fx_uzs").value);
+        el("fx_usd").value = isNaN(uzs) ? "" : (Math.round(uzs / kurs * 100) / 100).toFixed(2);
+      }
+    }
+    el("fx_kurs").addEventListener("input", ()=>{ const k = parseNum(el("fx_kurs").value); if(k > 0) setFxRate(k); fxCompute(); });
+    el("fx_usd").addEventListener("input", ()=>{ fxLast = "usd"; fxCompute(); });
+    el("fx_uzs").addEventListener("input", ()=>{ fxLast = "uzs"; fxCompute(); });
+    el("fxCopyUsd").addEventListener("click", async ()=>{
+      const t = String(el("fx_usd").value).trim(); if(!t) return;
+      toast((await copyText(t)) ? "Нусха олинди: " + t + " $ ✓" : "Нусха олиб бўлмади");
+    });
+    el("fxCopyUzs").addEventListener("click", async ()=>{
+      const t = String(el("fx_uzs").value).replace(/[\s\u00A0]/g, ""); if(!t) return;
+      toast((await copyText(t)) ? "Нусха олинди: " + t + " сўм ✓" : "Нусха олиб бўлмади");
+    });
+    el("fxClearBtn").addEventListener("click", ()=>{ el("fx_usd").value = ""; el("fx_uzs").value = ""; fxLast = "usd"; fxCompute(); });
+
+    // =====================================================================
+    //  3) КРЕДИТ / ЛИЗИНГ — ҲИСОБЛАШ (сўм ёки доллар)
+    // =====================================================================
+    const CC_FIELDS = ["cc_valyuta","cc_kurs","cc_summa","cc_boshl","cc_boshlTur","cc_foiz","cc_oy","cc_tur"];
+    const ccCur = () => el("cc_valyuta").value === "USD" ? "USD" : "UZS";
+    function ccSyncCurrencyUI(){
+      const usd = ccCur() === "USD";
+      el("cc_kursWrap").style.display = usd ? "" : "none";
+      el("cc_unit").textContent = usd ? "($)" : "(сўм)";
+      if(usd && !String(el("cc_kurs").value).trim() && fxRate()) el("cc_kurs").value = String(fxRate());
+    }
+    function renderCcCars(){
+      const sel = el("cc_mashina"); const cur = sel.value;
+      sel.innerHTML = `<option value="">— мошинасиз —</option>` + cars.map(c=> `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
+      sel.value = cur || "";
+    }
+    function ccSaveLast(){
+      if(ccEditId) return;
+      const o = {}; CC_FIELDS.forEach(id=> o[id] = el(id).value);
+      try{ localStorage.setItem(LS_CALC_LAST, JSON.stringify(o)); }catch(e){}
+    }
+    function ccLoadLast(){ try{ return JSON.parse(localStorage.getItem(LS_CALC_LAST)) || null; }catch(e){ return null; } }
+    function ccPrepare(){
+      renderCcCars();
+      if(!el("cc_sana").value) el("cc_sana").value = addMonthsISO(localDateStr(), 1);
+      if(!ccEditId && !el("cc_summa").value && !el("cc_oy").value){
+        const last = ccLoadLast();
+        if(last) CC_FIELDS.forEach(id=>{ if(last[id] !== undefined) el(id).value = last[id]; });
+      }
+      ccSyncCurrencyUI();
+      ccCompute(true);
+    }
+    function ccRead(){
+      const cur = ccCur();
+      const price = parseNum(el("cc_summa").value);
+      const rate = parseNum(el("cc_foiz").value);
+      const months = parseNum(el("cc_oy").value);
+      if(isNaN(price) || isNaN(rate) || isNaN(months)) return { ok:false, missing:true, err:"Сумма, йиллик фоиз ва муддатни киритинг." };
+      if(price <= 0) return { ok:false, err:"Сумма 0 дан катта бўлиши керак." };
+      let kurs = 0;
+      if(cur === "USD"){
+        const kr = String(el("cc_kurs").value).trim();
+        if(kr !== ""){
+          const kv = parseNum(kr);
+          if(isNaN(kv) || kv <= 0) return { ok:false, err:"Курс 0 дан катта бўлиши керак (ёки бўш қолдиринг)." };
+          kurs = kv;
+        }
+      }
+      const priceM = toMinor(price, cur);
+      if(priceM <= 0) return { ok:false, err:"Сумма жуда кичик." };
+      const downRaw = String(el("cc_boshl").value).trim();
+      const downType = el("cc_boshlTur").value === "foiz" ? "foiz" : "som";
+      let down = 0;
+      if(downRaw !== ""){
+        const d = parseNum(downRaw);
+        if(isNaN(d) || d < 0) return { ok:false, err:"Бошланғич тўлов нотўғри киритилган." };
+        down = downType === "foiz" ? Math.round(priceM * d / 100) : toMinor(d, cur);
+      }
+      if(down >= priceM) return { ok:false, err:"Бошланғич тўлов суммадан кичик бўлиши керак." };
+      if(rate < 0 || rate > 200) return { ok:false, err:"Йиллик фоиз 0 дан 200 гача бўлиши керак." };
+      if(!Number.isInteger(months) || months < 1 || months > 600) return { ok:false, err:"Муддат 1 дан 600 гача бутун ой бўлиши керак." };
+      const type = el("cc_tur").value === "differensial" ? "differensial" : "annuitet";
+      const firstDate = el("cc_sana").value || addMonthsISO(localDateStr(), 1);
+      return { ok:true, params:{ cur, kurs, price: priceM, down, principal: priceM - down, rate, months, type, firstDate } };
+    }
+    function rowStatusHTML(r, cur){
+      if(r.status === "paid") return `<span class="st-ok">✓ Тўланган</span>`;
+      const late = r.overdue ? ` <span class="st-bad">⚠ кечиккан</span>` : "";
+      if(r.status === "partial") return `<span class="st-part">◐ Қисман: ${fmtMN(r.covered, cur)}, қолди ${fmtMN(r.tolov - r.covered, cur)}</span>${late}`;
+      return r.overdue ? `<span class="st-bad">⚠ Кечиккан</span>` : `<span class="st-wait">— кутилмоқда</span>`;
+    }
+    function scheduleTableHTML(rows, o){
+      o = o || {}; const cur = o.cur || "UZS";
+      const u = cur === "USD" ? " ($)" : "";
+      const head = `<tr><th>№</th><th>Сана</th><th>Тўлов${u}</th><th>Асосий қарз${u}</th><th>Фоиз${u}</th><th>Қолдиқ${u}</th>${o.status ? "<th>Ҳолат</th>" : ""}</tr>`;
+      let tT = 0, tA = 0, tF = 0;
+      const body = rows.map(r=>{
+        tT += r.tolov; tA += r.asosiy; tF += r.foiz;
+        return `<tr${o.status && r.n === o.nextN ? ' class="calc-row-next"' : ""}><td>${r.n}</td><td>${fmtDate(r.sana)}</td><td>${fmtMN(r.tolov, cur)}</td><td>${fmtMN(r.asosiy, cur)}</td><td>${fmtMN(r.foiz, cur)}</td><td>${fmtMN(r.qoldiq, cur)}</td>${o.status ? `<td>${rowStatusHTML(r, cur)}</td>` : ""}</tr>`;
+      }).join("");
+      const foot = `<tr style="font-weight:700;"><td colspan="2">ЖАМИ</td><td>${fmtMN(tT, cur)}</td><td>${fmtMN(tA, cur)}</td><td>${fmtMN(tF, cur)}</td><td></td>${o.status ? "<td></td>" : ""}</tr>`;
+      const table = `<table><thead>${head}</thead><tbody>${body}${foot}</tbody></table>`;
+      return o.print ? table : `<div class="table-wrap" style="max-height:${o.maxH || 380}px;">${table}</div>`;
+    }
+    function ccTotals(rows){
+      return { jami: rows.reduce((s,r)=> s + r.tolov, 0), foizJami: rows.reduce((s,r)=> s + r.foiz, 0) };
+    }
+    function ccCompute(silent){
+      const errEl = el("ccError"), resEl = el("ccResult"), saveBox = el("ccSaveBox");
+      const r = ccRead();
+      if(!r.ok){
+        ccState = null; resEl.innerHTML = ""; saveBox.style.display = "none";
+        if(r.missing && silent){ errEl.style.display = "none"; }
+        else { errEl.style.display = "block"; errEl.textContent = r.err; }
+        return;
+      }
+      errEl.style.display = "none";
+      const rows = buildCreditSchedule(r.params);
+      const t = ccTotals(rows);
+      ccState = { params: r.params, rows, jami: t.jami, foizJami: t.foizJami };
+      const p = r.params, cur = p.cur;
+      const pct = p.principal > 0 ? Math.round(t.foizJami / p.principal * 1000) / 10 : 0;
+      const monthly = p.type === "annuitet"
+        ? mcard("Ойлик тўлов", rows[0].tolov, cur, p.kurs)
+        : mcard("Биринчи ойлик тўлов", rows[0].tolov, cur, p.kurs) + mcard("Охирги ойлик тўлов", rows[rows.length - 1].tolov, cur, p.kurs);
+      resEl.innerHTML = `
+        <div class="grid-cards" style="margin-top:14px;margin-bottom:8px;">
+          ${mcard("Кредит суммаси", p.principal, cur, p.kurs)}
+          ${monthly}
+          ${mcard("Жами тўлов", t.jami, cur, p.kurs)}
+          ${statCard("Ортиқча тўлов (фоиз)", fmtMC(t.foizJami, cur) + eqDiv(t.foizJami, cur, p.kurs) + `<div style="font-size:12px;font-weight:600;color:var(--muted);">кредитнинг ${pct}%и</div>`)}
+        </div>
+        ${p.down > 0 ? `<p class="calc-note" style="margin:0 0 8px;">Бошланғич тўлов: <b>${fmtMN(p.down, cur)}</b> ${unitOf(cur)} · бошланғич билан жами харажат: <b>${fmtMN(p.down + t.jami, cur)}</b> ${unitOf(cur)}</p>` : ""}
+        ${scheduleTableHTML(rows, { cur })}`;
+      saveBox.style.display = "";
+    }
+    ["cc_summa","cc_boshl","cc_foiz","cc_oy"].forEach(id=> el(id).addEventListener("input", ()=>{ ccCompute(true); ccSaveLast(); }));
+    ["cc_boshlTur","cc_tur","cc_sana"].forEach(id=> el(id).addEventListener("change", ()=>{ ccCompute(true); ccSaveLast(); }));
+    el("cc_kurs").addEventListener("input", ()=>{ const k = parseNum(el("cc_kurs").value); if(k > 0) setFxRate(k); ccCompute(true); ccSaveLast(); });
+    el("cc_valyuta").addEventListener("change", ()=>{ ccSyncCurrencyUI(); ccCompute(true); ccSaveLast(); });
+    el("ccCalcBtn").addEventListener("click", ()=> ccCompute(false));
+
+    function ccCopyTextOf(s){
+      const p = s.params, cur = p.cur;
+      const eq = v => (cur === "USD" && p.kurs > 0) ? ` (≈ ${fmt(somOfUsd(v, p.kurs))} сўм)` : "";
+      return [
+        "Кредит / лизинг ҳисоби (тахминий)",
+        `Нарх/сумма: ${fmtMU(p.price, cur)}`,
+        p.down > 0 ? `Бошланғич тўлов: ${fmtMU(p.down, cur)}` : null,
+        `Кредит суммаси: ${fmtMU(p.principal, cur)}`,
+        `Йиллик фоиз: ${p.rate}% · Муддат: ${p.months} ой · ${p.type === "annuitet" ? "Аннуитет" : "Дифференциал"}`,
+        cur === "USD" && p.kurs > 0 ? `Курс: 1 $ = ${fmt(p.kurs)} сўм` : null,
+        p.type === "annuitet"
+          ? `Ойлик тўлов: ${fmtMU(s.rows[0].tolov, cur)}${eq(s.rows[0].tolov)}`
+          : `Биринчи ойлик: ${fmtMU(s.rows[0].tolov, cur)} · Охирги: ${fmtMU(s.rows[s.rows.length - 1].tolov, cur)}`,
+        `Жами тўлов: ${fmtMU(s.jami, cur)}${eq(s.jami)}`,
+        `Ортиқча тўлов (фоиз): ${fmtMU(s.foizJami, cur)}${eq(s.foizJami)}`,
+      ].filter(Boolean).join("\n");
+    }
+    el("ccCopyBtn").addEventListener("click", async ()=>{
+      if(!ccState){ customAlert("Аввал кредит/лизинг шартларини тўғри киритинг."); return; }
+      toast((await copyText(ccCopyTextOf(ccState))) ? "Ҳисоб нусхаси олинди ✓" : "Нусха олиб бўлмади");
+    });
+
+    // ---------- чоп этиш (умумий услуб) ----------
+    const PRINT_CSS = `
+      body{font-family:Arial,sans-serif;padding:26px;color:#1c2430;}
+      h1{font-size:20px;color:#0f2440;margin:0 0 2px;}
+      h2{font-size:15px;color:#0f2440;margin:22px 0 8px;border-bottom:2px solid #c9a227;padding-bottom:6px;}
+      p.meta{font-size:12px;color:#666;margin:0 0 14px;}
+      .totals{display:flex;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+      .totals div{border:1px solid #e3ddcd;border-radius:8px;padding:9px 14px;min-width:140px;}
+      .totals .lbl{font-size:10.5px;color:#6b7280;text-transform:uppercase;}
+      .totals .val{font-size:16px;font-weight:700;color:#0f2440;margin-top:3px;}
+      .eq{font-size:10.5px;color:#6b7280;font-weight:400;}
+      table{border-collapse:collapse;width:100%;font-size:11.5px;margin-top:6px;}
+      th,td{border:1px solid #ccc;padding:5px 7px;text-align:left;}
+      th{background:#0f2440;color:#fff;}
+      tr:nth-child(even){background:#f6f4ee;}
+      .st-ok{color:#1f7a4d;font-weight:700;} .st-bad{color:#b3402a;font-weight:700;}
+      .st-part{color:#b07b00;font-weight:700;} .st-wait{color:#6b7280;}
+      .calc-row-next td{background:#efe7c8 !important;}
+      .note{font-size:11.5px;color:#6b7280;margin:6px 0 0;}
+      footer{margin-top:26px;font-size:11px;color:#999;text-align:center;}
+      @media print{ body{padding:10mm;} h2{page-break-after:avoid;} tr{page-break-inside:avoid;} }`;
+    const preparedNow = () => new Date().toLocaleDateString("uz-UZ") + " " + new Date().toLocaleTimeString("uz-UZ");
+    const typeName = t => t === "annuitet" ? "Аннуитет (ҳар ой бир хил)" : "Дифференциал (камайиб боради)";
+    const cardsHTML = list => `<div class="totals">${list.map(([l,v])=> `<div><div class="lbl">${l}</div><div class="val">${v}</div></div>`).join("")}</div>`;
+    const eqSpan = (v, cur, kurs) => (cur === "USD" && Number(kurs) > 0) ? `<div class="eq">≈ ${fmt(somOfUsd(v, kurs))} сўм</div>` : "";
+    const pc = (v, cur, kurs) => fmtMC(v, cur) + eqSpan(v, cur, kurs);      // чоп этишдаги карточка қиймати
+
+    function creditPrintHTML(s){
+      const p = s.params, cur = p.cur;
+      const monthly = p.type === "annuitet"
+        ? [["Ойлик тўлов", pc(s.rows[0].tolov, cur, p.kurs)]]
+        : [["Биринчи ойлик тўлов", pc(s.rows[0].tolov, cur, p.kurs)], ["Охирги ойлик тўлов", pc(s.rows[s.rows.length - 1].tolov, cur, p.kurs)]];
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Кредит / лизинг ҳисоби</title><style>${PRINT_CSS}</style></head><body>
+        <h1>Кредит / лизинг ҳисоби (тахминий)</h1>
+        <p class="meta">Тайёрланган сана: ${preparedNow()} · by Iqbol Jalilov</p>
+        <h2>1. Шартлар</h2>
+        <table><tbody>
+          <tr><td>Нарх / сумма</td><td>${fmtMU(p.price, cur)}</td></tr>
+          <tr><td>Бошланғич тўлов</td><td>${fmtMU(p.down, cur)}</td></tr>
+          <tr><td>Кредит суммаси</td><td>${fmtMU(p.principal, cur)}</td></tr>
+          <tr><td>Йиллик фоиз</td><td>${p.rate}%</td></tr>
+          <tr><td>Муддат</td><td>${p.months} ой</td></tr>
+          <tr><td>Тўлов тури</td><td>${typeName(p.type)}</td></tr>
+          <tr><td>Биринчи тўлов санаси</td><td>${fmtDate(p.firstDate)}</td></tr>
+          ${cur === "USD" ? `<tr><td>Валюта</td><td>Доллар ($)${p.kurs > 0 ? ` · курс: 1 $ = ${fmt(p.kurs)} сўм` : ""}</td></tr>` : ""}
+        </tbody></table>
+        <h2>2. Натижа</h2>
+        ${cardsHTML(monthly.concat([["Жами тўлов", pc(s.jami, cur, p.kurs)], ["Ортиқча тўлов (фоиз)", pc(s.foizJami, cur, p.kurs)]]))}
+        <h2>3. Тўлов жадвали</h2>
+        ${scheduleTableHTML(s.rows, { print:true, cur })}
+        <p class="note">Тахминий ҳисоб: банкнинг расмий жадвалидан озгина фарқ қилиши мумкин (кунларни ҳисоблаш усули, комиссия, суғурта, юмалоқлаш).${cur === "USD" ? " «≈ сўм» қийматлари киритилган курс бўйича тахминий." : ""}</p>
+        <footer>Кунлик Хисобот (by Iqbol Jalilov) — кредит/лизинг ҳисоблагичи</footer>
+      </body></html>`;
+    }
+    el("ccPrintBtn").addEventListener("click", ()=>{
+      if(!ccState){ customAlert("Аввал кредит/лизинг шартларини тўғри киритинг."); return; }
+      printFullHtmlDoc(creditPrintHTML(ccState));
+    });
+
+    // ---------- Excel (жадвал ва тўловлар) ----------
+    const XL_STYLES_LZ = XL_STYLES.replace("</Styles>", `
+  <Style ss:ID="usd">
+   <NumberFormat ss:Format="#,##0.00"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="boldusd">
+   <Font ss:Bold="1"/><Interior ss:Color="#FFF3CC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0.00"/>
+   <Alignment ss:Horizontal="Right"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#C9A227"/>
+    <Border ss:Position="Left"   ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Right"  ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#C9A227"/>
+    <Border ss:Position="Top"    ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#C9A227"/>
+   </Borders>
+  </Style>
+ </Styles>`);
+    const xlM = (v, cur) => cur === "USD"
+      ? `<Cell ss:StyleID="usd"><Data ss:Type="Number">${(Math.round(Number(v) || 0) / 100).toFixed(2)}</Data></Cell>` : cellN(v);
+    const xlBM = (v, cur) => cur === "USD"
+      ? `<Cell ss:StyleID="boldusd"><Data ss:Type="Number">${(Math.round(Number(v) || 0) / 100).toFixed(2)}</Data></Cell>` : cellBN(v);
+    const colsXML = widths => widths.map(w=> `<Column ss:AutoFitWidth="0" ss:Width="${w}"/>`).join("");
+    const rowStatusText = r => r.status === "paid" ? "Тўланган"
+      : r.status === "partial" ? (r.overdue ? "Қисман (кечиккан)" : "Қисман")
+      : (r.overdue ? "Кечиккан" : "Кутилмоқда");
+
+    // o: { title, cur, kurs, terms:[[label, text]], summary:[[label, {m}|{t}]], rows, withStatus, payments|null, nextN }
+    function lizingWorkbookXML(o){
+      const cur = o.cur, usd = cur === "USD", kurs = Number(o.kurs) > 0 ? Number(o.kurs) : 0;
+      const u = usd ? " ($)" : "";
+      const prepared = xmlEscape(preparedNow());
+      const noteRow = n => `<Row><Cell ss:MergeAcross="${n - 1}" ss:StyleID="dateNote"><Data ss:Type="String">Тайёрланган сана: ${prepared}</Data></Cell></Row><Row></Row>`;
+      const titleRow = n => `<Row><Cell ss:MergeAcross="${n - 1}" ss:StyleID="title"><Data ss:Type="String">${xmlEscape(o.title)}</Data></Cell></Row>`;
+
+      // 1-варақ: шартлар ва ҳолат
+      const showEq = usd && kurs > 0;
+      const n1 = showEq ? 3 : 2;
+      let s1 = titleRow(n1) + noteRow(n1) + "<Row>" + cellH("Кўрсаткич") + cellH("Қиймат") + (showEq ? cellH("≈ сўмда (курс " + fmt(kurs) + ")") : "") + "</Row>";
+      o.terms.forEach(([k, v])=> { s1 += "<Row>" + cellB(k) + cellS(v) + (showEq ? cellS("") : "") + "</Row>"; });
+      if(o.summary && o.summary.length){
+        s1 += "<Row></Row>";
+        o.summary.forEach(([k, v])=>{
+          s1 += "<Row>" + cellB(k) + (v.m !== undefined ? xlM(v.m, cur) : cellS(v.t)) +
+            (showEq ? (v.m !== undefined ? cellN(somOfUsd(v.m, kurs)) : cellS("")) : "") + "</Row>";
+        });
+      }
+
+      // 2-варақ: тўлов жадвали
+      const heads = ["№","Сана","Тўлов"+u,"Асосий қарз"+u,"Фоиз"+u,"Қолдиқ"+u].concat(o.withStatus ? ["Тўланган қисми"+u, "Ҳолат"] : []);
+      const n2 = heads.length;
+      let s2 = titleRow(n2) + noteRow(n2) + "<Row>" + heads.map(cellH).join("") + "</Row>";
+      let tT = 0, tA = 0, tF = 0;
+      o.rows.forEach(r=>{
+        tT += r.tolov; tA += r.asosiy; tF += r.foiz;
+        s2 += "<Row>" + cellN(r.n) + cellS(fmtDate(r.sana)) + xlM(r.tolov, cur) + xlM(r.asosiy, cur) + xlM(r.foiz, cur) + xlM(r.qoldiq, cur) +
+          (o.withStatus ? xlM(r.covered || 0, cur) + cellS(rowStatusText(r)) : "") + "</Row>";
+      });
+      s2 += "<Row>" + cellB("ЖАМИ") + cellB("") + xlBM(tT, cur) + xlBM(tA, cur) + xlBM(tF, cur) + cellB("") + (o.withStatus ? cellB("") + cellB("") : "") + "</Row>";
+
+      // 3-варақ: қилинган тўловлар (фақат шартнома учун)
+      let s3Sheet = "";
+      if(o.payments){
+        const h3 = ["№","Сана","Сумма"+u].concat(usd ? ["Сўмда тўланган","Курс"] : []).concat(["Изоҳ"]);
+        const n3 = h3.length;
+        let s3 = titleRow(n3) + noteRow(n3) + "<Row>" + h3.map(cellH).join("") + "</Row>";
+        let sum = 0, somSum = 0;
+        o.payments.forEach((p,i)=>{
+          sum += Number(p.summa || 0); somSum += Number(p.som || 0);
+          s3 += "<Row>" + cellN(i + 1) + cellS(fmtDate(p.sana)) + xlM(p.summa, cur) +
+            (usd ? (p.som ? cellN(p.som) : cellS("")) + (p.kurs ? cellN(p.kurs) : cellS("")) : "") + cellS(p.izoh || "") + "</Row>";
+        });
+        s3 += "<Row>" + cellB("ЖАМИ") + cellB("") + xlBM(sum, cur) + (usd ? cellBN(somSum) + cellB("") : "") + cellB("") + "</Row>";
+        const w3 = usd ? [40,90,110,120,90,220] : [40,90,120,260];
+        s3Sheet = `
+ <Worksheet ss:Name="Тўловлар">
+  <Table>${colsXML(w3)}${s3}</Table>
+${XL_PAGE}
+</Worksheet>`;
+      }
+      const w2 = [40,90,110,110,100,110].concat(o.withStatus ? [120,150] : []);
+      return `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+${XL_STYLES_LZ}
+ <Worksheet ss:Name="Шартлар ва ҳолат">
+  <Table>${colsXML(showEq ? [230,200,170] : [230,260])}${s1}</Table>
+${XL_PAGE}
+</Worksheet>
+ <Worksheet ss:Name="Тўлов жадвали">
+  <Table>${colsXML(w2)}${s2}</Table>
+${XL_PAGE}
+</Worksheet>${s3Sheet}
+</Workbook>`;
+    }
+    function downloadLizing(xml, name){
+      downloadFile(new Blob(["\uFEFF" + xml], { type:"application/vnd.ms-excel;charset=utf-8;" }), name, "application/vnd.ms-excel;charset=utf-8;");
+      toast("Excel файли юкланди ✓");
+    }
+    el("ccExcelBtn").addEventListener("click", ()=>{
+      if(!ccState){ customAlert("Аввал кредит/лизинг шартларини тўғри киритинг."); return; }
+      const s = ccState, p = s.params, cur = p.cur;
+      const xml = lizingWorkbookXML({
+        title: "Кредит / лизинг ҳисоби (тахминий)", cur, kurs: p.kurs, withStatus: false, payments: null, rows: s.rows,
+        terms: [
+          ["Нарх / сумма", fmtMU(p.price, cur)], ["Бошланғич тўлов", fmtMU(p.down, cur)], ["Кредит суммаси", fmtMU(p.principal, cur)],
+          ["Йиллик фоиз", p.rate + "%"], ["Муддат", p.months + " ой"], ["Тўлов тури", typeName(p.type)],
+          ["Биринчи тўлов санаси", fmtDate(p.firstDate)], ["Валюта", cur === "USD" ? "Доллар ($)" : "Сўм"]
+        ],
+        summary: [
+          [p.type === "annuitet" ? "Ойлик тўлов" : "Биринчи ойлик тўлов", { m: s.rows[0].tolov }],
+        ].concat(p.type === "annuitet" ? [] : [["Охирги ойлик тўлов", { m: s.rows[s.rows.length - 1].tolov }]])
+         .concat([["Жами тўлов", { m: s.jami }], ["Ортиқча тўлов (фоиз)", { m: s.foizJami }]])
+      });
+      downloadLizing(xml, "lizing_hisoblash_" + localDateStr() + ".xls");
+    });
+
+    // ---------- шартнома яратиш / янгилаш ----------
+    function ccEditUI(on){
+      el("ccSaveBtn").textContent = on ? "💾 Шартномани янгилаш" : "💾 Шартнома сифатида сақлаш";
+      el("ccCancelEditBtn").style.display = on ? "" : "none";
+      el("ccSaveTitle").textContent = on ? "✏️ Шартнома шартларини ўзгартириш (тўловлар сақланади)" : "💾 Шартнома сифатида сақлаш (тўловларни юритиш учун)";
+    }
+    function ccClearForm(){
+      ["cc_summa","cc_boshl","cc_foiz","cc_oy","cc_nom","cc_bank","cc_kurs"].forEach(id=> el(id).value = "");
+      el("cc_boshlTur").value = "som"; el("cc_tur").value = "annuitet"; el("cc_mashina").value = ""; el("cc_valyuta").value = "UZS";
+      el("cc_sana").value = addMonthsISO(localDateStr(), 1);
+      ccSyncCurrencyUI();
+    }
+    el("ccSaveBtn").addEventListener("click", ()=>{
+      if(!ccState){ customAlert("Аввал кредит/лизинг шартларини тўғри киритинг."); return; }
+      const p = ccState.params, cur = p.cur;
+      const nom = el("cc_nom").value.trim() || `Лизинг/кредит — ${fmtMU(p.price, cur)}`;
+      const base = {
+        nom, bank: el("cc_bank").value.trim(), mashina: el("cc_mashina").value || "",
+        valyuta: cur, kurs: cur === "USD" ? p.kurs : 0,
+        summa: p.price, boshlangich: p.down, foiz: p.rate, oy: p.months, turi: p.type, birinchiTolov: p.firstDate
+      };
+      if(ccEditId){
+        const c = leasing.find(x=> x.id === ccEditId);
+        if(c){
+          Object.assign(c, base); saveLeasing(leasing);
+          logAudit("Лизинг шартномаси янгиланди", nom);
+          lzSelectedId = c.id; toast("Шартнома янгиланди ✓");
+        }
+        ccEditId = null;
+      } else {
+        const c = Object.assign({ id: uid(), tolovlar: [], createdAt: new Date().toISOString() }, base);
+        leasing.push(c); saveLeasing(leasing);
+        logAudit("Лизинг шартномаси қўшилди", `${nom} · ${fmtMU(p.principal, cur)}`);
+        lzSelectedId = c.id; toast("Шартнома сақланди ✓");
+      }
+      ccEditUI(false); ccClearForm(); ccCompute(true);
+      showSub("pay");
+    });
+    el("ccCancelEditBtn").addEventListener("click", ()=>{
+      ccEditId = null; ccEditUI(false); ccClearForm(); ccCompute(true);
+    });
+    el("ccResetBtn").addEventListener("click", ()=>{
+      ccEditId = null; ccEditUI(false); ccClearForm();
+      try{ localStorage.removeItem(LS_CALC_LAST); }catch(e){}
+      ccCompute(true);
+    });
+
+    // =====================================================================
+    //  4) ЛИЗИНГ / КРЕДИТ ТЎЛОВЛАРИ ҲИСОБ-КИТОБИ
+    // =====================================================================
+    function leasingStatus(info, cur){
+      if(info.closed) return { cls:"st-ok", border:"var(--good)", text:"✅ Тўлиқ ёпилган.", more: info.extra > 0 ? `Жадвалдан ${fmtMU(info.extra, cur)} ортиқча тўланган.` : "" };
+      if(info.overdueAmount > 0) return { cls:"st-bad", border:"var(--bad)", text:`⚠ Кечикиш: ${fmtMU(info.overdueAmount, cur)}.`,
+        more:`Жадвал бўйича бугундан олдин ${fmtMU(info.dueBefore, cur)} тўланиши керак эди, тўланган: ${fmtMU(info.paidTotal, cur)}.` };
+      if(info.dueSoFar > info.paidTotal) return { cls:"st-part", border:"#e0a020", text:"📅 Бугун тўлов куни.", more:`${fmtMU(info.dueSoFar - info.paidTotal, cur)} тўланиши керак.` };
+      return { cls:"st-ok", border:"var(--good)", text:"✓ Графикка мос.", more: info.ahead > 0 ? `Бугунгача тўланиши керакдан ${fmtMU(info.ahead, cur)} олдинда.` : "" };
+    }
+    const currentContract = () => leasing.find(x=> x.id === lzSelectedId) || null;
+    function contractTermsLine(c){
+      const cur = lzCur(c);
+      return `Нарх ${fmtMN(c.summa, cur)}${cur === "USD" ? " $" : ""}${c.boshlangich > 0 ? ` · бошланғич ${fmtMN(c.boshlangich, cur)}` : ""} · ${c.foiz}% · ${c.oy} ой · ${c.turi === "annuitet" ? "аннуитет" : "дифференциал"} · биринчи тўлов ${fmtDate(c.birinchiTolov)}`;
+    }
+    function renderLeasingPane(){
+      const sel = el("lz_select");
+      if(!leasing.length){
+        sel.innerHTML = ""; lzSelectedId = null;
+        el("lzEmpty").style.display = ""; el("lzBody").style.display = "none"; el("lz_kursWrap").style.display = "none";
+        return;
+      }
+      if(!leasing.some(c=> c.id === lzSelectedId)) lzSelectedId = leasing[0].id;
+      sel.innerHTML = leasing.map(c=> `<option value="${esc(c.id)}">${esc(c.nom)}${c.mashina ? " · " + esc(c.mashina) : ""}${lzCur(c) === "USD" ? " · $" : ""}</option>`).join("");
+      sel.value = lzSelectedId;
+      el("lzEmpty").style.display = "none"; el("lzBody").style.display = "";
+      const c = currentContract(); const info = leasingInfo(c);
+      const cur = lzCur(c), usd = cur === "USD", kurs = Number(c.kurs) > 0 ? Number(c.kurs) : 0;
+      el("lz_kursWrap").style.display = usd ? "" : "none";
+      el("lz_pSomWrap").style.display = usd ? "" : "none";
+      el("lz_pKursWrap").style.display = usd ? "" : "none";
+      el("lz_unit").textContent = usd ? "($)" : "(сўм)";
+      if(usd){
+        el("lz_kurs").value = kurs ? String(kurs) : (fxRate() ? String(fxRate()) : "");
+        if(!String(el("lz_pKurs").value).trim()) el("lz_pKurs").value = kurs ? String(kurs) : (fxRate() ? String(fxRate()) : "");
+      }
+      const st = leasingStatus(info, cur);
+      const nx = info.nextRow;
+      el("lzSummary").innerHTML = `
+        <p class="calc-note" style="margin:0 0 8px;">${esc(contractTermsLine(c))}${usd && kurs ? ` · курс: 1 $ = ${fmt(kurs)} сўм` : ""}${c.bank ? " · " + esc(c.bank) : ""}</p>
+        <div class="notice" style="border-left:4px solid ${st.border};"><b class="${st.cls}">${st.text}</b> ${st.more}</div>
+        <div class="grid-cards" style="margin-top:12px;margin-bottom:0;">
+          ${mcard("Кредит суммаси", info.principal, cur, kurs)}
+          ${mcard("Жами тўлов (жадвал бўйича)", info.total, cur, kurs)}
+          ${mcard("Тўланган", info.paidTotal, cur, kurs)}
+          ${mcard("Қолган жами", info.remaining, cur, kurs, ` style="color:${info.remaining > 0 ? "var(--bad)" : "var(--good)"};"`)}
+          ${mcard("Бугунгача тўланиши керак", info.dueSoFar, cur, kurs)}
+          ${statCard("Кейинги тўлов", nx ? `${fmtDate(nx.sana)}<div style="font-size:13px;font-weight:600;margin-top:2px;">${fmtMU(nx.tolov - nx.covered, cur)}</div>${eqDiv(nx.tolov - nx.covered, cur, kurs)}` : "—")}
+        </div>`;
+      const pays = info.payments.slice().sort((a,b)=>
+        String(b.sana || "").localeCompare(String(a.sana || "")) || String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+      const payHead = usd
+        ? `<tr><th>Сана</th><th>Сумма ($)</th><th>Сўмда (курс)</th><th>Изоҳ</th><th>Амал</th></tr>`
+        : `<tr><th>Сана</th><th>Сумма</th><th>Изоҳ</th><th>Амал</th></tr>`;
+      const payRow = p => usd
+        ? `<tr><td>${fmtDate(p.sana)}</td><td class="pos">${fmtUsd(p.summa)}</td><td>${p.som ? fmt(p.som) + (p.kurs ? ` (${fmt(p.kurs)})` : "") : "—"}</td><td>${esc(p.izoh || "")}</td><td><button type="button" class="btn danger small" data-lzdel="${esc(p.id)}">Ўчириш</button></td></tr>`
+        : `<tr><td>${fmtDate(p.sana)}</td><td class="pos">${fmt(p.summa)}</td><td>${esc(p.izoh || "")}</td><td><button type="button" class="btn danger small" data-lzdel="${esc(p.id)}">Ўчириш</button></td></tr>`;
+      const payFoot = usd
+        ? `<tr style="font-weight:700;"><td>ЖАМИ</td><td>${fmtUsd(info.paidTotal)}</td><td colspan="3"></td></tr>`
+        : `<tr style="font-weight:700;"><td>ЖАМИ</td><td>${fmt(info.paidTotal)}</td><td colspan="2"></td></tr>`;
+      el("lzPayments").innerHTML = pays.length
+        ? `<div class="table-wrap" style="max-height:240px;"><table><thead>${payHead}</thead><tbody>${pays.map(payRow).join("")}${payFoot}</tbody></table></div>`
+        : `<div class="empty">Ҳали тўлов қайд этилмаган. Юқоридаги формадан биринчи тўловни қўшинг ↑</div>`;
+      el("lzPayments").querySelectorAll("[data-lzdel]").forEach(b=>{
+        b.addEventListener("click", async ()=>{
+          const cc = currentContract(); if(!cc) return;
+          const pid = b.dataset.lzdel;
+          const p = (cc.tolovlar || []).find(x=> x.id === pid); if(!p) return;
+          if(!(await customConfirmAsync(`${fmtDate(p.sana)} санадаги тўлов (${fmtMU(p.summa, lzCur(cc))}) ўчирилсинми?`))) return;
+          requirePasswordThen(()=>{
+            cc.tolovlar = cc.tolovlar.filter(x=> x.id !== pid);
+            saveLeasing(leasing);
+            logAudit("Лизинг тўлови ўчирилди", `${cc.nom} · ${fmtDate(p.sana)} · ${fmtMU(p.summa, lzCur(cc))}`);
+            renderLeasingPane(); toast("Тўлов ўчирилди");
+          });
+        });
+      });
+      el("lzSchedule").innerHTML = scheduleTableHTML(info.rows, { status:true, nextN: nx ? nx.n : -1, maxH: 360, cur });
+      if(!el("lz_pSana").value) el("lz_pSana").value = localDateStr();
+    }
+    calcRefreshHook = () => { if(isOpen() && calcTab === "credit" && ccSub === "pay") renderLeasingPane(); };
+    el("lz_select").addEventListener("change", ()=>{
+      lzSelectedId = el("lz_select").value;
+      lzSummaManual = false; el("lz_pSumma").value = ""; el("lz_pSom").value = ""; el("lz_pKurs").value = "";
+      renderLeasingPane();
+    });
+    el("lz_kurs").addEventListener("change", ()=>{
+      const c = currentContract(); if(!c) return;
+      const k = parseNum(el("lz_kurs").value);
+      if(k > 0){ c.kurs = k; saveLeasing(leasing); setFxRate(k); el("lz_pKurs").value = String(k); }
+      renderLeasingPane();
+    });
+
+    // доллар тўловида: сўмда тўланган сумма ва курсдан $ ўзи ҳисобланади (қўлда ёзилмаган бўлса)
+    function lzAutoSumma(){
+      if(lzSummaManual) return;
+      const som = parseNum(el("lz_pSom").value), kurs = parseNum(el("lz_pKurs").value);
+      el("lz_pSumma").value = (som > 0 && kurs > 0) ? (Math.round(som / kurs * 100) / 100).toFixed(2) : "";
+    }
+    el("lz_pSumma").addEventListener("input", ()=>{ lzSummaManual = String(el("lz_pSumma").value).trim() !== ""; });
+    el("lz_pSom").addEventListener("input", lzAutoSumma);
+    el("lz_pKurs").addEventListener("input", lzAutoSumma);
+
+    el("lzPayForm").addEventListener("submit", async e=>{
+      e.preventDefault();
+      const c = currentContract(); if(!c) return;
+      const cur = lzCur(c);
+      const sana = el("lz_pSana").value;
+      const summaMajor = parseNum(el("lz_pSumma").value);
+      if(!sana){ customAlert("Тўлов санасини танланг."); return; }
+      if(isNaN(summaMajor) || summaMajor <= 0){ customAlert("Тўлов суммасини киритинг (0 дан катта)."); return; }
+      const summa = toMinor(summaMajor, cur);
+      if(summa <= 0){ customAlert("Тўлов суммаси жуда кичик."); return; }
+      const info = leasingInfo(c);
+      if(info.paidTotal + summa > info.total){
+        const ok = await customConfirmAsync(
+          `Бу тўлов жадвал бўйича қолган жами суммадан (${fmtMU(info.remaining, cur)}) ошади — ортиқчаси ${fmtMU(info.paidTotal + summa - info.total, cur)}.\n\n` +
+          `Бу жарима (пеня) ёки муддатидан олдин тўлов бўлиши мумкин. Давом этасизми?`);
+        if(!ok) return;
+      }
+      c.tolovlar = Array.isArray(c.tolovlar) ? c.tolovlar : [];
+      const pay = { id: uid(), sana, summa, izoh: el("lz_pIzoh").value.trim(), createdAt: new Date().toISOString() };
+      if(cur === "USD"){
+        const som = parseNum(el("lz_pSom").value), kv = parseNum(el("lz_pKurs").value);
+        if(som > 0) pay.som = Math.round(som);
+        if(kv > 0){ pay.kurs = kv; setFxRate(kv); }
+      }
+      c.tolovlar.push(pay);
+      saveLeasing(leasing);
+      logAudit("Лизинг тўлови қайд этилди", `${c.nom} · ${fmtDate(sana)} · ${fmtMU(summa, cur)}`);
+      el("lz_pSumma").value = ""; el("lz_pIzoh").value = ""; el("lz_pSom").value = ""; lzSummaManual = false;
+      renderLeasingPane();
+      toast("Тўлов қайд этилди ✓");
+    });
+
+    function leasingPrintHTML(c, info){
+      const cur = lzCur(c), kurs = Number(c.kurs) > 0 ? Number(c.kurs) : 0, usd = cur === "USD";
+      const st = leasingStatus(info, cur);
+      const nx = info.nextRow;
+      const pays = info.payments.slice().sort((a,b)=> String(a.sana || "").localeCompare(String(b.sana || "")));
+      const payRows = pays.map((p,i)=> `<tr><td>${i + 1}</td><td>${fmtDate(p.sana)}</td><td>${fmtMN(p.summa, cur)}</td>${usd ? `<td>${p.som ? fmt(p.som) + (p.kurs ? ` (курс ${fmt(p.kurs)})` : "") : "—"}</td>` : ""}<td>${esc(p.izoh || "")}</td></tr>`).join("");
+      const payHead = `<tr><th>№</th><th>Сана</th><th>Сумма${usd ? " ($)" : ""}</th>${usd ? "<th>Сўмда (курс)</th>" : ""}<th>Изоҳ</th></tr>`;
+      const payFoot = pays.length ? `<tr style="font-weight:700;"><td colspan="2">ЖАМИ</td><td>${fmtMN(info.paidTotal, cur)}</td>${usd ? "<td></td>" : ""}<td></td></tr>` : "";
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Лизинг / кредит ҳисоб-китоби</title><style>${PRINT_CSS}</style></head><body>
+        <h1>Лизинг / кредит тўловлари ҳисоб-китоби</h1>
+        <p class="meta">${esc(c.nom)}${c.bank ? " · " + esc(c.bank) : ""}${c.mashina ? " · " + esc(c.mashina) : ""} · Тайёрланган сана: ${preparedNow()} · by Iqbol Jalilov</p>
+        <h2>1. Шартнома шартлари</h2>
+        <table><tbody>
+          <tr><td>Нарх / сумма</td><td>${fmtMU(c.summa, cur)}</td></tr>
+          <tr><td>Бошланғич тўлов</td><td>${fmtMU(c.boshlangich || 0, cur)}</td></tr>
+          <tr><td>Кредит суммаси</td><td>${fmtMU(info.principal, cur)}</td></tr>
+          <tr><td>Йиллик фоиз</td><td>${c.foiz}%</td></tr>
+          <tr><td>Муддат</td><td>${c.oy} ой</td></tr>
+          <tr><td>Тўлов тури</td><td>${typeName(c.turi)}</td></tr>
+          <tr><td>Биринчи тўлов санаси</td><td>${fmtDate(c.birinchiTolov)}</td></tr>
+          ${usd ? `<tr><td>Валюта</td><td>Доллар ($)${kurs ? ` · курс: 1 $ = ${fmt(kurs)} сўм` : ""}</td></tr>` : ""}
+        </tbody></table>
+        <h2>2. Жорий ҳолат (${fmtDate(localDateStr())} ҳолатига)</h2>
+        <p><b class="${st.cls}">${st.text}</b> ${st.more}</p>
+        ${cardsHTML([
+          ["Жами тўлов (жадвал бўйича)", pc(info.total, cur, kurs)],
+          ["Тўланган", pc(info.paidTotal, cur, kurs)],
+          ["Қолган жами", pc(info.remaining, cur, kurs)],
+          ["Бугунгача тўланиши керак", pc(info.dueSoFar, cur, kurs)],
+          ["Кечикиш", pc(info.overdueAmount, cur, kurs)],
+          ["Кейинги тўлов", nx ? `${fmtDate(nx.sana)} · ${pc(nx.tolov - nx.covered, cur, kurs)}` : "—"],
+        ])}
+        <h2>3. Қилинган тўловлар</h2>
+        <table><thead>${payHead}</thead>
+        <tbody>${payRows || `<tr><td colspan="${usd ? 5 : 4}">Ҳали тўлов қайд этилмаган</td></tr>`}${payFoot}</tbody></table>
+        <h2>4. Тўлов жадвали (ҳолати билан)</h2>
+        ${scheduleTableHTML(info.rows, { status:true, nextN: nx ? nx.n : -1, print:true, cur })}
+        <p class="note">Тўловлар жадвалдаги ойларга кетма-кет (биринчи ойдан бошлаб) тақсимланади. Жадвал тахминий ҳисоб: банкнинг расмий жадвалидан фарқ қилиши мумкин.${usd ? " «≈ сўм» қийматлари шартномадаги курс бўйича тахминий." : ""}</p>
+        <footer>Кунлик Хисобот (by Iqbol Jalilov) — лизинг/кредит тўловлари ҳисоб-китоби</footer>
+      </body></html>`;
+    }
+    el("lzPrintBtn").addEventListener("click", ()=>{
+      const c = currentContract(); if(!c) return;
+      printFullHtmlDoc(leasingPrintHTML(c, leasingInfo(c)));
+    });
+    el("lzExcelBtn").addEventListener("click", ()=>{
+      const c = currentContract(); if(!c) return;
+      const info = leasingInfo(c), cur = lzCur(c), kurs = Number(c.kurs) > 0 ? Number(c.kurs) : 0;
+      const st = leasingStatus(info, cur), nx = info.nextRow;
+      const pays = info.payments.slice().sort((a,b)=> String(a.sana || "").localeCompare(String(b.sana || "")));
+      const xml = lizingWorkbookXML({
+        title: "Лизинг / кредит ҳисоб-китоби: " + c.nom, cur, kurs, withStatus: true, payments: pays, rows: info.rows,
+        terms: [
+          ["Шартнома", c.nom], ["Банк / ташкилот", c.bank || "—"], ["Мошина", c.mashina || "—"],
+          ["Нарх / сумма", fmtMU(c.summa, cur)], ["Бошланғич тўлов", fmtMU(c.boshlangich || 0, cur)], ["Кредит суммаси", fmtMU(info.principal, cur)],
+          ["Йиллик фоиз", c.foiz + "%"], ["Муддат", c.oy + " ой"], ["Тўлов тури", typeName(c.turi)],
+          ["Биринчи тўлов санаси", fmtDate(c.birinchiTolov)], ["Валюта", cur === "USD" ? "Доллар ($)" : "Сўм"]
+        ],
+        summary: [
+          ["Ҳолат (" + fmtDate(localDateStr()) + ")", { t: (st.text + " " + st.more).trim() }],
+          ["Жами тўлов (жадвал бўйича)", { m: info.total }], ["Тўланган", { m: info.paidTotal }], ["Қолган жами", { m: info.remaining }],
+          ["Бугунгача тўланиши керак", { m: info.dueSoFar }], ["Кечикиш", { m: info.overdueAmount }],
+          ["Кейинги тўлов санаси", { t: nx ? fmtDate(nx.sana) : "—" }], ["Кейинги тўлов суммаси", nx ? { m: nx.tolov - nx.covered } : { t: "—" }]
+        ]
+      });
+      downloadLizing(xml, "lizing_tolovlar_" + localDateStr() + ".xls");
+    });
+    el("lzEditBtn").addEventListener("click", ()=>{
+      const c = currentContract(); if(!c) return;
+      requirePasswordThen(()=>{
+        const cur = lzCur(c);
+        renderCcCars();
+        el("cc_valyuta").value = cur; el("cc_kurs").value = c.kurs ? String(c.kurs) : "";
+        el("cc_summa").value = majorStr(c.summa, cur); el("cc_boshl").value = c.boshlangich ? majorStr(c.boshlangich, cur) : ""; el("cc_boshlTur").value = "som";
+        el("cc_foiz").value = c.foiz; el("cc_oy").value = c.oy; el("cc_tur").value = c.turi === "differensial" ? "differensial" : "annuitet";
+        el("cc_sana").value = c.birinchiTolov || addMonthsISO(localDateStr(), 1);
+        el("cc_nom").value = c.nom || ""; el("cc_bank").value = c.bank || ""; el("cc_mashina").value = c.mashina || "";
+        ccSyncCurrencyUI();
+        ccEditId = c.id; ccEditUI(true);
+        showSub("calc"); ccCompute(false);
+      });
+    });
+    el("lzDeleteBtn").addEventListener("click", async ()=>{
+      const c = currentContract(); if(!c) return;
+      const n = (c.tolovlar || []).length;
+      const msg = `«${c.nom}» шартномаси ўчирилсинми?` + (n ? `\n\nУнга боғлиқ ${n} та тўлов ёзуви ҳам бирга ўчирилади.` : "");
+      if(!(await customConfirmAsync(msg))) return;
+      requirePasswordThen(()=>{
+        leasing = leasing.filter(x=> x.id !== c.id);
+        saveLeasing(leasing);
+        logAudit("Лизинг шартномаси ўчирилди", `${c.nom}${n ? " · " + n + " та тўлов ҳам" : ""}`);
+        lzSelectedId = null; renderLeasingPane(); toast("Шартнома ўчирилди");
+      });
+    });
+  })();
+
   // ---- Версиялар тарихи (интерфейс) ----
-  const VER_COUNT_LABELS = { records:"ёзув", expenses:"харажат", cashTaken:"нақд олиш", cashSpend:"нақд сарфи", debtPayments:"қарз тўлови" };
+  const VER_COUNT_LABELS = { records:"ёзув", expenses:"харажат", cashTaken:"нақд олиш", cashSpend:"нақд сарфи", debtPayments:"қарз тўлови", leasing:"лизинг" };
   function fmtVersionTime(ms){
     const d = new Date(ms);
     const p = n => String(n).padStart(2,"0");
@@ -7660,6 +8876,7 @@ ${XL_PAGE}
       debtPayments = loadDebtPayments();
       agents = loadAgents();
       agentFields = loadAgentFields();
+      leasing = loadLeasing();
 
       applyTheme(loadTheme());
       applyLogo();
@@ -7677,6 +8894,7 @@ ${XL_PAGE}
       renderAgentsList();
 
       refreshActiveView();
+      if(calcRefreshHook) calcRefreshHook();
 
       toast("Маълумот янгиланди ✓");
     }catch(e){
