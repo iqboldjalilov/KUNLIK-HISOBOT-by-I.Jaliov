@@ -1059,6 +1059,8 @@
       <h3 style="margin:0 0 4px;">📅 Ойлар кесимида</h3>
       <p style="margin:0 0 12px;font-size:13px;color:var(--muted);">
         Ҳар ойда жами топширилган сумма, ўша ойда сиз олган нақд пул ва ой якунидаги қолдиқ. Юқоридаги умумий кўрсаткич ўзгармасдан сақланади.
+        Агар олган пулингизнинг бир қисми <b>олдинги ойда олинмай қолган қолдиқ</b> бўлса, пастдаги формада «Шундан олдинги ойлар қолдиғи ҳисобига» майдонини тўлдиринг:
+        ёзув битта қолади (сана ва жами сумма ўзгармайди), жадвалда эса ўша қисм энг эски қолдиқдан бошлаб ёпилади.
       </p>
       <div class="table-wrap">
         <table>
@@ -1082,6 +1084,11 @@
           <select id="ct_mashina"><option value="">Умумий (мошинага боғланмаган)</option></select>
         </div>
         <div class="full" id="ct_dayPreview" style="font-size:13px;color:var(--muted);"></div>
+        <div>
+          <label>Шундан олдинги ойлар қолдиғи ҳисобига (сўм, ихтиёрий)</label>
+          <input type="number" id="ct_oldingi" min="0" step="1" placeholder="0">
+        </div>
+        <div class="full" id="ct_oldingiHint" style="font-size:13px;color:var(--muted);"></div>
         <div class="full">
           <label>Изоҳ (ихтиёрий)</label>
           <input type="text" id="ct_izoh" placeholder="Масалан: шахсий эҳтиёж учун олинди">
@@ -4029,6 +4036,7 @@ ${XL_PAGE}
     // Нақд пул оқими (шу ой учун)
     const topshirilganOy = list.reduce((s,r)=> s + (r.topshirilgan!==null && r.topshirilgan!==undefined ? Number(r.topshirilgan) : 0), 0);
     const olinganOy = cashTaken.filter(c=> c.sana && c.sana.slice(0,7)===month).reduce((s,c)=> s+Number(c.summa||0), 0);
+    const carryOutOy = (cashMonthModel().carryOut[month]) || 0;
     const sarflanganOy = cashSpend.filter(c=> c.sana && c.sana.slice(0,7)===month).reduce((s,c)=> s+Number(c.summa||0), 0);
     const totalOlinganAll = cashTaken.reduce((s,c)=> s+Number(c.summa||0), 0);
     const totalSarflanganAll = cashSpend.reduce((s,c)=> s+Number(c.summa||0), 0);
@@ -4091,6 +4099,7 @@ ${XL_PAGE}
       <div><div class="lbl">Ҳозир қўлимда (жами)</div><div class="val">${fmt(qolimdaHozir)}</div></div>
     </div>
     <p class="section-note">"Ҳозир қўлимда" — ҳисобот тайёрланган кундаги умумий (барча вақт бўйича) қолдиқ, фақат шу ойнинг эмас.</p>
+    ${carryOutOy > 0 ? `<p class="section-note">"Олинган (шу ой)"нинг <b>${fmt(carryOutOy)}</b> сўми олдинги ойларда олинмай қолган қолдиқ ҳисобига киради (шу ойнинг ўз топширилгани эмас).</p>` : ""}
 
     <h2>3. Исломхон билан ҳисоб-китоб</h2>
     <div class="totals">
@@ -5087,51 +5096,91 @@ ${XL_PAGE}
     document.getElementById("ct_sana").valueAsDate = new Date();
     if(typeof updateCtDayPreview === "function") updateCtDayPreview();
     exitCashTakenEditMode();
+    if(typeof updateCtCarryHint === "function") updateCtCarryHint();
   });
+
+  // ---- Нақд олишнинг ОЙЛАР бўйича тақсимоти ----
+  // Ёзув ўз санасидаги ойга тушади. Агар ёзувда «oldingi» (олдинги ойлар қолдиғи ҳисобига)
+  // қисми бўлса, ўша қисм ЭНГ ЭСКИ олинмаган қолдиқдан бошлаб ўтган ойларга ёпилади.
+  // Ёзувнинг ўзи ва унинг санаси/жами суммаси ўзгармайди — фақат ойлик жадвалдаги тақсимот.
+  const CT_MONTHS = ["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+  const ctMonthLabel = mo => { const p = String(mo).split("-").map(Number); return CT_MONTHS[p[1]-1] + " " + p[0]; };
+  function cashMonthModel(list){
+    list = list || cashTaken;
+    const top = {};
+    records.forEach(r=>{
+      if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
+      const mo = String(r.sana).slice(0,7);
+      top[mo] = (top[mo]||0) + Number(r.topshirilgan);
+    });
+    const taken = {}, received = {}, carryIn = {}, carryOut = {}, alloc = {}, bumps = [];
+    const entries = list.filter(c=> c.sana).slice().sort((a,b)=> String(a.sana).localeCompare(String(b.sana)));
+    entries.forEach(c=>{
+      const mo = String(c.sana).slice(0,7), s = Number(c.summa||0);
+      received[mo] = (received[mo]||0) + s;
+      taken[mo] = (taken[mo]||0) + s;
+    });
+    entries.forEach(c=>{
+      let x = Math.min(Number(c.oldingi||0), Number(c.summa||0));
+      alloc[c.id] = 0;
+      if(!(x > 0)) return;
+      const mo = String(c.sana).slice(0,7);
+      Object.keys(top).filter(m=> m < mo).sort().forEach(m=>{
+        if(x <= 0) return;
+        const bal = (top[m]||0) - (taken[m]||0);       // шу ойнинг ҳозирги олинмаган қолдиғи
+        if(bal <= 0) return;
+        const take = Math.min(bal, x);
+        taken[m] = (taken[m]||0) + take; taken[mo] -= take; x -= take;
+        carryIn[m] = (carryIn[m]||0) + take; carryOut[mo] = (carryOut[mo]||0) + take;
+        alloc[c.id] += take;
+        bumps.push({ from: mo, to: m, amount: take, date: c.sana });
+      });
+    });
+    return { top, taken, received, carryIn, carryOut, alloc, bumps };
+  }
+  // Шу санадан ОЛДИНГИ ойларда ҳали олинмаган қолдиқ (excludeId — таҳрирланаётган ёзув ҳисобга олинмайди)
+  function ctCarryAvailable(dateIso, excludeId){
+    if(!dateIso) return { available:0, parts:[] };
+    const mdl = cashMonthModel(cashTaken.filter(c=> c.id !== excludeId));
+    const mo = String(dateIso).slice(0,7);
+    const parts = Object.keys(mdl.top).filter(m=> m < mo).sort()
+      .map(m=> ({ m, bal: (mdl.top[m]||0) - (mdl.taken[m]||0) })).filter(p=> p.bal > 0);
+    return { available: parts.reduce((s,p)=> s + p.bal, 0), parts };
+  }
 
   function renderCashTakenByMonth(){
     const body = document.getElementById("cashTakenByMonthBody");
     if(!body) return;
-
-    const topByMonth = {};
-    records.forEach(r=>{
-      if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
-      const mo = String(r.sana).slice(0,7);
-      topByMonth[mo] = (topByMonth[mo]||0) + Number(r.topshirilgan);
-    });
-    const takenByMonth = {};
-    cashTaken.forEach(c=>{
-      if(!c.sana) return;
-      const mo = String(c.sana).slice(0,7);
-      takenByMonth[mo] = (takenByMonth[mo]||0) + Number(c.summa||0);
-    });
-
-    const months = [...new Set([...Object.keys(topByMonth), ...Object.keys(takenByMonth)])].sort();
+    const mdl = cashMonthModel();
+    const months = [...new Set([...Object.keys(mdl.top), ...Object.keys(mdl.taken)])].sort();
     if(!months.length){
       body.innerHTML = `<tr><td colspan="5" class="empty">Ҳозирча маълумот йўқ.</td></tr>`;
       return;
     }
-
-    const monthNames = ["январь","февраль","март","апрель","май","июнь",
-                        "июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+    const sub = t => `<div style="font-size:11.5px;color:var(--muted);font-weight:400;">${t}</div>`;
     let running = 0;
     const rows = months.map(mo=>{
-      const [y,m] = mo.split("-").map(Number);
-      const top = topByMonth[mo] || 0;
-      const taken = takenByMonth[mo] || 0;
+      const top = mdl.top[mo] || 0;
+      const taken = mdl.taken[mo] || 0;
       const monthNet = top - taken;
       running += monthNet;
+      let note = "";
+      if(mdl.carryOut[mo]) note += sub(`олинган ${fmt(mdl.received[mo]||0)} · шундан ${fmt(mdl.carryOut[mo])} олдинги ойлар қолдиғи ҳисобига`);
+      if(mdl.carryIn[mo]){
+        const dates = [...new Set(mdl.bumps.filter(b=> b.to === mo).map(b=> fmtDate(b.date)))].join(", ");
+        note += sub(`шундан ${fmt(mdl.carryIn[mo])} кейинроқ олинган (${dates})`);
+      }
       return `<tr>
-        <td><b>${monthNames[m-1]} ${y}</b></td>
+        <td><b>${ctMonthLabel(mo)}</b></td>
         <td>${fmt(top)}</td>
-        <td>${fmt(taken)}</td>
+        <td>${fmt(taken)}${note}</td>
         <td class="${monthNet<0?'neg':'pos'}">${fmt(monthNet)}</td>
         <td class="${running<0?'neg':'pos'}" style="font-weight:700;">${fmt(running)}</td>
       </tr>`;
     }).join("");
 
-    const grandTop = Object.values(topByMonth).reduce((s,v)=>s+v,0);
-    const grandTaken = Object.values(takenByMonth).reduce((s,v)=>s+v,0);
+    const grandTop = Object.values(mdl.top).reduce((s,v)=>s+v,0);
+    const grandTaken = Object.values(mdl.taken).reduce((s,v)=>s+v,0);
     const grandNet = grandTop - grandTaken;
     const footer = `<tr style="background:var(--gold-soft);font-weight:800;border-top:2px solid var(--gold);">
       <td>ЖАМИ</td>
@@ -5142,6 +5191,17 @@ ${XL_PAGE}
     </tr>`;
 
     body.innerHTML = rows + footer;
+  }
+
+  // Рўйхатдаги ёзув тагидаги изоҳ: қанча қисми олдинги ойлар қолдиғига ёпилгани
+  function ctCarryNote(c, mdl){
+    const want = Number(c.oldingi || 0);
+    if(!(want > 0)) return "";
+    const got = (mdl.alloc && mdl.alloc[c.id]) || 0;
+    const style = `font-size:12px;font-weight:400;color:${got < want ? "var(--bad)" : "var(--muted)"};`;
+    return got < want
+      ? `<div style="${style}">⚠ олдинги ойлар қолдиғи ҳисобига сўралган ${fmt(want)}, ёпилгани ${fmt(got)} (қолдиқ етарли эмас)</div>`
+      : `<div style="${style}">шундан олдинги ойлар қолдиғи ҳисобига: ${fmt(got)}</div>`;
   }
 
   function renderCashTaken(){
@@ -5219,6 +5279,7 @@ ${XL_PAGE}
       return;
     }
     const sorted = cashTaken.slice().sort((a,b)=> b.sana.localeCompare(a.sana));
+    const carryModel = cashMonthModel();
     // Бир хил санадаги ёзувларни гуруҳлаб, шу куннинг ЖАМИсини (агар 2 та ёки
     // кўпроқ ёзув бўлса) ҳар гуруҳ охирида кичик қатор қилиб кўрсатамиз —
     // токи қўлда қўшиб чиқишга ҳожат қолмасин.
@@ -5233,7 +5294,7 @@ ${XL_PAGE}
           <td>${fmtDate(c.sana)}</td>
           <td>${c.mashina ? carPill(c.mashina) : '<span style="color:var(--muted);">Умумий</span>'}</td>
           <td class="neg">${fmt(c.summa)}</td>
-          <td>${esc(c.izoh)}</td>
+          <td>${esc(c.izoh)}${ctCarryNote(c, carryModel)}</td>
           <td style="white-space:nowrap;">
             <button class="btn outline small" data-ctedit="${c.id}">Таҳрирлаш</button>
             <button class="btn danger small" data-ctdel="${c.id}">Ўчириш</button>
@@ -5260,9 +5321,11 @@ ${XL_PAGE}
           document.getElementById("ct_summa").value = c.summa;
           document.getElementById("ct_mashina").value = c.mashina || "";
           document.getElementById("ct_izoh").value = c.izoh || "";
+          document.getElementById("ct_oldingi").value = Number(c.oldingi || 0) > 0 ? c.oldingi : "";
           document.getElementById("cashTakenSubmitBtn").textContent = "Янгилаш";
           document.getElementById("cashTakenCancelEditBtn").style.display = "inline-block";
           if(typeof updateCtDayPreview === "function") updateCtDayPreview();
+          updateCtCarryHint();
           window.scrollTo({top:0, behavior:"smooth"});
         });
       });
@@ -5305,9 +5368,44 @@ ${XL_PAGE}
     const lines = Object.keys(perCar).map(name=> `${esc(name)}: ${fmt(perCar[name])} сўм`).join(" · ");
     el.innerHTML = `<b style="color:var(--ink);">Шу санада жами топширилган: ${fmt(total)} сўм</b><br>${lines}`;
   }
-  document.getElementById("ct_sana").addEventListener("change", updateCtDayPreview);
+  // «Шундан олдинги ойлар қолдиғи ҳисобига» майдони учун маслаҳат: қанча қолдиқ бор ва қандай ёпилади
+  function updateCtCarryHint(){
+    const el = document.getElementById("ct_oldingiHint");
+    if(!el) return;
+    const date = document.getElementById("ct_sana").value;
+    const summa = Number(document.getElementById("ct_summa").value || 0);
+    const want = Number(document.getElementById("ct_oldingi").value || 0);
+    const av = ctCarryAvailable(date, editingCashTakenId);
+    if(!date){ el.innerHTML = ""; return; }
+    if(!av.parts.length){
+      el.innerHTML = `<span>Шу санадан олдинги ойларда олинмаган қолдиқ йўқ — бу майдонни тўлдириш шарт эмас.</span>`;
+      return;
+    }
+    const list = av.parts.map(p=> `${ctMonthLabel(p.m)} — ${fmt(p.bal)}`).join(" · ");
+    let html = `Олдинги ойлардаги олинмаган қолдиқ: <b style="color:var(--ink);">${fmt(av.available)} сўм</b> (${list}). ` +
+               `<button type="button" class="btn outline small" data-ctfill="1">Қолдиқни қўйиш</button>`;
+    if(want > 0){
+      if(want > summa && summa > 0) html += `<div style="color:var(--bad);">⚠ Бу қисм умумий суммадан (${fmt(summa)}) катта бўлиши мумкин эмас.</div>`;
+      else if(want > av.available) html += `<div style="color:var(--bad);">⚠ Олинмаган қолдиқ атиги ${fmt(av.available)} сўм — ундан кўп ёзиб бўлмайди.</div>`;
+      else {
+        let x = want; const dist = [];
+        av.parts.forEach(p=>{ if(x <= 0) return; const t = Math.min(p.bal, x); dist.push(`${ctMonthLabel(p.m)}: ${fmt(t)}`); x -= t; });
+        html += `<div>Ёпилади (энг эскидан): <b style="color:var(--ink);">${dist.join(" · ")}</b>. Шу ойга ўз ҳисобига: ${fmt(Math.max(0, summa - want))}.</div>`;
+      }
+    }
+    el.innerHTML = html;
+    el.querySelectorAll("[data-ctfill]").forEach(b=> b.addEventListener("click", ()=>{
+      const s = Number(document.getElementById("ct_summa").value || 0);
+      document.getElementById("ct_oldingi").value = Math.min(av.available, s > 0 ? s : av.available);
+      updateCtCarryHint();
+    }));
+  }
+  document.getElementById("ct_sana").addEventListener("change", ()=>{ updateCtDayPreview(); updateCtCarryHint(); });
+  document.getElementById("ct_summa").addEventListener("input", updateCtCarryHint);
+  document.getElementById("ct_oldingi").addEventListener("input", updateCtCarryHint);
   document.getElementById("ct_sana").valueAsDate = new Date();
   updateCtDayPreview();
+  updateCtCarryHint();
   document.getElementById("cashTakenForm").addEventListener("submit", e=>{
     e.preventDefault();
     const data = {
@@ -5315,12 +5413,26 @@ ${XL_PAGE}
       summa: Number(document.getElementById("ct_summa").value||0),
       mashina: document.getElementById("ct_mashina").value || "",
       izoh: document.getElementById("ct_izoh").value.trim(),
+      oldingi: Number(document.getElementById("ct_oldingi").value||0),
     };
     if(!data.sana || data.summa<=0) return;
+    if(isNaN(data.oldingi) || data.oldingi < 0){ customAlert("«Олдинги ойлар қолдиғи» қисми манфий бўлмаслиги керак."); return; }
+    if(data.oldingi > data.summa){
+      customAlert(`«Олдинги ойлар қолдиғи» қисми (${fmt(data.oldingi)}) умумий суммадан (${fmt(data.summa)}) катта бўлиши мумкин эмас.`);
+      return;
+    }
+    if(data.oldingi > 0){
+      const av = ctCarryAvailable(data.sana, editingCashTakenId);
+      if(data.oldingi > av.available){
+        customAlert(`Шу санадан олдинги ойларда олинмаган қолдиқ атиги ${fmt(av.available)} сўм. ${fmt(data.oldingi)} сўмни олдинги ойларга ёпиб бўлмайди.`);
+        return;
+      }
+    }
     const finish = ()=>{
       document.getElementById("cashTakenForm").reset();
       document.getElementById("ct_sana").valueAsDate = new Date();
       updateCtDayPreview();
+      updateCtCarryHint();
       renderCashTaken();
       renderCashSpend();
     };
