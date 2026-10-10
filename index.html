@@ -383,7 +383,7 @@
 
   .pivot-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px;}
   .pivot-table th,.pivot-table td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;}
-  .pivot-table thead th{background:#f2eee2;font-weight:700;text-align:center;position:sticky;top:0;}
+  .pivot-table thead th{background:#f2eee2;color:#0f2440;font-weight:700;text-align:center;position:sticky;top:0;}
   .pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:2;}
   .pivot-table th:nth-child(2),.pivot-table td:nth-child(2){text-align:left;}
   .pivot-table .pv-num{text-align:right;font-variant-numeric:tabular-nums;}
@@ -396,9 +396,20 @@
   [data-theme="dark"] .pivot-table tfoot td.pv-taken{background:#245c3c;}
   .pivot-table tfoot td{font-weight:800;background:#f2eee2;}
   .pivot-table tbody tr:hover td{background:#faf8f2;}
+  /* Нақд билан қопланган кунлар йиғиндиси («Берилди», яшил) ва қолган кунлар йиғиндиси («Жами», сариқ) — қалин, ажралиб турадиган */
+  .pivot-table th.pv-given,.pivot-table td.pv-given,.pivot-table thead th.pv-given,.pivot-table tfoot td.pv-given,.pivot-table tbody tr:hover td.pv-given{
+    background:#92d050;color:#0f2440;font-weight:800;text-align:right;font-variant-numeric:tabular-nums;border-left:2px solid #5c9a22;border-right:2px solid #5c9a22;}
+  .pivot-table th.pv-rest,.pivot-table td.pv-rest,.pivot-table thead th.pv-rest,.pivot-table tfoot td.pv-rest,.pivot-table tbody tr:hover td.pv-rest{
+    background:#ffe600;color:#0f2440;font-weight:800;text-align:right;font-variant-numeric:tabular-nums;border-left:2px solid #c9a800;border-right:2px solid #c9a800;}
+  .pivot-table thead th.pv-given,.pivot-table thead th.pv-rest{text-align:center;}
+  .pivot-table .pv-sub{font-size:10.5px;font-weight:700;}
+  .pv-chip{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;margin-right:4px;border:1px solid rgba(0,0,0,.25);}
   [data-theme="dark"] .pivot-table thead th,[data-theme="dark"] .pivot-table tfoot td{background:#2a2f3a;}
   [data-theme="dark"] .pivot-table .pv-total{background:#3a3520;}
   [data-theme="dark"] .pivot-table td:first-child{background:var(--card);}
+  [data-theme="dark"] .pivot-table thead th{color:#e7ecf5;}
+  [data-theme="dark"] .pivot-table th.pv-given,[data-theme="dark"] .pivot-table td.pv-given,[data-theme="dark"] .pivot-table thead th.pv-given,[data-theme="dark"] .pivot-table tfoot td.pv-given{background:#92d050;color:#0f2440;}
+  [data-theme="dark"] .pivot-table th.pv-rest,[data-theme="dark"] .pivot-table td.pv-rest,[data-theme="dark"] .pivot-table thead th.pv-rest,[data-theme="dark"] .pivot-table tfoot td.pv-rest{background:#ffe600;color:#0f2440;}
 
   #agentPanel header{flex-wrap:wrap;gap:10px;}
   #agentPanel main{padding-bottom:30px;}
@@ -471,6 +482,14 @@
     body.printing #printArea tfoot td,
     body.printing #printArea .pv-total{
       background:#fff6cf !important;font-weight:bold;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    body.printing #printArea .pv-given{
+      background:#92d050 !important;color:#0f2440 !important;font-weight:bold;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    body.printing #printArea .pv-rest{
+      background:#ffe600 !important;color:#0f2440 !important;font-weight:bold;
       -webkit-print-color-adjust:exact;print-color-adjust:exact;
     }
     @page{size:landscape;margin:8mm;}
@@ -697,6 +716,11 @@
         <label style="margin:0;flex:1;min-width:220px;">Ҳайдовчи қарзи огоҳлантириш чегараси (сўм, 0 = ўчирилган):</label>
         <input type="number" id="dashDebtLimitInput" min="0" step="100000" style="max-width:180px;">
         <button class="btn outline small" id="dashDebtLimitSaveBtn">Сақлаш</button>
+      </div>
+      <div class="settings-row" style="align-items:center;gap:12px;margin-top:8px;">
+        <label style="margin:0;flex:1;min-width:220px;">Олинмаган нақд пул ҳақида огоҳлантириш (неча кундан кейин, 0 = ўчирилган):</label>
+        <input type="number" id="dashCashDaysInput" min="0" step="1" style="max-width:180px;">
+        <button class="btn outline small" id="dashCashDaysSaveBtn">Сақлаш</button>
       </div>
     </div>
   </section>
@@ -1045,6 +1069,28 @@
         <div class="stat" id="cs_qoldiq_box"><div class="label">Ҳозир қўлимда<span class="help-ic" data-tip="Ҳозир қўлимда = Мен олган нақд пул − Сарфладим. Бу — олинган пулдан ҳали сарфланмаган, қўлда қолиши керак бўлган сумма.">?</span></div><div class="value" id="cs_qoldiq">0 сўм</div></div>
       </div>
       <span id="cs_olingan" style="display:none;"></span>
+
+      <div style="margin-top:18px;padding:12px 14px;border:1px dashed var(--gold);border-radius:10px;background:var(--paper);">
+        <h3 style="margin:0 0 4px;">✅ Нақд пул мослиги</h3>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--muted);">
+          Қўлингиздаги ҳақиқий нақд пулни санаб, дастур ҳисоблаган «Ҳозир қўлимда» билан солиштиринг. Фарқ чиқса — қайсидир ёзув (олиш ёки сарф) унутилган бўлиши мумкин.
+          Ойда бир-икки марта текшириш тавсия этилади.
+        </p>
+        <div id="chkLast" style="font-size:13px;margin-bottom:8px;"></div>
+        <form class="entry" id="chkForm">
+          <div><label>Дастур ҳисоблаган «Ҳозир қўлимда»</label><div class="value" id="chk_hisob" style="font-size:18px;font-weight:700;padding:8px 0;">0</div></div>
+          <div><label>Ҳақиқатда қўлингизда (сўм)</label><input type="number" id="chk_real" min="0" step="1" placeholder="Санаб чиққан сумма"></div>
+          <div><label>Изоҳ (ихтиёрий)</label><input type="text" id="chk_izoh" placeholder="Масалан: ой охири"></div>
+          <div style="align-self:end;"><button type="submit" class="btn gold" id="chkSaveBtn">Текшириш ва қайд этиш</button></div>
+        </form>
+        <div id="chkResult" style="margin-top:10px;"></div>
+        <div class="table-wrap" style="margin-top:10px;max-height:260px;">
+          <table>
+            <thead><tr><th>Сана</th><th>Дастур ҳисоби</th><th>Ҳақиқий</th><th>Фарқ</th><th>Изоҳ</th><th>Амал</th></tr></thead>
+            <tbody id="chkBody"></tbody>
+          </table>
+        </div>
+      </div>
       <h3 style="margin:20px 0 4px;">🚗 Мошиналар кесимида (жами, барча вақт бўйича)</h3>
       <div class="table-wrap" style="margin-top:8px;">
         <table>
@@ -1084,6 +1130,7 @@
           <select id="ct_mashina"><option value="">Умумий (мошинага боғланмаган)</option></select>
         </div>
         <div class="full" id="ct_dayPreview" style="font-size:13px;color:var(--muted);"></div>
+        <div class="full" id="ct_allHint" style="font-size:13px;color:var(--muted);"></div>
         <div>
           <label>Шундан олдинги ойлар қолдиғи ҳисобига (сўм, ихтиёрий)</label>
           <input type="number" id="ct_oldingi" min="0" step="1" placeholder="0">
@@ -1819,6 +1866,7 @@
     {varName:"agents", storageKey:"kh_agents_v1"},
     {varName:"agentFields", storageKey:"kh_agent_fields_v1"},
     {varName:"leasing", storageKey:"kh_leasing_v1"},
+    {varName:"cashChecks", storageKey:"kh_cashcheck_v1"},
   ];
 
   const LS_KEY = "kh_records_v1";
@@ -1852,7 +1900,7 @@
     "kh_lockmin_v1","kh_autosend_v1","kh_lastautosent_v1",
     "kh_theme_v1","kh_logo_v1","kh_brand_v1",
     "kh_daily_autosend_v1","kh_daily_send_time_v1","kh_last_daily_sent_v1",
-    "kh_dash_debt_limit_v1","kh_trust_hours_v1"
+    "kh_dash_debt_limit_v1","kh_trust_hours_v1","kh_dash_cash_days_v1"
   ];
 
   /* =========================================================
@@ -3678,6 +3726,11 @@ ${XL_PAGE}
   const LS_DASH_DEBT_LIMIT = "kh_dash_debt_limit_v1";
   function loadDashDebtLimit(){ return Number(localStorage.getItem(LS_DASH_DEBT_LIMIT) || 0); }
   function saveDashDebtLimit(v){ localStorage.setItem(LS_DASH_DEBT_LIMIT, String(v)); }
+  const LS_DASH_CASH_DAYS = "kh_dash_cash_days_v1";
+  function loadDashCashDays(){
+    const v = localStorage.getItem(LS_DASH_CASH_DAYS);
+    return v === null ? 10 : (Number(v) || 0);          // сақланмаган бўлса — 10 кун
+  }
 
   function renderDashboard(){
     const today = localDateStr();
@@ -3717,6 +3770,26 @@ ${XL_PAGE}
           attentionItems.push({color:"var(--bad)", text:`💳 ${esc(k)} қарзи чегарадан ошган: <b>${fmt(qarz)} сўм</b> (чегара: ${fmt(debtLimit)})`});
         }
       });
+    }
+    // Олинмай турган нақд пул (энг эски олинмаган кундан бери ўтган кунга қараб)
+    const cashDays = loadDashCashDays();
+    if(cashDays > 0){
+      const un = cashUncollectedInfo(today);
+      if(un && un.age >= cashDays){
+        attentionItems.push({color: un.age >= cashDays * 2 ? "var(--bad)" : "var(--gold)",
+          text:`💵 Олинмаган нақд пул: <b>${fmt(un.outstanding)} сўм</b> — энг эскиси ${fmtDate(un.oldest)} дан бери (${un.age} кун)`});
+      }
+    }
+    // Нақд пул мослиги: текширилмаган ёки фарқ чиққан
+    if(cashTaken.length){
+      const lc2 = lastCashCheck();
+      if(!lc2){
+        attentionItems.push({color:"var(--gold)", text:`✅ Нақд пул мослиги ҳали ҳеч қачон текширилмаган — «Қарзлар ва нақд пул» бўлимида ҳақиқий қолдиқни солиштиринг`});
+      } else {
+        const age = daysBetween(lc2.sana, today);
+        if(age >= 30) attentionItems.push({color:"var(--gold)", text:`✅ Нақд пул мослиги ${age} кундан бери текширилмаган (охирги: ${fmtDate(lc2.sana)})`});
+        else if(lc2.farq !== 0) attentionItems.push({color:"var(--bad)", text:`⚠ Охирги нақд пул текширувида (${fmtDate(lc2.sana)}) фарқ чиққан: <b>${lc2.farq > 0 ? "+" : "−"}${fmt(Math.abs(lc2.farq))} сўм</b> — унутилган ёзув бўлиши мумкин, қайта текширинг`});
+      }
     }
     leasing.forEach(lc=>{
       const li = leasingInfo(lc, today);
@@ -3821,6 +3894,14 @@ ${XL_PAGE}
       `;
     }
   }
+  document.getElementById("dashCashDaysInput").value = loadDashCashDays();
+  document.getElementById("dashCashDaysSaveBtn").addEventListener("click", ()=>{
+    const v = Number(document.getElementById("dashCashDaysInput").value || 0);
+    if(isNaN(v) || v < 0){ customAlert("Кун сони 0 ёки катта бўлиши керак."); return; }
+    localStorage.setItem(LS_DASH_CASH_DAYS, String(Math.round(v)));
+    toast("Сақланди ✓");
+    renderDashboard();
+  });
   document.getElementById("dashDebtLimitInput").value = loadDashDebtLimit() || "";
   document.getElementById("dashDebtLimitSaveBtn").addEventListener("click", ()=>{
     const v = Number(document.getElementById("dashDebtLimitInput").value || 0);
@@ -4501,6 +4582,61 @@ ${XL_PAGE}
     return { cutoffDate, totalTaken, dayTotals };
   }
 
+  // ---- «Берилди» (яшил) ва «Жами» (сариқ) устунлари ----
+  // Нақд олиш ёзувлари санаси бўйича тартибланади, йиғилган сумма кунларни энг эскидан бошлаб ёпади.
+  // Ҳар бир олиш ёпган охирги кундан кейин яшил «Берилди» устуни чиқади: унда олдинги маркердан бери
+  // ёпилган кунларнинг йиғиндиси ва олинган сана. Охирги маркердан кейинги (ҳали ёпилмаган) кунлар — сариқ «Жами».
+  function pivotCashMarkers(){
+    const dayTotals = {};
+    records.forEach(r=>{
+      if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
+      dayTotals[r.sana] = (dayTotals[r.sana] || 0) + Number(r.topshirilgan);
+    });
+    const days = Object.keys(dayTotals).sort();
+    const cum = {}; let run = 0;
+    days.forEach(d=>{ run += dayTotals[d]; cum[d] = run; });
+    // Бир санада бир неча марта олинган пул ЯГОНА олиш ҳисобланади (битта «Берилди» устуни, битта умумий сумма)
+    const byDate = {};
+    cashTaken.forEach(x=>{ if(x.sana && Number(x.summa) > 0) byDate[x.sana] = (byDate[x.sana] || 0) + Number(x.summa); });
+    const markers = []; let pool = 0, last = null;
+    Object.keys(byDate).sort().forEach(date=>{
+      pool += byDate[date];
+      let cutoff = null;
+      for(const d of days){ if(cum[d] <= pool) cutoff = d; else break; }
+      if(cutoff && cutoff !== last){ markers.push({ cutoff, date }); last = cutoff; }
+    });
+    return markers;
+  }
+  function pivotPlan(P){
+    const iso = d => `${P.month}-${String(d).padStart(2,"0")}`;
+    const days = P.activeDays;
+    const markers = days.length ? pivotCashMarkers().filter(m=> m.cutoff >= iso(days[0])) : [];
+    const cols = []; let seg = [];
+    days.forEach((d, i)=>{
+      cols.push({ type:"day", d }); seg.push(d);
+      const next = days[i + 1];
+      const here = markers.filter(m=> m.cutoff >= iso(d) && (next === undefined || m.cutoff < iso(next)));
+      if(here.length){ cols.push({ type:"given", date: here[0].date, days: seg }); seg = []; }
+    });
+    const hasGiven = cols.some(x=> x.type === "given");
+    cols.push({ type:"rest", days: seg, hasGiven });
+    return { cols, hasGiven };
+  }
+  const pivotDM = iso => String(iso).slice(8,10) + "." + String(iso).slice(5,7);
+  const pivotColVal = (P, name, col) => col.type === "day"
+    ? (P.byCar[name][col.d] || 0)
+    : col.days.reduce((s,d)=> s + (P.byCar[name][d] || 0), 0);
+  function pivotTotals(P, plan){
+    const t = { given:0, rest:0, all:0 };
+    plan.cols.forEach(col=>{
+      if(col.type === "day") return;
+      const v = P.carNames.reduce((s,n)=> s + pivotColVal(P, n, col), 0);
+      if(col.type === "given") t.given += v; else t.rest += v;
+    });
+    t.all = t.given + t.rest;
+    return t;
+  }
+
   function buildPivot(){
     const month  = document.getElementById("pivotMonth").value || localDateStr().slice(0,7);
     const metric = document.getElementById("pivotMetric").value;
@@ -4566,32 +4702,62 @@ ${XL_PAGE}
       else monthQolmagan += v;
     });
 
+    // Устунлар режаси: кунлар + (нақд олинган бўлса) яшил «Берилди» + охирида сариқ «Жами»
+    const plan = pivotPlan(P);
+    const unitLabel0 = P.unit === 1000 ? "минг сўмда" : "сўмда";
+    const colCls = col => col.type === "given" ? "pv-num pv-given" : (col.hasGiven ? "pv-num pv-rest" : "pv-total");
     let head = `<tr><th>Давлат рақами</th><th>Русуми</th>`;
-    days.forEach(d=> head += `<th class="pv-num${isTaken(d)?' pv-taken':''}">${d}</th>`);
-    head += `<th class="pv-total">Жами</th></tr>`;
+    plan.cols.forEach(col=>{
+      if(col.type === "day") head += `<th class="pv-num${isTaken(col.d)?' pv-taken':''}">${col.d}</th>`;
+      else if(col.type === "given") head += `<th class="${colCls(col)}">Берилди<br><span class="pv-sub">${pivotDM(col.date)}</span></th>`;
+      else head += `<th class="${colCls(col)}">Жами</th>`;
+    });
+    head += `</tr>`;
 
-    const dayTotals = {};
-    let grand = 0;
+    const colTotals = plan.cols.map(()=> 0);
     let body = "";
     P.carNames.forEach(name=>{
       const carObj = cars.find(c=> c.name === name);
       const rusumi = carObj && carObj.rusumi ? carObj.rusumi : "";
-      let rowSum = 0;
       let tds = "";
-      days.forEach(d=>{
-        const v = P.byCar[name][d] || 0;
-        rowSum += v;
-        dayTotals[d] = (dayTotals[d] || 0) + v;
-        tds += `<td class="pv-num${isTaken(d)?' pv-taken':''}">${show(v)}</td>`;
+      plan.cols.forEach((col, i)=>{
+        const v = pivotColVal(P, name, col);
+        colTotals[i] += v;
+        tds += col.type === "day"
+          ? `<td class="pv-num${isTaken(col.d)?' pv-taken':''}">${show(v)}</td>`
+          : `<td class="${colCls(col)}">${show(v)}</td>`;
       });
-      grand += rowSum;
-      body += `<tr><td><b>${esc(name)}</b></td><td>${esc(rusumi)}</td>${tds}` +
-              `<td class="pv-total">${show(rowSum)}</td></tr>`;
+      body += `<tr><td><b>${esc(name)}</b></td><td>${esc(rusumi)}</td>${tds}</tr>`;
     });
 
     let foot = `<tr class="pv-foot"><td colspan="2">жами</td>`;
-    days.forEach(d=> foot += `<td class="pv-num${isTaken(d)?' pv-taken':''}">${show(dayTotals[d]||0)}</td>`);
-    foot += `<td class="pv-total">${show(grand)}</td></tr>`;
+    plan.cols.forEach((col, i)=>{
+      foot += col.type === "day"
+        ? `<td class="pv-num${isTaken(col.d)?' pv-taken':''}">${show(colTotals[i])}</td>`
+        : `<td class="${colCls(col)}">${show(colTotals[i])}</td>`;
+    });
+    foot += `</tr>`;
+
+    // Изоҳ: қайси кунлар қайси куни қанча нақд билан қопланган
+    let legend = "";
+    if(plan.hasGiven){
+      const T = pivotTotals(P, plan);
+      const rng = ds => ds.length === 1 ? `${ds[0]}-кун` : `${ds[0]}–${ds[ds.length-1]}-кунлар`;
+      const lines = plan.cols.filter(col=> col.type === "given").map(col=>{
+        const sum = P.carNames.reduce((s,n)=> s + pivotColVal(P, n, col), 0);
+        const cash = cashTaken.filter(x=> x.sana === col.date).reduce((s,x)=> s + Number(x.summa||0), 0);
+        return `<div>• <b>${fmtDate(col.date)}</b> — ${rng(col.days)} учун: <b>${show(sum)}</b>` +
+               (cash > 0 ? ` <span style="color:var(--muted);">(шу куни олинган нақд: ${fmt(cash)} сўм)</span>` : "") + `</div>`;
+      }).join("");
+      const rest = plan.cols[plan.cols.length - 1];
+      legend = `<div class="pv-legend" style="margin-top:10px;font-size:12.5px;line-height:1.55;">
+        <div><span class="pv-chip" style="background:#92d050;"></span><b>Берилди</b> — нақд пул билан қопланган кунларнинг йиғиндиси (${unitLabel0}):</div>
+        ${lines}
+        <div style="margin-top:3px;"><span class="pv-chip" style="background:#ffe600;"></span><b>Жами</b> — ҳали қопланмаган кунлар йиғиндиси${rest.days.length ? ` (${rng(rest.days)})` : ""}:
+          <b>${rest.days.length ? show(T.rest) : "йўқ — ҳаммаси қопланган"}</b></div>
+        <div style="color:var(--muted);">Ойда жами: ${show(T.all)} · берилган: ${show(T.given)} · қолган: ${show(T.rest)}</div>
+      </div>`;
+    }
 
     const metricLabel = P.metric === "tushum" ? "Тушум"
                       : P.metric === "topshirilgan" ? "Топширилган" : "Соф тушум";
@@ -4618,7 +4784,7 @@ ${XL_PAGE}
         <thead>${head}</thead>
         <tbody>${body}</tbody>
         <tfoot>${foot}</tfoot>
-      </table>`;
+      </table>${legend}`;
   }
 
   function exportPivotExcel(){
@@ -4635,29 +4801,37 @@ ${XL_PAGE}
     const bCell   = v => `<Cell ss:StyleID="bold"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
     const bnCell  = v => `<Cell ss:StyleID="boldnum"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
 
+    // Устунлар режаси экрандагидек: кунлар + яшил «Берилди» + сариқ «Жами»
+    const plan = pivotPlan(P);
+    const gHdr = v => `<Cell ss:StyleID="ghdr"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const yHdr = v => `<Cell ss:StyleID="yhdr"><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+    const gNum = v => `<Cell ss:StyleID="gnum"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
+    const yNum = v => `<Cell ss:StyleID="ynum"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>`;
     let head = hdrCell("Давлат рақами") + hdrCell("Русуми");
-    days.forEach(d=> head += hdrCell(String(d)));
-    head += hdrCell("Жами");
+    plan.cols.forEach(col=>{
+      if(col.type === "day") head += hdrCell(String(col.d));
+      else if(col.type === "given") head += gHdr("Берилди " + pivotDM(col.date));
+      else head += col.hasGiven ? yHdr("Жами") : hdrCell("Жами");
+    });
 
-    const dayTotals = {}; let grand = 0; let rows = "";
+    const colTotals = plan.cols.map(()=> 0); let rows = "";
     P.carNames.forEach(name=>{
       const c = cars.find(x=> x.name === name);
-      let rowSum = 0, tds = "";
-      days.forEach(d=>{
-        const v = Math.round((P.byCar[name][d]||0)/P.unit);
-        rowSum += v; dayTotals[d] = (dayTotals[d]||0) + v;
-        tds += nCell(v);
+      let tds = "";
+      plan.cols.forEach((col, i)=>{
+        const v = Math.round(pivotColVal(P, name, col) / P.unit);
+        colTotals[i] += v;
+        tds += col.type === "day" ? nCell(v) : col.type === "given" ? gNum(v) : (col.hasGiven ? yNum(v) : bnCell(v));
       });
-      grand += rowSum;
-      rows += "<Row>" + sCell(name) + sCell(c && c.rusumi ? c.rusumi : "") + tds + bnCell(rowSum) + "</Row>";
+      rows += "<Row>" + sCell(name) + sCell(c && c.rusumi ? c.rusumi : "") + tds + "</Row>";
     });
     let foot = bCell("жами") + bCell("");
-    days.forEach(d=> foot += bnCell(dayTotals[d]||0));
-    foot += bnCell(grand);
+    plan.cols.forEach((col, i)=>{
+      foot += col.type === "day" ? bnCell(colTotals[i]) : col.type === "given" ? gNum(colTotals[i]) : (col.hasGiven ? yNum(colTotals[i]) : bnCell(colTotals[i]));
+    });
 
     const cols = `<Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="70"/>` +
-      days.map(()=> `<Column ss:AutoFitWidth="0" ss:Width="52"/>`).join("") +
-      `<Column ss:AutoFitWidth="0" ss:Width="85"/>`;
+      plan.cols.map(col=> `<Column ss:AutoFitWidth="0" ss:Width="${col.type === "day" ? 52 : col.type === "given" ? 78 : 85}"/>`).join("");
 
     const metricLabel = P.metric==="tushum" ? "Тушум" : P.metric==="topshirilgan" ? "Топширилган" : "Соф тушум";
     const title = `${P.y} йил ${monthNames[P.m-1]}ойи`;
@@ -4688,7 +4862,15 @@ ${XL_PAGE}
    <NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
   <Style ss:ID="title"><Font ss:Bold="1" ss:Size="14" ss:Color="#0F2440"/><Borders/></Style>
   <Style ss:ID="meta"><Font ss:Italic="1" ss:Size="10" ss:Color="#6B7280"/><Borders/></Style>
- </Styles>
+    <Style ss:ID="ghdr"><Font ss:Bold="1" ss:Color="#0F2440"/><Interior ss:Color="#92D050" ss:Pattern="Solid"/>
+    <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style>
+   <Style ss:ID="yhdr"><Font ss:Bold="1" ss:Color="#0F2440"/><Interior ss:Color="#FFE600" ss:Pattern="Solid"/>
+    <Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
+   <Style ss:ID="gnum"><Font ss:Bold="1"/><Interior ss:Color="#92D050" ss:Pattern="Solid"/>
+    <NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
+   <Style ss:ID="ynum"><Font ss:Bold="1"/><Interior ss:Color="#FFE600" ss:Pattern="Solid"/>
+    <NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right"/></Style>
+  </Styles>
  <Worksheet ss:Name="Ойлик жадвал">
   <Table>${cols}
    <Row ss:Height="22"><Cell ss:StyleID="title"><Data ss:Type="String">${xmlEscape(title)}</Data></Cell></Row>
@@ -4781,7 +4963,15 @@ ${XL_PAGE}
           const month = document.getElementById("pivotMonth").value || localDateStr().slice(0,7);
           const fd = new FormData();
           fd.append("chat_id", settings.chatId);
-          fd.append("caption", "📅 Ойлик жадвал — " + month);
+          let caption = "📅 Ойлик жадвал — " + month;
+          try{
+            const Pc = buildPivot(), plc = pivotPlan(Pc);
+            if(plc.hasGiven){
+              const T = pivotTotals(Pc, plc), sh = v => Math.round(v / Pc.unit).toLocaleString("ru-RU");
+              caption += `\n🟩 Берилди: ${sh(T.given)} · 🟨 Қолган: ${sh(T.rest)} (${Pc.unit === 1000 ? "минг сўмда" : "сўмда"})`;
+            }
+          }catch(e){}
+          fd.append("caption", caption);
           fd.append("photo", blob, "oylik_jadval_"+month+".png");
           toast("Юборилмоқда...");
           const resp = await fetch(`https://api.telegram.org/bot${settings.token}/sendPhoto`, {
@@ -5076,6 +5266,7 @@ ${XL_PAGE}
   function saveCashTaken(list){ safeSave(LS_CASHTAKEN, JSON.stringify(list)); }
   let cashTaken = loadCashTaken();
   let editingCashTakenId = null;
+  const ctExpandedDates = new Set();      // рўйхатда «Тафсилот» очилган санлар (бир кунда бир неча ёзув бўлса)
 
   // ---- Олинган нақд пулни сарфлаш (мустақил бўлим — бошқа кўрсаткичларга таъсир қилмайди) ----
   const LS_CASHSPEND = "kh_cashspend_v1";
@@ -5085,6 +5276,36 @@ ${XL_PAGE}
   function saveCashSpend(list){ safeSave(LS_CASHSPEND, JSON.stringify(list)); }
   let cashSpend = loadCashSpend();
   let editingCashSpendId = null;
+
+  // ---- Нақд пул мослиги: ҳақиқий санаб чиқилган қолдиқни дастур ҳисоби билан солиштириш тарихи ----
+  // {id, sana, hisob (дастур ҳисоби), haqiqiy (санаб чиқилгани), farq (= haqiqiy − hisob), izoh, createdAt}
+  const LS_CASHCHECK = "kh_cashcheck_v1";
+  function loadCashChecks(){
+    try{ const v = JSON.parse(localStorage.getItem(LS_CASHCHECK)); return Array.isArray(v) ? v : []; }catch(e){ return []; }
+  }
+  function saveCashChecks(list){ safeSave(LS_CASHCHECK, JSON.stringify(list)); }
+  let cashChecks = loadCashChecks();
+  // «Ҳозир қўлимда» = олинган нақд пул − сарфланган (renderCashSpend билан бир хил қоида)
+  const cashOnHand = () => cashTaken.reduce((s,c)=> s + Number(c.summa||0), 0) - cashSpend.reduce((s,c)=> s + Number(c.summa||0), 0);
+  const lastCashCheck = () => cashChecks.slice().sort((a,b)=>
+    String(b.sana||"").localeCompare(String(a.sana||"")) || String(b.createdAt||"").localeCompare(String(a.createdAt||"")))[0] || null;
+  const daysBetween = (fromIso, toIso) => Math.round((new Date(toIso) - new Date(fromIso)) / 86400000);
+
+  // Олинмаган нақд пул: энг эски олинмаган куннинг ёши (огоҳлантириш учун)
+  function cashUncollectedInfo(today){
+    const dayTotals = {};
+    records.forEach(r=>{
+      if(r.topshirilgan === null || r.topshirilgan === undefined || !r.sana) return;
+      dayTotals[r.sana] = (dayTotals[r.sana] || 0) + Number(r.topshirilgan);
+    });
+    const days = Object.keys(dayTotals).sort();
+    const totalTop = days.reduce((s,d)=> s + dayTotals[d], 0);
+    const totalTaken = cashTaken.reduce((s,c)=> s + Number(c.summa||0), 0);
+    let run = 0, oldest = null;
+    for(const d of days){ run += dayTotals[d]; if(run > totalTaken){ oldest = d; break; } }
+    const outstanding = totalTop - totalTaken;
+    return (outstanding > 0 && oldest) ? { outstanding, oldest, age: daysBetween(oldest, today) } : null;
+  }
 
   function exitCashTakenEditMode(){
     editingCashTakenId = null;
@@ -5195,9 +5416,10 @@ ${XL_PAGE}
 
   // Рўйхатдаги ёзув тагидаги изоҳ: қанча қисми олдинги ойлар қолдиғига ёпилгани
   function ctCarryNote(c, mdl){
-    const want = Number(c.oldingi || 0);
+    return ctCarryNoteSum(Number(c.oldingi || 0), (mdl.alloc && mdl.alloc[c.id]) || 0);
+  }
+  function ctCarryNoteSum(want, got){
     if(!(want > 0)) return "";
-    const got = (mdl.alloc && mdl.alloc[c.id]) || 0;
     const style = `font-size:12px;font-weight:400;color:${got < want ? "var(--bad)" : "var(--muted)"};`;
     return got < want
       ? `<div style="${style}">⚠ олдинги ойлар қолдиғи ҳисобига сўралган ${fmt(want)}, ёпилгани ${fmt(got)} (қолдиқ етарли эмас)</div>`
@@ -5280,18 +5502,10 @@ ${XL_PAGE}
     }
     const sorted = cashTaken.slice().sort((a,b)=> b.sana.localeCompare(a.sana));
     const carryModel = cashMonthModel();
-    // Бир хил санадаги ёзувларни гуруҳлаб, шу куннинг ЖАМИсини (агар 2 та ёки
-    // кўпроқ ёзув бўлса) ҳар гуруҳ охирида кичик қатор қилиб кўрсатамиз —
-    // токи қўлда қўшиб чиқишга ҳожат қолмасин.
-    let rowsHtml = "";
-    let gi = 0;
-    while(gi < sorted.length){
-      const date = sorted[gi].sana;
-      const group = [];
-      while(gi < sorted.length && sorted[gi].sana === date){ group.push(sorted[gi]); gi++; }
-      group.forEach(c=>{
-        rowsHtml += `<tr>
-          <td>${fmtDate(c.sana)}</td>
+    // Бир хил санадаги ёзувлар БИТТА умумий қатор бўлиб кўринади (жами сумма, ёзувлар сони, изоҳлар).
+    // Алоҳида ёзувлар «Тафсилот» тугмаси орқали очилади — таҳрирлаш/ўчириш учун.
+    const entryRow = (c, sub)=> `<tr${sub ? ' style="background:var(--paper);"' : ""}>
+          <td${sub ? ' style="padding-left:22px;color:var(--muted);"' : ""}>${sub ? "↳ " : ""}${fmtDate(c.sana)}</td>
           <td>${c.mashina ? carPill(c.mashina) : '<span style="color:var(--muted);">Умумий</span>'}</td>
           <td class="neg">${fmt(c.summa)}</td>
           <td>${esc(c.izoh)}${ctCarryNote(c, carryModel)}</td>
@@ -5300,17 +5514,35 @@ ${XL_PAGE}
             <button class="btn danger small" data-ctdel="${c.id}">Ўчириш</button>
           </td>
         </tr>`;
-      });
-      if(group.length > 1){
-        const daySum = group.reduce((s,c)=> s + Number(c.summa||0), 0);
-        rowsHtml += `<tr style="background:var(--gold-soft);">
-          <td colspan="2" style="text-align:right;font-weight:700;">Шу кун жами:</td>
+    let rowsHtml = "";
+    let gi = 0;
+    while(gi < sorted.length){
+      const date = sorted[gi].sana;
+      const group = [];
+      while(gi < sorted.length && sorted[gi].sana === date){ group.push(sorted[gi]); gi++; }
+      if(group.length === 1){ rowsHtml += entryRow(group[0], false); continue; }
+      const daySum = group.reduce((s,c)=> s + Number(c.summa||0), 0);
+      const open = ctExpandedDates.has(date);
+      const cars0 = [...new Set(group.map(c=> c.mashina || ""))];
+      const carsHtml = cars0.map(m=> m ? carPill(m) : '<span style="color:var(--muted);">Умумий</span>').join(" ");
+      const notes = [...new Set(group.map(c=> String(c.izoh || "").trim()).filter(Boolean))];
+      const wantSum = group.reduce((s,c)=> s + Number(c.oldingi || 0), 0);
+      const gotSum = group.reduce((s,c)=> s + ((carryModel.alloc && carryModel.alloc[c.id]) || 0), 0);
+      rowsHtml += `<tr style="background:var(--gold-soft);">
+          <td><b>${fmtDate(date)}</b></td>
+          <td>${carsHtml}</td>
           <td class="neg" style="font-weight:800;">${fmt(daySum)}</td>
-          <td colspan="2"></td>
+          <td><b>Шу кун жами</b> · ${group.length} та ёзув${notes.length ? ": " + esc(notes.join(" · ")) : ""}${ctCarryNoteSum(wantSum, gotSum)}</td>
+          <td style="white-space:nowrap;"><button class="btn outline small" data-cttoggle="${esc(date)}">${open ? "▾ Яшириш" : "▸ Тафсилот"}</button></td>
         </tr>`;
-      }
+      if(open) group.forEach(c=> { rowsHtml += entryRow(c, true); });
     }
     body.innerHTML = rowsHtml;
+    body.querySelectorAll("[data-cttoggle]").forEach(b=> b.addEventListener("click", ()=>{
+      const d = b.dataset.cttoggle;
+      if(ctExpandedDates.has(d)) ctExpandedDates.delete(d); else ctExpandedDates.add(d);
+      renderCashTaken();
+    }));
     body.querySelectorAll("[data-ctedit]").forEach(b=>{
       b.addEventListener("click", ()=>{
         const c = cashTaken.find(x=>x.id===b.dataset.ctedit);
@@ -5368,8 +5600,40 @@ ${XL_PAGE}
     const lines = Object.keys(perCar).map(name=> `${esc(name)}: ${fmt(perCar[name])} сўм`).join(" · ");
     el.innerHTML = `<b style="color:var(--ink);">Шу санада жами топширилган: ${fmt(total)} сўм</b><br>${lines}`;
   }
+  // Шу санагача олинмаган жами (кумулатив): топширилган(сана гача) − олинган(сана гача; таҳрирланаётган ёзувсиз).
+  // Шундан олдинги ойлар қолдиғи (carry) — «ҳаммасини олиш» учун қисмни ўзи аниқлаш.
+  function ctOutstanding(dateIso, excludeId){
+    if(!dateIso) return { total:0, carry:0, own:0 };
+    const top = records.reduce((s,r)=> (r.topshirilgan !== null && r.topshirilgan !== undefined && r.sana && r.sana <= dateIso) ? s + Number(r.topshirilgan) : s, 0);
+    const taken = cashTaken.reduce((s,x)=> (x.id !== excludeId && x.sana && x.sana <= dateIso) ? s + Number(x.summa||0) : s, 0);
+    const total = top - taken;
+    const av = ctCarryAvailable(dateIso, excludeId);
+    const carry = Math.max(0, Math.min(av.available, total));
+    return { total, carry, own: total - carry };
+  }
+  function updateCtAllHint(){
+    const el = document.getElementById("ct_allHint");
+    if(!el) return;
+    const date = document.getElementById("ct_sana").value;
+    if(!date){ el.innerHTML = ""; return; }
+    const o = ctOutstanding(date, editingCashTakenId);
+    if(o.total <= 0){
+      el.innerHTML = o.total === 0 ? "Шу санагача олинмаган қолдиқ йўқ." : `Шу санагача <b style="color:var(--bad);">${fmt(-o.total)} сўм ортиқча</b> олинган.`;
+      return;
+    }
+    const parts = o.carry > 0 ? ` (олдинги ойлар қолдиғи ${fmt(o.carry)} + қолгани ${fmt(o.own)})` : "";
+    el.innerHTML = `Шу санагача олинмаган жами: <b style="color:var(--ink);">${fmt(o.total)} сўм</b>${parts}. ` +
+                   `<button type="button" class="btn gold small" data-ctall="1">Ҳаммасини олиш (${fmt(o.total)})</button>`;
+    el.querySelectorAll("[data-ctall]").forEach(b=> b.addEventListener("click", ()=>{
+      document.getElementById("ct_summa").value = o.total;
+      document.getElementById("ct_oldingi").value = o.carry > 0 ? o.carry : "";
+      updateCtCarryHint();
+    }));
+  }
+
   // «Шундан олдинги ойлар қолдиғи ҳисобига» майдони учун маслаҳат: қанча қолдиқ бор ва қандай ёпилади
   function updateCtCarryHint(){
+    updateCtAllHint();
     const el = document.getElementById("ct_oldingiHint");
     if(!el) return;
     const date = document.getElementById("ct_sana").value;
@@ -5492,6 +5756,60 @@ ${XL_PAGE}
     }
   }
 
+  // ---- Нақд пул мослиги: интерфейс ----
+  function renderCashCheck(){
+    const hisobEl = document.getElementById("chk_hisob");
+    if(!hisobEl) return;
+    const hisob = cashOnHand();
+    hisobEl.textContent = fmt(hisob) + " сўм";
+    const today = localDateStr();
+    const last = lastCashCheck();
+    document.getElementById("chkLast").innerHTML = last
+      ? `Охирги текширув: <b>${fmtDate(last.sana)}</b> (${daysBetween(last.sana, today)} кун олдин) — ${last.farq === 0 ? '<b class="pos">мос келган ✓</b>' : `<b class="neg">фарқ: ${last.farq > 0 ? "+" : "−"}${fmt(Math.abs(last.farq))} сўм</b>`}`
+      : `Ҳали ҳеч қачон текширилмаган.`;
+    const list = cashChecks.slice().sort((a,b)=>
+      String(b.sana||"").localeCompare(String(a.sana||"")) || String(b.createdAt||"").localeCompare(String(a.createdAt||""))).slice(0, 10);
+    const body = document.getElementById("chkBody");
+    body.innerHTML = list.length ? list.map(k=> `<tr>
+        <td>${fmtDate(k.sana)}</td><td>${fmt(k.hisob)}</td><td>${fmt(k.haqiqiy)}</td>
+        <td class="${k.farq === 0 ? "pos" : "neg"}">${k.farq === 0 ? "0 ✓" : (k.farq > 0 ? "+" : "−") + fmt(Math.abs(k.farq))}</td>
+        <td>${esc(k.izoh || "")}</td>
+        <td><button class="btn danger small" data-chkdel="${esc(k.id)}">Ўчириш</button></td></tr>`).join("")
+      : `<tr><td colspan="6" class="empty">Ҳали текширув қайд этилмаган. Қўлингиздаги пулни санаб, юқоридаги формани тўлдиринг ↑</td></tr>`;
+    body.querySelectorAll("[data-chkdel]").forEach(b=> b.addEventListener("click", async ()=>{
+      const k = cashChecks.find(x=> x.id === b.dataset.chkdel); if(!k) return;
+      if(!(await customConfirmAsync(`${fmtDate(k.sana)} санадаги текширув ўчирилсинми?`))) return;
+      requirePasswordThen(()=>{
+        cashChecks = cashChecks.filter(x=> x.id !== k.id);
+        saveCashChecks(cashChecks);
+        logAudit("Нақд пул текшируви ўчирилди", `${fmtDate(k.sana)} · фарқ ${k.farq}`);
+        renderCashCheck(); toast("Текширув ўчирилди");
+      });
+    }));
+  }
+  document.getElementById("chkForm").addEventListener("submit", e=>{
+    e.preventDefault();
+    const raw = String(document.getElementById("chk_real").value).trim();
+    const real = Number(raw);
+    if(raw === "" || isNaN(real) || real < 0){ customAlert("Қўлингиздаги ҳақиқий пул суммасини киритинг (0 ёки катта)."); return; }
+    const hisob = cashOnHand();
+    const farq = Math.round(real) - hisob;
+    const entry = { id: uid(), sana: localDateStr(), hisob, haqiqiy: Math.round(real), farq,
+      izoh: document.getElementById("chk_izoh").value.trim(), createdAt: new Date().toISOString() };
+    cashChecks.push(entry);
+    if(cashChecks.length > 200) cashChecks = cashChecks.slice(-200);
+    saveCashChecks(cashChecks);
+    logAudit("Нақд пул текширилди", `${fmtDate(entry.sana)} · ҳисоб ${fmt(hisob)} · ҳақиқий ${fmt(entry.haqiqiy)} · фарқ ${farq}`);
+    document.getElementById("chkResult").innerHTML = farq === 0
+      ? `<div class="notice" style="border-left:4px solid var(--good);"><b class="pos">✅ Мос келди.</b> Қўлингиздаги пул дастур ҳисоби билан бир хил.</div>`
+      : farq < 0
+        ? `<div class="notice" style="border-left:4px solid var(--bad);"><b class="neg">⚠ Ҳақиқатда ${fmt(-farq)} сўм КАМ.</b> Эҳтимол, бирор сарф (лизинг, ҳамкорга берилган пул ва ҳ.к.) ёзилмай қолган.</div>`
+        : `<div class="notice" style="border-left:4px solid var(--bad);"><b class="neg">⚠ Ҳақиқатда ${fmt(farq)} сўм КЎП.</b> Эҳтимол, олинган нақд пул ёзилмаган ёки сарф ортиқча ёзилган.</div>`;
+    document.getElementById("chk_real").value = ""; document.getElementById("chk_izoh").value = "";
+    renderCashCheck();
+    toast("Текширув қайд этилди ✓");
+  });
+
   // ---- Олинган нақд пулни сарфлаш: рендер ва форма (мустақил, бошқа ҳисоб-китобга тегмайди) ----
   function exitCashSpendEditMode(){
     editingCashSpendId = null;
@@ -5507,6 +5825,7 @@ ${XL_PAGE}
   function renderCashSpend(){
     const box = document.getElementById("cs_olingan");
     if(!box) return;
+    renderCashCheck();
     const totalOlingan = cashTaken.reduce((s,c)=> s + Number(c.summa||0), 0);
     const totalSarflangan = cashSpend.reduce((s,c)=> s + Number(c.summa||0), 0);
     const qoldiq = totalOlingan - totalSarflangan;
@@ -7240,6 +7559,7 @@ ${XL_PAGE}
         case "agents": data.agents = agents; break;
         case "agentFields": data.agentFields = agentFields; break;
         case "leasing": data.leasing = leasing; break;
+        case "cashChecks": data.cashChecks = cashChecks; break;
       }
     });
     data.exportedAt = new Date().toISOString();
@@ -7263,6 +7583,7 @@ ${XL_PAGE}
       safeSave(LS_AGENT_FIELDS, JSON.stringify(agentFields));
     }
     if(Array.isArray(data.leasing)){ leasing = data.leasing; saveLeasing(leasing); }
+    if(Array.isArray(data.cashChecks)){ cashChecks = data.cashChecks; saveCashChecks(cashChecks); }
   }
 
   function renderAgentFieldsList(){
@@ -8989,6 +9310,7 @@ ${XL_PAGE}
       agents = loadAgents();
       agentFields = loadAgentFields();
       leasing = loadLeasing();
+      cashChecks = loadCashChecks();
 
       applyTheme(loadTheme());
       applyLogo();
